@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { type Trade } from '@/lib/types';
+import { z } from 'zod';
+import { Trade, TradeSchema } from '@/lib/types';
 
 const STORAGE_KEY = 'tradevision-trades';
 
@@ -13,25 +14,25 @@ export function useTrades() {
     try {
       const storedTrades = localStorage.getItem(STORAGE_KEY);
       if (storedTrades) {
-        const parsedTrades = JSON.parse(storedTrades, (key, value) => {
-          if (key === 'date' && typeof value === 'string') {
-            return new Date(value);
-          }
-          return value;
-        });
+        const rawTrades = JSON.parse(storedTrades);
+        const parsedTrades = z.array(TradeSchema).parse(rawTrades);
         setTrades(parsedTrades);
       }
     } catch (error) {
-      console.error("Failed to load trades from localStorage", error);
+      console.error("Failed to load or parse trades from localStorage. Old data might be incompatible.", error);
+      // Optional: Clear storage if data is corrupt
+      // localStorage.removeItem(STORAGE_KEY); 
     } finally {
       setIsLoaded(true);
     }
   }, []);
 
   const updateStorage = useCallback((updatedTrades: Trade[]) => {
-    setTrades(updatedTrades);
+    // Sort by date descending before saving
+    const sortedTrades = [...updatedTrades].sort((a, b) => b.date.getTime() - a.date.getTime());
+    setTrades(sortedTrades);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTrades));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedTrades));
     } catch (error) {
       console.error("Failed to save trades to localStorage", error);
     }

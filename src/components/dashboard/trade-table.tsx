@@ -49,7 +49,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     let filtered = trades.filter(trade =>
       (trade.asset.toLowerCase().includes(filter.toLowerCase()) ||
        trade.strategy.toLowerCase().includes(filter.toLowerCase()) ||
-       trade.notes?.toLowerCase().includes(filter.toLowerCase())) &&
+       trade.notes?.toLowerCase().includes(filter.toLowerCase()) ||
+       trade.mistakes?.some(m => m.toLowerCase().includes(filter.toLowerCase()))) &&
       (assetFilter === 'all' || trade.asset === assetFilter)
     );
 
@@ -60,6 +61,12 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
         
         if (aVal === undefined || aVal === null) return 1;
         if (bVal === undefined || bVal === null) return -1;
+
+        if (sortConfig.key === 'date') {
+            const dateA = new Date(aVal as string | number | Date).getTime();
+            const dateB = new Date(bVal as string | number | Date).getTime();
+            return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+        }
         
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -80,7 +87,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
   const getSortIndicator = (key: SortKey) => {
     if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-30" />;
-    return sortConfig.direction === 'asc' ? '🔼' : '🔽';
+    return sortConfig.direction === 'desc' ? '🔽' : '🔼';
   };
 
   const ResultBadge = ({ result }: { result: Trade["result"] }) => {
@@ -96,7 +103,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     <div className="w-full space-y-4">
       <div className="flex flex-col md:flex-row gap-2">
         <Input
-          placeholder="Filter by asset, strategy, notes..."
+          placeholder="Filter by asset, strategy, notes, mistakes..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
@@ -122,6 +129,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead>Direction</TableHead>
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer">RR {getSortIndicator("rr")}</TableHead>
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
+              <TableHead>Mistakes</TableHead>
               <TableHead>Screenshot</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -141,6 +149,13 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                   <TableCell>{trade.rr?.toFixed(2)}</TableCell>
                   <TableCell><ResultBadge result={trade.result} /></TableCell>
                   <TableCell>
+                    <div className="flex flex-wrap gap-1 max-w-xs">
+                        {trade.mistakes?.map(mistake => (
+                            <Badge key={mistake} variant="outline">{mistake}</Badge>
+                        ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     {trade.screenshot ? (
                       <Button variant="ghost" size="icon" onClick={() => setImageInView(trade.screenshot!)}>
                         <ImageIcon className="h-5 w-5" />
@@ -159,7 +174,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(trade.id)} className="text-destructive-foreground bg-destructive hover:bg-destructive/90">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDelete(trade.id)} className="text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -167,7 +182,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>

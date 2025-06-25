@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { CalendarIcon, ImageUp, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,27 +32,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { type Trade, TradeSchema } from "@/lib/types";
+import { type Trade, TradeSchema, type MistakeTag } from "@/lib/types";
+import { MISTAKE_TAGS } from "@/lib/constants";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
-const FormSchema = z.object({
-  date: z.date({ required_error: "A date is required." }),
-  asset: z.enum(["NAS100", "XAUUSD"]),
-  strategy: z.enum(["NQ #1", "NQ #2", "Gold"]),
-  direction: z.enum(["Buy", "Sell"]),
-  entryTime: z.string().nonempty({ message: "Entry time is required." }),
-  entryPrice: z.coerce.number({ required_error: "Entry price is required." }),
-  sl: z.coerce.number({ required_error: "Stop loss is required." }),
-  tp: z.coerce.number({ required_error: "Take profit is required." }),
-  rr: z.coerce.number().optional(),
-  exitPrice: z.coerce.number({ required_error: "Exit price is required." }),
-  result: z.enum(["Win", "Loss", "BE"]),
-  mistake: z.boolean().default(false),
-  notes: z.string().optional(),
-  screenshot: z.string().optional(),
-});
+const FormSchema = TradeSchema.omit({ id: true });
 
 type TradeFormProps = {
   trade?: Trade;
@@ -67,22 +54,22 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: trade
-      ? trade
-      : ({
+      ? { ...trade }
+      : {
           date: new Date(),
-          mistake: false,
-          direction: "Buy",
-          result: "Win",
           asset: "NAS100",
           strategy: "NQ #1",
+          direction: "Buy",
           entryTime: "",
-          entryPrice: "",
-          sl: "",
-          tp: "",
-          exitPrice: "",
+          entryPrice: undefined,
+          sl: undefined,
+          tp: undefined,
+          exitPrice: undefined,
+          result: "Win",
+          mistakes: [],
           notes: "",
           screenshot: "",
-        } as any),
+        },
   });
 
   const { watch, setValue } = form;
@@ -119,7 +106,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
     const newTrade: Trade = {
-      ...TradeSchema.partial({ id: true }).parse(data),
+      ...data,
       id: trade?.id || crypto.randomUUID(),
     };
     onSave(newTrade);
@@ -263,7 +250,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Entry Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="any" {...field} />
+                  <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -276,7 +263,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Stop Loss (SL)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="any" {...field} />
+                   <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -289,7 +276,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Take Profit (TP)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="any" {...field} />
+                   <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -318,7 +305,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Exit Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="any" {...field} />
+                   <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -347,6 +334,57 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             )}
           />
         </div>
+        
+        <FormField
+          control={form.control}
+          name="mistakes"
+          render={() => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Mistakes Made</FormLabel>
+                <FormDescription>
+                  Select any mistakes you made during this trade.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {MISTAKE_TAGS.map((item) => (
+                  <FormField
+                    key={item}
+                    control={form.control}
+                    name="mistakes"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={item}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(item)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...(field.value || []), item])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== item
+                                      )
+                                    )
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {item}
+                          </FormLabel>
+                        </FormItem>
+                      )
+                    }}
+                  />
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -377,27 +415,6 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                 </div>
             )}
         </div>
-
-
-        <FormField
-          control={form.control}
-          name="mistake"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Did you make a mistake on this trade?
-                </FormLabel>
-              </div>
-            </FormItem>
-          )}
-        />
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
