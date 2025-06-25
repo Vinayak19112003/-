@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,17 +55,21 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: trade
-      ? { ...trade }
+      ? { 
+          ...trade,
+          rr: trade.rr ?? 0,
+        }
       : {
           date: new Date(),
           asset: "NAS100",
           strategy: "NQ #1",
           direction: "Buy",
           entryTime: "",
-          entryPrice: undefined,
-          sl: undefined,
-          tp: undefined,
-          exitPrice: undefined,
+          entryPrice: "" as any,
+          sl: "" as any,
+          tp: "" as any,
+          exitPrice: "" as any,
+          rr: 0,
           result: "Win",
           mistakes: [],
           notes: "",
@@ -79,10 +84,14 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const direction = watch("direction");
 
   useEffect(() => {
-    if (entryPrice && sl && tp) {
+    const entry = parseFloat(entryPrice as any);
+    const stopLoss = parseFloat(sl as any);
+    const takeProfit = parseFloat(tp as any);
+
+    if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(takeProfit)) {
       let rr = 0;
-      const risk = Math.abs(entryPrice - sl);
-      const reward = Math.abs(tp - entryPrice);
+      const risk = Math.abs(entry - stopLoss);
+      const reward = Math.abs(takeProfit - entry);
       if (risk > 0) {
         rr = reward / risk;
       }
@@ -250,7 +259,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Entry Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                  <Input type="number" step="any" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -263,7 +272,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Stop Loss (SL)</FormLabel>
                 <FormControl>
-                   <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                   <Input type="number" step="any" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -276,7 +285,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Take Profit (TP)</FormLabel>
                 <FormControl>
-                   <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                   <Input type="number" step="any" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -305,7 +314,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Exit Price</FormLabel>
                 <FormControl>
-                   <Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                   <Input type="number" step="any" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
