@@ -66,14 +66,23 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: trade || {
-      date: new Date(),
-      mistake: false,
-      direction: "Buy",
-      result: "Win",
-      asset: "NAS100",
-      strategy: "NQ #1",
-    },
+    defaultValues: trade
+      ? trade
+      : ({
+          date: new Date(),
+          mistake: false,
+          direction: "Buy",
+          result: "Win",
+          asset: "NAS100",
+          strategy: "NQ #1",
+          entryTime: "",
+          entryPrice: "",
+          sl: "",
+          tp: "",
+          exitPrice: "",
+          notes: "",
+          screenshot: "",
+        } as any),
   });
 
   const { watch, setValue } = form;
