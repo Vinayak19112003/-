@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,7 +8,7 @@ import { Download, Loader2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 type ExportTradesProps = {
   trades: Trade[];
@@ -39,10 +40,9 @@ export function ExportTrades({ trades }: ExportTradesProps) {
     setIsExporting(true);
     const doc = new jsPDF();
     
-    // Set type declaration for autoTable
-    const autoTable = (doc as any).autoTable;
+    doc.text("Trade Log Export", 14, 15);
 
-    autoTable({
+    autoTable(doc, {
         head: [['Date', 'Asset', 'Strategy', 'Direction', 'RR', 'Result', 'Mistakes']],
         body: trades.map(t => [
             t.date.toISOString().split('T')[0],
@@ -56,7 +56,6 @@ export function ExportTrades({ trades }: ExportTradesProps) {
         startY: 20
     });
 
-    doc.text("Trade Log Export", 14, 15);
     doc.save('trades.pdf');
     setIsExporting(false);
   };
