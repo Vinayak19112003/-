@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Trade } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { MoreHorizontal, ArrowUpDown, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
@@ -133,7 +134,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                   <TableCell>{trade.asset}</TableCell>
                   <TableCell>{trade.strategy}</TableCell>
                   <TableCell>
-                    <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-green-500' : 'text-red-500')}>
+                    <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-primary' : 'text-destructive')}>
                         {trade.direction}
                     </span>
                   </TableCell>
@@ -158,7 +159,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(trade.id)} className="text-red-500">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDelete(trade.id)} className="text-destructive-foreground bg-destructive hover:bg-destructive/90">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
