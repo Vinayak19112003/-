@@ -73,9 +73,6 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
 
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // This is a proxy for P/L in dollars. Assume 1R = $100 risk.
-  const R_TO_DOLLAR_MULTIPLIER = 100;
-
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
@@ -151,7 +148,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                            data.netR < -0.01 ? 'text-red-700 dark:text-red-300' :
                            'text-blue-700 dark:text-blue-300'
                         )}>
-                            {data.netR >= 0 ? '$' : '-$'}{(Math.abs(data.netR * R_TO_DOLLAR_MULTIPLIER)).toFixed(2)}
+                            {data.netR.toFixed(2)}R
                         </p> 
                         <p className="text-xs text-muted-foreground">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
                     </div>
