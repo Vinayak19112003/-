@@ -10,7 +10,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { patternDetection } from '@/ai/flows/pattern-detection';
 import type { Trade } from '@/lib/types';
 import { Loader2, Wand2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,6 +34,7 @@ export function PatternAnalysis({ trades }: { trades: Trade[] }) {
     }
     
     try {
+      const { patternDetection } = await import('@/ai/flows/pattern-detection');
       const result = await patternDetection({ tradeNotes });
       setAnalysis(result.patterns);
     } catch (error) {
