@@ -38,8 +38,6 @@ import { MISTAKE_TAGS } from "@/lib/constants";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { useAssets } from "@/hooks/use-assets";
-import { AddAssetDialog } from "./add-asset-dialog";
 
 const FormSchema = TradeSchema.omit({ id: true });
 
@@ -53,7 +51,6 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
-  const { assets, addAsset, removeAsset } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -64,7 +61,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
         }
       : {
           date: new Date(),
-          asset: "",
+          asset: "NQ",
           strategy: "NQ #1",
           direction: "Buy",
           entryTime: "",
@@ -102,13 +99,6 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
     }
   }, [entryPrice, sl, tp, direction, setValue]);
   
-  useEffect(() => {
-    if (assets.length > 0 && !form.getValues('asset')) {
-        setValue('asset', assets[0]);
-    }
-  }, [assets, form, setValue]);
-
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -199,23 +189,17 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Asset</FormLabel>
-                <div className="flex items-center gap-2">
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an asset" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {assets.map((asset) => (
-                        <SelectItem key={asset} value={asset}>
-                          {asset}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <AddAssetDialog assets={assets} addAsset={addAsset} removeAsset={removeAsset} />
-                </div>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an asset" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="NQ">NQ</SelectItem>
+                    <SelectItem value="XAU">XAU</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

@@ -4,7 +4,7 @@ import { MISTAKE_TAGS } from "./constants";
 export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
   date: z.coerce.date(),
-  asset: z.string().nonempty({ message: "Asset is required." }),
+  asset: z.enum(["NQ", "XAU"]),
   strategy: z.enum(["NQ #1", "NQ #2", "Gold"]),
   direction: z.enum(["Buy", "Sell"]),
   entryTime: z.string().nonempty({ message: "Entry time is required." }),
