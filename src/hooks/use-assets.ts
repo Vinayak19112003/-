@@ -1,48 +1,33 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
+import useLocalStorage from './use-local-storage';
 
 const DEFAULT_ASSETS = ["NAS100", "EURUSD", "XAUUSD"];
 const ASSETS_STORAGE_KEY = 'user-assets';
 
 export function useAssets() {
-  const [assets, setAssets] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [assets, setAssets, isLoaded] = useLocalStorage<string[]>(ASSETS_STORAGE_KEY, DEFAULT_ASSETS);
 
-  useEffect(() => {
-    try {
-      const storedAssets = localStorage.getItem(ASSETS_STORAGE_KEY);
-      if (storedAssets) {
-        setAssets(JSON.parse(storedAssets));
-      } else {
-        setAssets(DEFAULT_ASSETS);
-      }
-    } catch (error) {
-      console.error("Failed to load assets from localStorage", error);
-      setAssets(DEFAULT_ASSETS);
-    }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(assets));
-    }
-  }, [assets, isLoaded]);
-
-  const addAsset = (newAsset: string): boolean => {
+  const addAsset = useCallback((newAsset: string): boolean => {
     const trimmedAsset = newAsset.trim().toUpperCase();
-    if (!trimmedAsset || assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
-        return false;
-    }
-    setAssets(prevAssets => [...prevAssets, trimmedAsset].sort());
-    return true;
-  };
+    if (!trimmedAsset) return false;
 
-  const removeAsset = (assetToRemove: string) => {
+    let success = false;
+    setAssets(prevAssets => {
+      if (prevAssets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
+        return prevAssets;
+      }
+      success = true;
+      return [...prevAssets, trimmedAsset].sort();
+    });
+    return success;
+  }, [setAssets]);
+
+  const removeAsset = useCallback((assetToRemove: string) => {
     setAssets(prevAssets => prevAssets.filter(asset => asset !== assetToRemove));
-  };
+  }, [setAssets]);
 
   return { assets, addAsset, removeAsset, isLoaded };
 }

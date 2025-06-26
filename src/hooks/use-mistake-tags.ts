@@ -1,48 +1,36 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
+import useLocalStorage from './use-local-storage';
 import { DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
 
 const MISTAKES_STORAGE_KEY = 'user-mistake-tags';
 
 export function useMistakeTags() {
-  const [mistakeTags, setMistakeTags] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [mistakeTags, setMistakeTags, isLoaded] = useLocalStorage<string[]>(
+    MISTAKES_STORAGE_KEY, 
+    [...DEFAULT_MISTAKE_TAGS]
+  );
 
-  useEffect(() => {
-    try {
-      const storedTags = localStorage.getItem(MISTAKES_STORAGE_KEY);
-      if (storedTags) {
-        setMistakeTags(JSON.parse(storedTags));
-      } else {
-        setMistakeTags([...DEFAULT_MISTAKE_TAGS]);
-      }
-    } catch (error) {
-      console.error("Failed to load mistake tags from localStorage", error);
-      setMistakeTags([...DEFAULT_MISTAKE_TAGS]);
-    }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(MISTAKES_STORAGE_KEY, JSON.stringify(mistakeTags));
-    }
-  }, [mistakeTags, isLoaded]);
-
-  const addMistakeTag = (newTag: string): boolean => {
+  const addMistakeTag = useCallback((newTag: string): boolean => {
     const trimmedTag = newTag.trim();
-    if (!trimmedTag || mistakeTags.some(tag => tag.toLowerCase() === trimmedTag.toLowerCase())) {
-        return false;
-    }
-    setMistakeTags(prevTags => [...prevTags, trimmedTag].sort());
-    return true;
-  };
+    if (!trimmedTag) return false;
+    
+    let success = false;
+    setMistakeTags(prevTags => {
+      if (prevTags.some(tag => tag.toLowerCase() === trimmedTag.toLowerCase())) {
+        return prevTags;
+      }
+      success = true;
+      return [...prevTags, trimmedTag].sort();
+    });
+    return success;
+  }, [setMistakeTags]);
 
-  const removeMistakeTag = (tagToRemove: string) => {
+  const removeMistakeTag = useCallback((tagToRemove: string) => {
     setMistakeTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
-  };
+  }, [setMistakeTags]);
 
   return { mistakeTags, addMistakeTag, removeMistakeTag, isLoaded };
 }
