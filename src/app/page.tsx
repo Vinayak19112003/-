@@ -18,13 +18,14 @@ import { Logo } from "@/components/logo";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
-import { subDays, startOfMonth } from "date-fns";
+import { subDays, startOfMonth, isSameDay } from "date-fns";
 
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
 import { StrategyAnalytics } from "@/components/dashboard/strategy-analytics";
 import { MistakeAnalysis } from "@/components/dashboard/mistake-analysis";
 import { ExportTrades } from "@/components/dashboard/export-trades";
+import { TradeCalendar } from "@/components/dashboard/trade-calendar";
 
 
 export default function Home() {
@@ -37,6 +38,15 @@ export default function Home() {
     from: startOfMonth(new Date()),
     to: new Date(),
   });
+
+  const handleCalendarDateSelect = (date: Date) => {
+    // If the same single day is clicked again, reset the filter to the default (this month)
+    if (dateRange?.from && isSameDay(date, dateRange.from) && dateRange.to && isSameDay(date, dateRange.to)) {
+        setDateRange({ from: startOfMonth(new Date()), to: new Date() });
+    } else {
+        setDateRange({ from: date, to: date });
+    }
+  };
 
   const filteredTrades = useMemo(() => {
     if (!dateRange?.from) return trades;
@@ -127,6 +137,7 @@ export default function Home() {
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:gap-8">
             <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
                 <StatsCards trades={filteredTrades} />
+                <TradeCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
                 <EquityCurveChart trades={filteredTrades} />
                 <Card>
                     <CardHeader className="flex flex-row items-center">
