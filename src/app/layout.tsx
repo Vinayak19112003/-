@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'Anony Journal',
   description: 'A modern trading journal for professional traders.',
+  viewport: 'width=device-width, initial-scale=1.0',
 };
 
 export default function RootLayout({
