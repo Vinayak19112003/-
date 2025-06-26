@@ -4,7 +4,7 @@ import { z } from "zod";
 export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
   date: z.coerce.date(),
-  asset: z.enum(["NQ", "XAU"]),
+  asset: z.string().nonempty({ message: "Asset is required." }),
   strategy: z.enum(["9 AM CRT", "9.30 15M MODEL", "ASIAN MODEL"]),
   direction: z.enum(["Buy", "Sell"]),
   entryTime: z.string().nonempty({ message: "Entry time is required." }),

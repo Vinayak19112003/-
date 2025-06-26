@@ -66,7 +66,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
         }
       : {
           date: new Date(),
-          asset: "NQ",
+          asset: "",
           strategy: "9 AM CRT",
           direction: "Buy",
           entryTime: "",
