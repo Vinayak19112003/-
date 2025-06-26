@@ -65,10 +65,10 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
           strategy: "NQ #1",
           direction: "Buy",
           entryTime: "",
-          entryPrice: "" as any,
-          sl: "" as any,
-          tp: "" as any,
-          exitPrice: "" as any,
+          entryPrice: 0,
+          sl: 0,
+          tp: 0,
+          exitPrice: 0,
           rr: 0,
           result: "Win",
           mistakes: [],
@@ -88,7 +88,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
     const stopLoss = parseFloat(sl as any);
     const takeProfit = parseFloat(tp as any);
 
-    if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(takeProfit)) {
+    if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(takeProfit) && stopLoss !== entry) {
       let rr = 0;
       const risk = Math.abs(entry - stopLoss);
       const reward = Math.abs(takeProfit - entry);
@@ -158,9 +158,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
+                      disabled={{ after: new Date() }}
                       initialFocus
                     />
                   </PopoverContent>
