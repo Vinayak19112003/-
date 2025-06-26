@@ -30,7 +30,7 @@ export function TradeCalendar({ trades, onDateSelect }: TradeCalendarProps) {
     
     trades.forEach(trade => {
         const dateKey = format(new Date(trade.date), 'yyyy-MM-dd');
-        const dayData = data.get(dateKey) || { netR: 0, totalTrades: 0, wins: 0, losses: 0 };
+        const dayData = dataByDate.get(dateKey) || { netR: 0, totalTrades: 0, wins: 0, losses: 0 };
         
         dayData.totalTrades += 1;
         if (trade.result === 'Win') {
@@ -40,7 +40,7 @@ export function TradeCalendar({ trades, onDateSelect }: TradeCalendarProps) {
             dayData.losses += 1;
             dayData.netR -= 1;
         }
-        data.set(dateKey, dayData);
+        dataByDate.set(dateKey, dayData);
     });
 
     return Array.from(dataByDate.entries()).map(([date, dayData]) => {
