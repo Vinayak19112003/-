@@ -27,10 +27,12 @@ import { MistakeAnalysis } from "@/components/dashboard/mistake-analysis";
 import { ExportTrades } from "@/components/dashboard/export-trades";
 import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
 import { useToast } from "@/hooks/use-toast";
+import { useStrategies } from "@/hooks/use-strategies";
 
 
 export default function Home() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
+  const { strategies, addStrategy, deleteStrategy } = useStrategies();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
@@ -179,12 +181,28 @@ export default function Home() {
                 </FormDescriptionComponent>
                 </FormHeaderComponent>
                 <div className={cn("p-4 overflow-y-auto max-h-[80vh]")}>
-                    <TradeForm trade={editingTrade} onSave={handleSaveTrade} setOpen={setIsFormOpen}/>
+                    <TradeForm 
+                      trade={editingTrade} 
+                      onSave={handleSaveTrade} 
+                      setOpen={setIsFormOpen}
+                      strategies={strategies}
+                      addStrategy={addStrategy}
+                      deleteStrategy={deleteStrategy}
+                    />
                 </div>
             </FormContentComponent>
         </FormComponent>
-
        </main>
+       <footer className="py-6 text-center text-sm text-muted-foreground">
+        <div className="container flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span>Created by AnonyTrading</span>
+            <span className="hidden sm:inline-block">|</span>
+            <div className="flex gap-4">
+                <a href="https://x.com/vinayakICT" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">X</a>
+                <a href="https://discord.gg/rPFQfF5tSb" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">Discord</a>
+            </div>
+        </div>
+       </footer>
     </div>
   );
 }
