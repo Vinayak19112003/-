@@ -10,3 +10,9 @@ export const DEFAULT_MISTAKE_TAGS = [
   "Revenge Trading",
   "FOMO",
 ] as const;
+
+export const DEFAULT_STRATEGIES = [
+  "9 AM CRT", 
+  "9.30 15M MODEL", 
+  "ASIAN MODEL"
+] as const;

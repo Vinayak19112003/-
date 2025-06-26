@@ -41,6 +41,8 @@ import { useMistakeTags } from "@/hooks/use-mistake-tags";
 import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
 import { useAssets } from "@/hooks/use-assets";
 import { AddAssetDialog } from "./add-asset-dialog";
+import { useStrategies } from "@/hooks/use-strategies";
+import { AddStrategyDialog } from "./add-strategy-dialog";
 
 const FormSchema = TradeSchema.omit({ id: true });
 
@@ -56,6 +58,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
+  const { strategies, addStrategy, deleteStrategy } = useStrategies();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -67,7 +70,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
       : {
           date: new Date(),
           asset: "",
-          strategy: "9 AM CRT",
+          strategy: "",
           direction: "Buy",
           entryTime: "",
           entryPrice: 0,
@@ -219,18 +222,21 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Strategy</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a strategy" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="9 AM CRT">9 AM CRT</SelectItem>
-                    <SelectItem value="9.30 15M MODEL">9.30 15M MODEL</SelectItem>
-                    <SelectItem value="ASIAN MODEL">ASIAN MODEL</SelectItem>
-                  </SelectContent>
-                </Select>
+                 <div className="flex items-center gap-2">
+                    <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a strategy" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {strategies.map(strategy => (
+                            <SelectItem key={strategy} value={strategy}>{strategy}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <AddStrategyDialog strategies={strategies} addStrategy={addStrategy} deleteStrategy={deleteStrategy}/>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
