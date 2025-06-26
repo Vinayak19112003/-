@@ -138,9 +138,9 @@ export default function Home() {
             <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
             <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
         </div>
+        <StatsCards trades={filteredTrades} />
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:gap-8">
             <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
-                <StatsCards trades={filteredTrades} />
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
                 <EquityCurveChart trades={filteredTrades} />
                 <Card>

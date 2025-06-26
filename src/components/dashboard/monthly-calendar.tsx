@@ -74,7 +74,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <Card className="lg:col-span-2">
+    <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
