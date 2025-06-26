@@ -161,8 +161,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(trade.id)} className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onDelete(trade.id)} className="text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
