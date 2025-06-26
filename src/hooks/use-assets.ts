@@ -29,27 +29,25 @@ export function useAssets() {
     }
   }, []);
 
-  const updateStorage = useCallback((updatedAssets: string[]) => {
-    const sorted = [...new Set(updatedAssets)].sort();
-    setAssets(sorted);
-    localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(sorted));
-  }, []);
-
-
   const addAsset = useCallback((newAsset: string): boolean => {
     const trimmedAsset = newAsset.trim().toUpperCase();
-    if (trimmedAsset && !assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
-      const updatedAssets = [...assets, trimmedAsset];
-      updateStorage(updatedAssets);
-      return true;
+    if (!trimmedAsset || assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
+      return false;
     }
-    return false;
-  }, [assets, updateStorage]);
+    
+    const updatedAssets = [...assets, trimmedAsset].sort();
+    setAssets(updatedAssets);
+    localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(updatedAssets));
+    return true;
+  }, [assets]);
 
   const removeAsset = useCallback((assetToRemove: string) => {
-    const updatedAssets = assets.filter(a => a !== assetToRemove);
-    updateStorage(updatedAssets);
-  }, [assets, updateStorage]);
+    setAssets(currentAssets => {
+      const updatedAssets = currentAssets.filter(a => a !== assetToRemove);
+      localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(updatedAssets));
+      return updatedAssets;
+    });
+  }, []);
 
 
   return { assets, addAsset, removeAsset, isLoaded };
