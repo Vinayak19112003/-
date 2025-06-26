@@ -111,6 +111,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
       Win: "default",
       Loss: "destructive",
       BE: "secondary",
+      Missed: "secondary"
     }[result] as "default" | "destructive" | "secondary";
     return <Badge variant={variant}>{result}</Badge>;
   };

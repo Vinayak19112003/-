@@ -13,7 +13,7 @@ export const TradeSchema = z.object({
   tp: z.coerce.number({ required_error: "Take profit is required." }).default(0),
   rr: z.coerce.number().optional().default(0),
   exitPrice: z.coerce.number({ required_error: "Exit price is required." }).default(0),
-  result: z.enum(["Win", "Loss", "BE"]),
+  result: z.enum(["Win", "Loss", "BE", "Missed"]),
   mistakes: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
   screenshot: z.string().optional(),

@@ -349,6 +349,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                     <SelectItem value="Win">Win</SelectItem>
                     <SelectItem value="Loss">Loss</SelectItem>
                     <SelectItem value="BE">Break Even (BE)</SelectItem>
+                    <SelectItem value="Missed">Missed</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
