@@ -61,7 +61,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
         }
       : {
           date: new Date(),
-          asset: "NAS100",
+          asset: "",
           strategy: "NQ #1",
           direction: "Buy",
           entryTime: "",
@@ -158,7 +158,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                      disabled={(date) => date > new Date()}
                       initialFocus
                     />
                   </PopoverContent>
@@ -189,17 +189,9 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Asset</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an asset" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="NAS100">NAS100</SelectItem>
-                    <SelectItem value="XAUUSD">XAUUSD</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input placeholder="e.g. NAS100, EURUSD" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

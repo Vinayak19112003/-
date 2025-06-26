@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
@@ -24,7 +25,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -41,7 +41,6 @@ type SortKey = keyof Trade | "rr";
 
 export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
-  const [assetFilter, setAssetFilter] = useState("all");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [imageInView, setImageInView] = useState<string | null>(null);
 
@@ -50,8 +49,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
       (trade.asset.toLowerCase().includes(filter.toLowerCase()) ||
        trade.strategy.toLowerCase().includes(filter.toLowerCase()) ||
        trade.notes?.toLowerCase().includes(filter.toLowerCase()) ||
-       trade.mistakes?.some(m => m.toLowerCase().includes(filter.toLowerCase()))) &&
-      (assetFilter === 'all' || trade.asset === assetFilter)
+       trade.mistakes?.some(m => m.toLowerCase().includes(filter.toLowerCase())))
     );
 
     if (sortConfig !== null) {
@@ -75,7 +73,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     }
 
     return filtered;
-  }, [trades, filter, assetFilter, sortConfig]);
+  }, [trades, filter, sortConfig]);
 
   const requestSort = (key: SortKey) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -108,16 +106,6 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={assetFilter} onValueChange={setAssetFilter}>
-            <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by asset" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="all">All Assets</SelectItem>
-                <SelectItem value="NAS100">NAS100</SelectItem>
-                <SelectItem value="XAUUSD">XAUUSD</SelectItem>
-            </SelectContent>
-        </Select>
       </div>
       <div className="rounded-md border">
         <Table>
