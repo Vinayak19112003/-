@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
 
 const MISTAKES_STORAGE_KEY = 'user-mistake-tags';
@@ -31,19 +31,19 @@ export function useMistakeTags() {
     }
   }, [mistakeTags, isLoaded]);
 
-  const addMistakeTag = useCallback((newTag: string): Promise<boolean> => {
+  const addMistakeTag = (newTag: string): Promise<boolean> => {
     const trimmedTag = newTag.trim();
     if (!trimmedTag || mistakeTags.some(tag => tag.toLowerCase() === trimmedTag.toLowerCase())) {
         return Promise.resolve(false);
     }
     setMistakeTags(prevTags => [...prevTags, trimmedTag].sort());
     return Promise.resolve(true);
-  }, [mistakeTags]);
+  };
 
-  const removeMistakeTag = useCallback((tagToRemove: string) => {
+  const removeMistakeTag = (tagToRemove: string) => {
     setMistakeTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
     return Promise.resolve();
-  }, []);
+  };
 
   return { mistakeTags, addMistakeTag, removeMistakeTag, isLoaded };
 }

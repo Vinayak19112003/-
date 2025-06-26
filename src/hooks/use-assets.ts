@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 const DEFAULT_ASSETS = ["NAS100", "EURUSD", "XAUUSD"];
 const ASSETS_STORAGE_KEY = 'user-assets';
@@ -31,19 +31,19 @@ export function useAssets() {
     }
   }, [assets, isLoaded]);
 
-  const addAsset = useCallback((newAsset: string): Promise<boolean> => {
+  const addAsset = (newAsset: string): Promise<boolean> => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset || assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
         return Promise.resolve(false);
     }
     setAssets(prevAssets => [...prevAssets, trimmedAsset].sort());
     return Promise.resolve(true);
-  }, [assets]);
+  };
 
-  const removeAsset = useCallback((assetToRemove: string) => {
+  const removeAsset = (assetToRemove: string) => {
     setAssets(prevAssets => prevAssets.filter(asset => asset !== assetToRemove));
     return Promise.resolve();
-  }, []);
+  };
 
   return { assets, addAsset, removeAsset, isLoaded };
 }

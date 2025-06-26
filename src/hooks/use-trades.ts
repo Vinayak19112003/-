@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Trade, TradeSchema } from '@/lib/types';
 import { z } from 'zod';
 
@@ -40,27 +40,27 @@ export function useTrades() {
     }
   }, [trades, isLoaded]);
 
-  const addTrade = useCallback((trade: Trade) => {
+  const addTrade = (trade: Trade) => {
     const newTrade = TradeSchema.parse(trade);
     setTrades(prevTrades => 
       [newTrade, ...prevTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
     return Promise.resolve();
-  }, []);
+  };
 
-  const updateTrade = useCallback((updatedTrade: Trade) => {
+  const updateTrade = (updatedTrade: Trade) => {
     const newTrade = TradeSchema.parse(updatedTrade);
     setTrades(prevTrades =>
       prevTrades.map(t => (t.id === newTrade.id ? newTrade : t))
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
     return Promise.resolve();
-  }, []);
+  };
   
-  const deleteTrade = useCallback((tradeId: string) => {
+  const deleteTrade = (tradeId: string) => {
     setTrades(prevTrades => prevTrades.filter(t => t.id !== tradeId));
     return Promise.resolve();
-  }, []);
+  };
 
   return { trades, addTrade, updateTrade, deleteTrade, isLoaded };
 }
