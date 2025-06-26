@@ -158,7 +158,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={{ after: new Date() }}
+                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                       initialFocus
                     />
                   </PopoverContent>
@@ -345,7 +345,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
         <FormField
           control={form.control}
           name="mistakes"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <div className="mb-4">
                 <FormLabel className="text-base">Mistakes Made</FormLabel>
@@ -355,37 +355,29 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {MISTAKE_TAGS.map((item) => (
-                  <FormField
+                  <FormItem
                     key={item}
-                    control={form.control}
-                    name="mistakes"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={item}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(item)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...(field.value || []), item])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== item
-                                      )
-                                    )
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            {item}
-                          </FormLabel>
-                        </FormItem>
-                      )
-                    }}
-                  />
+                    className="flex flex-row items-start space-x-3 space-y-0"
+                  >
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value?.includes(item)}
+                        onCheckedChange={(checked) => {
+                          const currentValues = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValues, item]);
+                          } else {
+                            field.onChange(
+                              currentValues.filter((value) => value !== item)
+                            );
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      {item}
+                    </FormLabel>
+                  </FormItem>
                 ))}
               </div>
               <FormMessage />
