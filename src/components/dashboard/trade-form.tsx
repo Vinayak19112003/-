@@ -53,7 +53,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
-  const { assets } = useAssets();
+  const { assets, addAsset, removeAsset } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -214,7 +214,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <AddAssetDialog />
+                  <AddAssetDialog assets={assets} addAsset={addAsset} removeAsset={removeAsset} />
                 </div>
                 <FormMessage />
               </FormItem>

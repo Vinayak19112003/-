@@ -17,12 +17,16 @@ import { Input } from "@/components/ui/input";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAssets } from "@/hooks/use-assets";
 
-export function AddAssetDialog() {
+type AddAssetDialogProps = {
+  assets: string[];
+  addAsset: (newAsset: string) => boolean;
+  removeAsset: (assetToRemove: string) => void;
+};
+
+export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialogProps) {
   const [open, setOpen] = useState(false);
   const [newAsset, setNewAsset] = useState("");
-  const { assets, addAsset, removeAsset } = useAssets();
   const { toast } = useToast();
 
   const handleAdd = () => {
