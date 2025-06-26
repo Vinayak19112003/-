@@ -11,11 +11,11 @@ export default {
     container: {
       center: true,
       padding: "2rem",
+    },
+    extend: {
       screens: {
         "2xl": "1400px",
       },
-    },
-    extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['"Space Grotesk"', 'sans-serif'],
