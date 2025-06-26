@@ -38,6 +38,8 @@ import { MISTAKE_TAGS } from "@/lib/constants";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { useAssets } from "@/hooks/use-assets";
+import { AddAssetDialog } from "./add-asset-dialog";
 
 const FormSchema = TradeSchema.omit({ id: true });
 
@@ -51,6 +53,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
+  const { assets, addAsset } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -158,7 +161,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date > new Date()}
+                      disabled={(date) => date > new Date() && !isSameDay(date, new Date())}
                       initialFocus
                     />
                   </PopoverContent>
@@ -189,9 +192,23 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Asset</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. NAS100, EURUSD" {...field} />
-                </FormControl>
+                <div className="flex items-center gap-2">
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an asset" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {assets.map((asset) => (
+                        <SelectItem key={asset} value={asset}>
+                          {asset}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <AddAssetDialog onAddAsset={addAsset} />
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -202,7 +219,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Strategy</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a strategy" />
@@ -224,7 +241,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Direction</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select direction" />
@@ -316,7 +333,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Result</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select result" />
