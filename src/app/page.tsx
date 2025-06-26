@@ -163,7 +163,7 @@ export default function Home() {
                     Fill in the details of your trade. Accurate records lead to better insights.
                 </FormDescriptionComponent>
                 </FormHeaderComponent>
-                <div className={cn("p-4", { "overflow-y-auto max-h-[85vh]": isMobile })}>
+                <div className={cn("p-4 overflow-y-auto max-h-[80vh]")}>
                     <TradeForm trade={editingTrade} onSave={handleSaveTrade} setOpen={setIsFormOpen}/>
                 </div>
             </FormContentComponent>
