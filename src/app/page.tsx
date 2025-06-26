@@ -25,7 +25,7 @@ import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
 import { StrategyAnalytics } from "@/components/dashboard/strategy-analytics";
 import { MistakeAnalysis } from "@/components/dashboard/mistake-analysis";
 import { ExportTrades } from "@/components/dashboard/export-trades";
-import { TradeCalendar } from "@/components/dashboard/trade-calendar";
+import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
 
 
 export default function Home() {
@@ -137,7 +137,7 @@ export default function Home() {
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:gap-8">
             <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
                 <StatsCards trades={filteredTrades} />
-                <TradeCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
+                <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
                 <EquityCurveChart trades={filteredTrades} />
                 <Card>
                     <CardHeader className="flex flex-row items-center">
