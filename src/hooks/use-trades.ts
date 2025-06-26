@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Trade, TradeSchema } from '@/lib/types';
+import { z } from 'zod';
 
 const TRADES_STORAGE_KEY = 'trades';
 
@@ -22,7 +23,7 @@ export function useTrades() {
             return result.success ? result.data : null;
           }).filter((trade: Trade | null): trade is Trade => trade !== null);
           
-        setTrades(parsedTrades.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        setTrades(parsedTrades);
       }
     } catch (error) {
       console.error("Failed to load or parse trades from localStorage:", error);
@@ -40,22 +41,49 @@ export function useTrades() {
   }, [trades, isLoaded]);
 
   const addTrade = (trade: Trade) => {
-    const newTrade = TradeSchema.parse(trade);
-    setTrades(prevTrades => 
-      [newTrade, ...prevTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    );
+    setTrades(prevTrades => {
+        const newTrade = TradeSchema.parse(trade);
+        const updatedTrades = [newTrade, ...prevTrades];
+        updatedTrades.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return updatedTrades;
+    });
   };
 
   const updateTrade = (updatedTrade: Trade) => {
-    const newTrade = TradeSchema.parse(updatedTrade);
-    setTrades(prevTrades =>
-      prevTrades.map(t => (t.id === newTrade.id ? newTrade : t))
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    );
+    setTrades(prevTrades => {
+        const newTrade = TradeSchema.parse(updatedTrade);
+        const updatedTrades = prevTrades.map(t => (t.id === newTrade.id ? newTrade : t));
+        updatedTrades.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return updatedTrades;
+    });
   };
   
-  const deleteTrade = (tradeId: string) => {
-    setTrades(prevTrades => prevTrades.filter(t => t.id !== tradeId));
+  const deleteTrade = (idToDelete: string) => {
+    setTrades(currentTrades => {
+      let tradeFound = false;
+      const updatedTrades = currentTrades.filter(trade => {
+        // Check for various possible ID keys.
+        const matches = (trade.id === idToDelete) || 
+                        ((trade as any)._id === idToDelete) || 
+                        ((trade as any).tradeID === idToDelete);
+        
+        if (matches) {
+          tradeFound = true;
+          return false; // Exclude this item from the new array
+        }
+        return true; // Keep this item
+      });
+  
+      if (tradeFound) {
+        console.log(`deleteTrade: Successfully deleted trade with ID "${idToDelete}".`);
+      } else {
+        console.log(`deleteTrade: Trade with ID "${idToDelete}" not found.`);
+      }
+  
+      // Return the updated array to set the new state.
+      // The `useEffect` hook will then automatically save this new array to localStorage.
+      return updatedTrades;
+    });
   };
 
   return { trades, addTrade, updateTrade, deleteTrade, isLoaded };
