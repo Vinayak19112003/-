@@ -42,12 +42,10 @@ export function useAssets() {
   }, [assets]);
 
   const removeAsset = useCallback((assetToRemove: string) => {
-    setAssets(currentAssets => {
-      const updatedAssets = currentAssets.filter(a => a !== assetToRemove);
-      localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(updatedAssets));
-      return updatedAssets;
-    });
-  }, []);
+    const updatedAssets = assets.filter(a => a !== assetToRemove);
+    setAssets(updatedAssets);
+    localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(updatedAssets));
+  }, [assets]);
 
 
   return { assets, addAsset, removeAsset, isLoaded };
