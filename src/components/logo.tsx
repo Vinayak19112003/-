@@ -5,7 +5,7 @@ export function Logo() {
     <div className="flex items-center gap-2">
       <AreaChart className="h-6 w-6 text-primary" />
       <h1 className="font-headline text-xl font-semibold tracking-tight">
-        TradeVision Journal
+        Anony Journal
       </h1>
     </div>
   );
