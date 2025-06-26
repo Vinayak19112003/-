@@ -33,11 +33,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { type Trade, TradeSchema, type MistakeTag } from "@/lib/types";
-import { MISTAKE_TAGS } from "@/lib/constants";
+import { type Trade, TradeSchema } from "@/lib/types";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { useMistakeTags } from "@/hooks/use-mistake-tags";
+import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
 
 const FormSchema = TradeSchema.omit({ id: true });
 
@@ -51,6 +52,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
+  const { mistakeTags, addMistakeTag, removeMistakeTag } = useMistakeTags();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -348,13 +350,20 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
           render={({ field }) => (
             <FormItem>
               <div className="mb-4">
-                <FormLabel className="text-base">Mistakes Made</FormLabel>
+                <div className="flex items-center gap-2">
+                   <FormLabel className="text-base">Mistakes Made</FormLabel>
+                   <AddMistakeTagDialog 
+                    mistakeTags={mistakeTags}
+                    addMistakeTag={addMistakeTag}
+                    removeMistakeTag={removeMistakeTag}
+                   />
+                </div>
                 <FormDescription>
                   Select any mistakes you made during this trade.
                 </FormDescription>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {MISTAKE_TAGS.map((item) => (
+                {mistakeTags.map((item) => (
                   <FormItem
                     key={item}
                     className="flex flex-row items-start space-x-3 space-y-0"

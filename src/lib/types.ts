@@ -1,5 +1,5 @@
+
 import { z } from "zod";
-import { MISTAKE_TAGS } from "./constants";
 
 export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
@@ -14,10 +14,10 @@ export const TradeSchema = z.object({
   rr: z.coerce.number().optional().default(0),
   exitPrice: z.coerce.number({ required_error: "Exit price is required." }).default(0),
   result: z.enum(["Win", "Loss", "BE"]),
-  mistakes: z.array(z.enum(MISTAKE_TAGS)).optional().default([]),
+  mistakes: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
   screenshot: z.string().optional(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
-export type MistakeTag = (typeof MISTAKE_TAGS)[number];
+export type MistakeTag = string;

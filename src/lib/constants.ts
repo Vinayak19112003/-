@@ -1,4 +1,5 @@
-export const MISTAKE_TAGS = [
+
+export const DEFAULT_MISTAKE_TAGS = [
   "No SMT",
   "No CISD",
   "Early Entry",
