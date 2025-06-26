@@ -3,97 +3,63 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Trade, TradeSchema } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp,
-  serverTimestamp,
-} from "firebase/firestore";
+import { z } from 'zod';
 
-const tradesCollection = collection(db, 'trades');
-
-// Helper to convert Firestore data to our Trade type
-const fromFirestore = (docSnapshot: any): Trade | null => {
-  const data = docSnapshot.data();
-  // Convert Firestore Timestamps to JS Dates
-  const tradeDataWithDate = {
-    ...data,
-    id: docSnapshot.id,
-    date: data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date),
-  };
-
-  const result = TradeSchema.safeParse(tradeDataWithDate);
-  if (result.success) {
-    return result.data;
-  }
-  
-  console.warn("Invalid trade data from Firestore, skipping:", result.error.flatten());
-  return null;
-};
-
+const TRADES_STORAGE_KEY = 'trades';
 
 export function useTrades() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load trades from localStorage on initial render
   useEffect(() => {
-    // Set up a real-time listener on the trades collection
-    const q = query(tradesCollection, orderBy('date', 'desc'));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const tradesData: Trade[] = [];
-      querySnapshot.forEach((doc) => {
-        const trade = fromFirestore(doc);
-        if (trade) {
-          tradesData.push(trade);
-        }
-      });
-      setTrades(tradesData);
-      if (!isLoaded) {
-          setIsLoaded(true);
-      }
-    }, (error) => {
-      console.error("Error fetching trades:", error);
-      setIsLoaded(true); // Still set to loaded even if there's an error
-    });
-
-    // Unsubscribe from the listener when the component unmounts
-    return () => unsubscribe();
-  }, [isLoaded]);
-
-  const addTrade = useCallback(async (trade: Trade) => {
     try {
-      const { id, ...tradeData } = TradeSchema.parse(trade);
-      await addDoc(tradesCollection, tradeData);
+      const storedTrades = localStorage.getItem(TRADES_STORAGE_KEY);
+      if (storedTrades) {
+        const rawTrades = JSON.parse(storedTrades);
+        // Safely parse each trade and filter out invalid ones
+        const parsedTrades: Trade[] = rawTrades.map((trade: any) => {
+            const result = TradeSchema.safeParse(trade);
+            return result.success ? result.data : null;
+          }).filter((trade: Trade | null): trade is Trade => trade !== null);
+          
+        setTrades(parsedTrades.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      }
     } catch (error) {
-      console.error("Error adding trade:", error);
+      console.error("Failed to load or parse trades from localStorage:", error);
+      // If parsing fails, it's safer to start with an empty list
+      setTrades([]);
     }
+    setIsLoaded(true);
   }, []);
 
-  const updateTrade = useCallback(async (updatedTrade: Trade) => {
-    try {
-      const tradeRef = doc(db, 'trades', updatedTrade.id);
-      const { id, ...tradeData } = TradeSchema.parse(updatedTrade);
-      await updateDoc(tradeRef, tradeData);
-    } catch (error) {
-      console.error("Error updating trade:", error);
+  // Save trades to localStorage whenever they change
+  useEffect(() => {
+    if(isLoaded) {
+      localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades));
     }
+  }, [trades, isLoaded]);
+
+  const addTrade = useCallback((trade: Trade) => {
+    const newTrade = TradeSchema.parse(trade);
+    setTrades(prevTrades => 
+      [newTrade, ...prevTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    );
+    return Promise.resolve();
+  }, []);
+
+  const updateTrade = useCallback((updatedTrade: Trade) => {
+    const newTrade = TradeSchema.parse(updatedTrade);
+    setTrades(prevTrades =>
+      prevTrades.map(t => (t.id === newTrade.id ? newTrade : t))
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    );
+    return Promise.resolve();
   }, []);
   
-  const deleteTrade = useCallback(async (tradeId: string) => {
-    try {
-      const tradeRef = doc(db, 'trades', tradeId);
-      await deleteDoc(tradeRef);
-    } catch (error) {
-      console.error("Error deleting trade:", error);
-    }
+  const deleteTrade = useCallback((tradeId: string) => {
+    setTrades(prevTrades => prevTrades.filter(t => t.id !== tradeId));
+    return Promise.resolve();
   }, []);
 
   return { trades, addTrade, updateTrade, deleteTrade, isLoaded };

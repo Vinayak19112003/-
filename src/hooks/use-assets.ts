@@ -2,66 +2,47 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 
 const DEFAULT_ASSETS = ["NAS100", "EURUSD", "XAUUSD"];
-const settingsDocRef = doc(db, 'settings', 'assets');
-
+const ASSETS_STORAGE_KEY = 'user-assets';
 
 export function useAssets() {
   const [assets, setAssets] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(settingsDocRef, async (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (Array.isArray(data.values) && data.values.every(item => typeof item === 'string')) {
-          setAssets(data.values.sort());
-        } else {
-          await setDoc(settingsDocRef, { values: DEFAULT_ASSETS });
-          setAssets(DEFAULT_ASSETS.sort());
-        }
+    try {
+      const storedAssets = localStorage.getItem(ASSETS_STORAGE_KEY);
+      if (storedAssets) {
+        setAssets(JSON.parse(storedAssets));
       } else {
-        await setDoc(settingsDocRef, { values: DEFAULT_ASSETS });
-        setAssets(DEFAULT_ASSETS.sort());
+        setAssets(DEFAULT_ASSETS);
       }
-      setIsLoaded(true);
-    }, (error) => {
-      console.error("Error fetching assets from Firestore:", error);
-      setAssets(DEFAULT_ASSETS.sort());
-      setIsLoaded(true);
-    });
-
-    return () => unsubscribe();
+    } catch (error) {
+      console.error("Failed to load assets from localStorage", error);
+      setAssets(DEFAULT_ASSETS);
+    }
+    setIsLoaded(true);
   }, []);
-  
-  const addAsset = useCallback(async (newAsset: string): Promise<boolean> => {
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(assets));
+    }
+  }, [assets, isLoaded]);
+
+  const addAsset = useCallback((newAsset: string): Promise<boolean> => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset || assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
-      return false;
+        return Promise.resolve(false);
     }
-    
-    try {
-      await updateDoc(settingsDocRef, {
-        values: arrayUnion(trimmedAsset)
-      });
-      return true;
-    } catch (error) {
-      console.error("Error adding asset to Firestore:", error);
-      return false;
-    }
+    setAssets(prevAssets => [...prevAssets, trimmedAsset].sort());
+    return Promise.resolve(true);
   }, [assets]);
 
-  const removeAsset = useCallback(async (assetToRemove: string) => {
-    try {
-      await updateDoc(settingsDocRef, {
-        values: arrayRemove(assetToRemove)
-      });
-    } catch (error) {
-      console.error("Error removing asset from Firestore:", error);
-    }
+  const removeAsset = useCallback((assetToRemove: string) => {
+    setAssets(prevAssets => prevAssets.filter(asset => asset !== assetToRemove));
+    return Promise.resolve();
   }, []);
 
   return { assets, addAsset, removeAsset, isLoaded };
