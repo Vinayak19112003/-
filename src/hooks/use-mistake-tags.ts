@@ -28,9 +28,5 @@ export function useMistakeTags() {
     return success;
   }, [setMistakeTags]);
 
-  const removeMistakeTag = useCallback((tagToRemove: string) => {
-    setMistakeTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
-  }, [setMistakeTags]);
-
-  return { mistakeTags, addMistakeTag, removeMistakeTag, isLoaded };
+  return { mistakeTags, addMistakeTag, isLoaded };
 }

@@ -18,7 +18,7 @@ import { Logo } from "@/components/logo";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
-import { subDays, startOfMonth, isSameDay } from "date-fns";
+import { startOfMonth, isSameDay } from "date-fns";
 
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
@@ -29,7 +29,7 @@ import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
 
 
 export default function Home() {
-  const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
+  const { trades, addTrade, updateTrade, isLoaded } = useTrades();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
@@ -86,12 +86,6 @@ export default function Home() {
     handleCloseForm();
   };
 
-  const handleDeleteTrade = (tradeId: string) => {
-    if (window.confirm("Are you sure you want to delete this trade?")) {
-      deleteTrade(tradeId);
-    }
-  };
-  
   const FormComponent = isMobile ? Sheet : Dialog;
   const FormContentComponent = isMobile ? SheetContent : DialogContent;
   const FormHeaderComponent = isMobile ? SheetHeader : DialogHeader;
@@ -156,7 +150,7 @@ export default function Home() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                       <TradeTable trades={filteredTrades} onEdit={handleOpenForm} onDelete={handleDeleteTrade} />
+                       <TradeTable trades={filteredTrades} onEdit={handleOpenForm} />
                     </CardContent>
                 </Card>
             </div>

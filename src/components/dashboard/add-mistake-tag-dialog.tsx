@@ -14,21 +14,19 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddMistakeTagDialogProps = {
   mistakeTags: string[];
   addMistakeTag: (newTag: string) => boolean;
-  removeMistakeTag: (tagToRemove: string) => void;
 };
 
-export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeTag }: AddMistakeTagDialogProps) {
+export function AddMistakeTagDialog({ mistakeTags, addMistakeTag }: AddMistakeTagDialogProps) {
   const [open, setOpen] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [removingTag, setRemovingTag] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleAdd = () => {
@@ -60,18 +58,6 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeT
     setIsLoading(false);
   };
 
-  const handleRemove = (tagToRemove: string) => {
-    if (window.confirm(`Are you sure you want to remove "${tagToRemove}"? This cannot be undone.`)) {
-        setRemovingTag(tagToRemove);
-        removeMistakeTag(tagToRemove);
-        toast({
-            title: "Mistake Tag Removed",
-            description: `"${tagToRemove}" has been removed from your list.`,
-        });
-        setRemovingTag(null);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -84,7 +70,7 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeT
         <DialogHeader>
           <DialogTitle>Manage Mistake Tags</DialogTitle>
           <DialogDescription>
-            Add, remove, and view your custom mistake tags.
+            Add and view your custom mistake tags.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -94,10 +80,6 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeT
                     mistakeTags.map(tag => (
                         <div key={tag} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
                             <span className="text-sm font-medium">{tag}</span>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemove(tag)} disabled={removingTag === tag}>
-                                {removingTag === tag ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                <span className="sr-only">Remove {tag}</span>
-                            </Button>
                         </div>
                     ))
                 ) : (

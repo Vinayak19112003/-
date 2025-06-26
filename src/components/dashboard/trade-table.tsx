@@ -34,12 +34,11 @@ import Image from "next/image";
 type TradeTableProps = {
   trades: Trade[];
   onEdit: (trade: Trade) => void;
-  onDelete: (tradeId: string) => void;
 };
 
 type SortKey = keyof Trade | "rr";
 
-export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
+export function TradeTable({ trades, onEdit }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [imageInView, setImageInView] = useState<string | null>(null);
@@ -162,7 +161,6 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onDelete(trade.id)} className="text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

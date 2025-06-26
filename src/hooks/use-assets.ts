@@ -25,9 +25,5 @@ export function useAssets() {
     return success;
   }, [setAssets]);
 
-  const removeAsset = useCallback((assetToRemove: string) => {
-    setAssets(prevAssets => prevAssets.filter(asset => asset !== assetToRemove));
-  }, [setAssets]);
-
-  return { assets, addAsset, removeAsset, isLoaded };
+  return { assets, addAsset, isLoaded };
 }

@@ -54,8 +54,8 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
-  const { mistakeTags, addMistakeTag, removeMistakeTag } = useMistakeTags();
-  const { assets, addAsset, removeAsset } = useAssets();
+  const { mistakeTags, addMistakeTag } = useMistakeTags();
+  const { assets, addAsset } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -207,7 +207,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                    <AddAssetDialog assets={assets} addAsset={addAsset} removeAsset={removeAsset} />
+                    <AddAssetDialog assets={assets} addAsset={addAsset} />
                 </div>
                 <FormMessage />
               </FormItem>
@@ -362,7 +362,6 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                    <AddMistakeTagDialog 
                     mistakeTags={mistakeTags}
                     addMistakeTag={addMistakeTag}
-                    removeMistakeTag={removeMistakeTag}
                    />
                 </div>
                 <FormDescription>
