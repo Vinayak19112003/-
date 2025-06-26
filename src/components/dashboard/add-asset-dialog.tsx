@@ -20,8 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddAssetDialogProps = {
   assets: string[];
-  addAsset: (newAsset: string) => Promise<boolean>;
-  removeAsset: (assetToRemove: string) => Promise<void>;
+  addAsset: (newAsset: string) => boolean;
+  removeAsset: (assetToRemove: string) => void;
 };
 
 export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialogProps) {
@@ -31,7 +31,7 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
   const [removingAsset, setRemovingAsset] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset) {
         toast({
@@ -43,7 +43,7 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
     }
 
     setIsLoading(true);
-    const success = await addAsset(trimmedAsset);
+    const success = addAsset(trimmedAsset);
     if (success) {
       toast({
         title: "Asset Added",
@@ -60,10 +60,10 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
     setIsLoading(false);
   };
 
-  const handleRemove = async (assetToRemove: string) => {
+  const handleRemove = (assetToRemove: string) => {
     if (window.confirm(`Are you sure you want to remove "${assetToRemove}"? This cannot be undone.`)) {
         setRemovingAsset(assetToRemove);
-        await removeAsset(assetToRemove);
+        removeAsset(assetToRemove);
         toast({
             title: "Asset Removed",
             description: `"${assetToRemove}" has been removed from your list.`,

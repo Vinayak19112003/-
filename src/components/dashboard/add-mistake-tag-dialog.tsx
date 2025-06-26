@@ -20,8 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddMistakeTagDialogProps = {
   mistakeTags: string[];
-  addMistakeTag: (newTag: string) => Promise<boolean>;
-  removeMistakeTag: (tagToRemove: string) => Promise<void>;
+  addMistakeTag: (newTag: string) => boolean;
+  removeMistakeTag: (tagToRemove: string) => void;
 };
 
 export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeTag }: AddMistakeTagDialogProps) {
@@ -31,7 +31,7 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeT
   const [removingTag, setRemovingTag] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     const trimmedTag = newTag.trim();
     if (!trimmedTag) {
         toast({
@@ -43,7 +43,7 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeT
     }
 
     setIsLoading(true);
-    const success = await addMistakeTag(trimmedTag);
+    const success = addMistakeTag(trimmedTag);
     if (success) {
       toast({
         title: "Mistake Tag Added",
@@ -60,10 +60,10 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, removeMistakeT
     setIsLoading(false);
   };
 
-  const handleRemove = async (tagToRemove: string) => {
+  const handleRemove = (tagToRemove: string) => {
     if (window.confirm(`Are you sure you want to remove "${tagToRemove}"? This cannot be undone.`)) {
         setRemovingTag(tagToRemove);
-        await removeMistakeTag(tagToRemove);
+        removeMistakeTag(tagToRemove);
         toast({
             title: "Mistake Tag Removed",
             description: `"${tagToRemove}" has been removed from your list.`,

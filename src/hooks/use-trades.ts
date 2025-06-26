@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { Trade, TradeSchema } from '@/lib/types';
-import { z } from 'zod';
 
 const TRADES_STORAGE_KEY = 'trades';
 
@@ -45,7 +44,6 @@ export function useTrades() {
     setTrades(prevTrades => 
       [newTrade, ...prevTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
-    return Promise.resolve();
   };
 
   const updateTrade = (updatedTrade: Trade) => {
@@ -54,12 +52,10 @@ export function useTrades() {
       prevTrades.map(t => (t.id === newTrade.id ? newTrade : t))
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
-    return Promise.resolve();
   };
   
   const deleteTrade = (tradeId: string) => {
     setTrades(prevTrades => prevTrades.filter(t => t.id !== tradeId));
-    return Promise.resolve();
   };
 
   return { trades, addTrade, updateTrade, deleteTrade, isLoaded };

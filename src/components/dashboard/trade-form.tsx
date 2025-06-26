@@ -46,7 +46,7 @@ const FormSchema = TradeSchema.omit({ id: true });
 
 type TradeFormProps = {
   trade?: Trade;
-  onSave: (trade: Trade) => Promise<void>;
+  onSave: (trade: Trade) => void;
   setOpen: Dispatch<SetStateAction<boolean>>;
 };
 
@@ -117,13 +117,13 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
     }
   };
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
     const newTrade: Trade = {
       ...data,
       id: trade?.id || crypto.randomUUID(),
     };
-    await onSave(newTrade);
+    onSave(newTrade);
     setIsSaving(false);
     toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
     setOpen(false);

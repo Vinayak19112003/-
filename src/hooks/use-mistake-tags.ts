@@ -31,18 +31,17 @@ export function useMistakeTags() {
     }
   }, [mistakeTags, isLoaded]);
 
-  const addMistakeTag = (newTag: string): Promise<boolean> => {
+  const addMistakeTag = (newTag: string): boolean => {
     const trimmedTag = newTag.trim();
     if (!trimmedTag || mistakeTags.some(tag => tag.toLowerCase() === trimmedTag.toLowerCase())) {
-        return Promise.resolve(false);
+        return false;
     }
     setMistakeTags(prevTags => [...prevTags, trimmedTag].sort());
-    return Promise.resolve(true);
+    return true;
   };
 
   const removeMistakeTag = (tagToRemove: string) => {
     setMistakeTags(prevTags => prevTags.filter(tag => tag !== tagToRemove));
-    return Promise.resolve();
   };
 
   return { mistakeTags, addMistakeTag, removeMistakeTag, isLoaded };

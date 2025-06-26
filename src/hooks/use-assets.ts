@@ -31,18 +31,17 @@ export function useAssets() {
     }
   }, [assets, isLoaded]);
 
-  const addAsset = (newAsset: string): Promise<boolean> => {
+  const addAsset = (newAsset: string): boolean => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset || assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
-        return Promise.resolve(false);
+        return false;
     }
     setAssets(prevAssets => [...prevAssets, trimmedAsset].sort());
-    return Promise.resolve(true);
+    return true;
   };
 
   const removeAsset = (assetToRemove: string) => {
     setAssets(prevAssets => prevAssets.filter(asset => asset !== assetToRemove));
-    return Promise.resolve();
   };
 
   return { assets, addAsset, removeAsset, isLoaded };
