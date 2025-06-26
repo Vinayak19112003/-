@@ -2,69 +2,99 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { z } from 'zod';
 import { Trade, TradeSchema } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Timestamp,
+  serverTimestamp,
+} from "firebase/firestore";
 
-const STORAGE_KEY = 'tradevision-trades';
+const tradesCollection = collection(db, 'trades');
+
+// Helper to convert Firestore data to our Trade type
+const fromFirestore = (docSnapshot: any): Trade | null => {
+  const data = docSnapshot.data();
+  // Convert Firestore Timestamps to JS Dates
+  const tradeDataWithDate = {
+    ...data,
+    id: docSnapshot.id,
+    date: data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date),
+  };
+
+  const result = TradeSchema.safeParse(tradeDataWithDate);
+  if (result.success) {
+    return result.data;
+  }
+  
+  console.warn("Invalid trade data from Firestore, skipping:", result.error.flatten());
+  return null;
+};
+
 
 export function useTrades() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const storedTrades = localStorage.getItem(STORAGE_KEY);
-      if (storedTrades) {
-        const rawTrades = JSON.parse(storedTrades);
-        // The error is because previously stored trades might not match the new, stricter schema.
-        // We will safely parse each trade and only keep the valid ones.
-        const validTrades = rawTrades
-          .map((trade: unknown) => {
-            const result = TradeSchema.safeParse(trade);
-            if (result.success) {
-              return result.data;
-            }
-            console.warn("Filtering out invalid trade data from localStorage:", result.error.flatten());
-            return null;
-          })
-          .filter((trade: Trade | null): trade is Trade => trade !== null);
-
-        setTrades(validTrades);
+    // Set up a real-time listener on the trades collection
+    const q = query(tradesCollection, orderBy('date', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const tradesData: Trade[] = [];
+      querySnapshot.forEach((doc) => {
+        const trade = fromFirestore(doc);
+        if (trade) {
+          tradesData.push(trade);
+        }
+      });
+      setTrades(tradesData);
+      if (!isLoaded) {
+          setIsLoaded(true);
       }
+    }, (error) => {
+      console.error("Error fetching trades:", error);
+      setIsLoaded(true); // Still set to loaded even if there's an error
+    });
+
+    // Unsubscribe from the listener when the component unmounts
+    return () => unsubscribe();
+  }, [isLoaded]);
+
+  const addTrade = useCallback(async (trade: Trade) => {
+    try {
+      const { id, ...tradeData } = TradeSchema.parse(trade);
+      await addDoc(tradesCollection, tradeData);
     } catch (error) {
-      console.error("Failed to load or parse trades from localStorage. Old data might be incompatible.", error);
-      // Optional: Clear storage if data is corrupt
-      // localStorage.removeItem(STORAGE_KEY); 
-    } finally {
-      setIsLoaded(true);
+      console.error("Error adding trade:", error);
     }
   }, []);
 
-  const updateTradesAndStorage = useCallback((updater: (trades: Trade[]) => Trade[]) => {
-    setTrades(currentTrades => {
-        const newTrades = updater(currentTrades);
-        const sortedTrades = [...newTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedTrades));
-        } catch (error) {
-            console.error("Failed to save trades to localStorage", error);
-        }
-        return sortedTrades;
-    });
+  const updateTrade = useCallback(async (updatedTrade: Trade) => {
+    try {
+      const tradeRef = doc(db, 'trades', updatedTrade.id);
+      const { id, ...tradeData } = TradeSchema.parse(updatedTrade);
+      await updateDoc(tradeRef, tradeData);
+    } catch (error) {
+      console.error("Error updating trade:", error);
+    }
   }, []);
-
-
-  const addTrade = useCallback((trade: Trade) => {
-    updateTradesAndStorage(currentTrades => [trade, ...currentTrades]);
-  }, [updateTradesAndStorage]);
-
-  const updateTrade = useCallback((updatedTrade: Trade) => {
-    updateTradesAndStorage(currentTrades => currentTrades.map(t => t.id === updatedTrade.id ? updatedTrade : t));
-  }, [updateTradesAndStorage]);
   
-  const deleteTrade = useCallback((tradeId: string) => {
-    updateTradesAndStorage(currentTrades => currentTrades.filter(t => t.id !== tradeId));
-  }, [updateTradesAndStorage]);
+  const deleteTrade = useCallback(async (tradeId: string) => {
+    try {
+      const tradeRef = doc(db, 'trades', tradeId);
+      await deleteDoc(tradeRef);
+    } catch (error) {
+      console.error("Error deleting trade:", error);
+    }
+  }, []);
 
   return { trades, addTrade, updateTrade, deleteTrade, isLoaded };
 }

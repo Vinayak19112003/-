@@ -39,12 +39,14 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { useMistakeTags } from "@/hooks/use-mistake-tags";
 import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
+import { useAssets } from "@/hooks/use-assets";
+import { AddAssetDialog } from "./add-asset-dialog";
 
 const FormSchema = TradeSchema.omit({ id: true });
 
 type TradeFormProps = {
   trade?: Trade;
-  onSave: (trade: Trade) => void;
+  onSave: (trade: Trade) => Promise<void>;
   setOpen: Dispatch<SetStateAction<boolean>>;
 };
 
@@ -53,6 +55,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
   const { mistakeTags, addMistakeTag, removeMistakeTag } = useMistakeTags();
+  const { assets, addAsset, removeAsset } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -114,13 +117,13 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
     }
   };
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
     const newTrade: Trade = {
       ...data,
       id: trade?.id || crypto.randomUUID(),
     };
-    onSave(newTrade);
+    await onSave(newTrade);
     setIsSaving(false);
     toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
     setOpen(false);
@@ -191,17 +194,21 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Asset</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an asset" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="NQ">NQ</SelectItem>
-                    <SelectItem value="XAU">XAU</SelectItem>
-                  </SelectContent>
-                </Select>
+                 <div className="flex items-center gap-2">
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an asset" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {assets.map(asset => (
+                            <SelectItem key={asset} value={asset}>{asset}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <AddAssetDialog assets={assets} addAsset={addAsset} removeAsset={removeAsset} />
+                </div>
                 <FormMessage />
               </FormItem>
             )}

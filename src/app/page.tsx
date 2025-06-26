@@ -77,18 +77,18 @@ export default function Home() {
     setIsFormOpen(false);
   };
   
-  const handleSaveTrade = (trade: Trade) => {
+  const handleSaveTrade = async (trade: Trade) => {
     if (editingTrade) {
-      updateTrade(trade);
+      await updateTrade(trade);
     } else {
-      addTrade(trade);
+      await addTrade(trade);
     }
     handleCloseForm();
   };
 
-  const handleDeleteTrade = (tradeId: string) => {
+  const handleDeleteTrade = async (tradeId: string) => {
     if (window.confirm("Are you sure you want to delete this trade?")) {
-      deleteTrade(tradeId);
+      await deleteTrade(tradeId);
     }
   };
   

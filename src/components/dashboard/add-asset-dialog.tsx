@@ -14,22 +14,24 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddAssetDialogProps = {
   assets: string[];
-  addAsset: (newAsset: string) => boolean;
-  removeAsset: (assetToRemove: string) => void;
+  addAsset: (newAsset: string) => Promise<boolean>;
+  removeAsset: (assetToRemove: string) => Promise<void>;
 };
 
 export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialogProps) {
   const [open, setOpen] = useState(false);
   const [newAsset, setNewAsset] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [removingAsset, setRemovingAsset] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset) {
         toast({
@@ -40,7 +42,8 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
         return;
     }
 
-    const success = addAsset(newAsset);
+    setIsLoading(true);
+    const success = await addAsset(trimmedAsset);
     if (success) {
       toast({
         title: "Asset Added",
@@ -54,15 +57,18 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
             description: "This asset is already in your list.",
         });
     }
+    setIsLoading(false);
   };
 
-  const handleRemove = (assetToRemove: string) => {
+  const handleRemove = async (assetToRemove: string) => {
     if (window.confirm(`Are you sure you want to remove "${assetToRemove}"? This cannot be undone.`)) {
-        removeAsset(assetToRemove);
+        setRemovingAsset(assetToRemove);
+        await removeAsset(assetToRemove);
         toast({
             title: "Asset Removed",
             description: `"${assetToRemove}" has been removed from your list.`,
         });
+        setRemovingAsset(null);
     }
   };
 
@@ -88,8 +94,8 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
                     assets.map(asset => (
                         <div key={asset} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
                             <span className="text-sm font-medium">{asset}</span>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemove(asset)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemove(asset)} disabled={removingAsset === asset}>
+                                {removingAsset === asset ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-destructive" />}
                                 <span className="sr-only">Remove {asset}</span>
                             </Button>
                         </div>
@@ -107,6 +113,7 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
                   value={newAsset}
                   onChange={(e) => setNewAsset(e.target.value)}
                   placeholder="e.g. SPX500"
+                  disabled={isLoading}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -114,7 +121,8 @@ export function AddAssetDialog({ assets, addAsset, removeAsset }: AddAssetDialog
                     }
                   }}
                 />
-                <Button onClick={handleAdd}>
+                <Button onClick={handleAdd} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Add Asset
                 </Button>
             </div>
