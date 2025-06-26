@@ -26,13 +26,15 @@ import { StrategyAnalytics } from "@/components/dashboard/strategy-analytics";
 import { MistakeAnalysis } from "@/components/dashboard/mistake-analysis";
 import { ExportTrades } from "@/components/dashboard/export-trades";
 import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function Home() {
-  const { trades, addTrade, updateTrade, isLoaded } = useTrades();
+  const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -84,6 +86,14 @@ export default function Home() {
       addTrade(trade);
     }
     handleCloseForm();
+  };
+
+  const handleDeleteTrade = (id: string) => {
+    deleteTrade(id);
+    toast({
+      title: "Trade Deleted",
+      description: "The trade has been removed from your log.",
+    });
   };
 
   const FormComponent = isMobile ? Sheet : Dialog;
@@ -150,7 +160,7 @@ export default function Home() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                       <TradeTable trades={filteredTrades} onEdit={handleOpenForm} />
+                       <TradeTable trades={filteredTrades} onEdit={handleOpenForm} onDelete={handleDeleteTrade}/>
                     </CardContent>
                 </Card>
             </div>

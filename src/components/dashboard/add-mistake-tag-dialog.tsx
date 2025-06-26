@@ -14,16 +14,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddMistakeTagDialogProps = {
   mistakeTags: string[];
   addMistakeTag: (newTag: string) => boolean;
+  deleteMistakeTag: (tag: string) => void;
 };
 
-export function AddMistakeTagDialog({ mistakeTags, addMistakeTag }: AddMistakeTagDialogProps) {
+export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, deleteMistakeTag }: AddMistakeTagDialogProps) {
   const [open, setOpen] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -80,6 +81,10 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag }: AddMistakeTa
                     mistakeTags.map(tag => (
                         <div key={tag} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
                             <span className="text-sm font-medium">{tag}</span>
+                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteMistakeTag(tag)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete {tag}</span>
+                            </Button>
                         </div>
                     ))
                 ) : (

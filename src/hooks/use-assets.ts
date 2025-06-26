@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useCallback } from 'react';
 import useLocalStorage from './use-local-storage';
 
 const DEFAULT_ASSETS = ["NAS100", "EURUSD", "XAUUSD"];
@@ -10,7 +9,7 @@ const ASSETS_STORAGE_KEY = 'user-assets';
 export function useAssets() {
   const [assets, setAssets, isLoaded] = useLocalStorage<string[]>(ASSETS_STORAGE_KEY, DEFAULT_ASSETS);
 
-  const addAsset = useCallback((newAsset: string): boolean => {
+  const addAsset = (newAsset: string): boolean => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset) return false;
 
@@ -23,7 +22,11 @@ export function useAssets() {
       return [...prevAssets, trimmedAsset].sort();
     });
     return success;
-  }, [setAssets]);
+  };
 
-  return { assets, addAsset, isLoaded };
+  const deleteAsset = (assetToDelete: string) => {
+    setAssets(prev => prev.filter(asset => asset !== assetToDelete));
+  };
+
+  return { assets, addAsset, deleteAsset, isLoaded };
 }

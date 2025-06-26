@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -22,7 +22,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+  } from "@/components/ui/alert-dialog"
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { type Trade } from "@/lib/types";
@@ -34,14 +44,23 @@ import Image from "next/image";
 type TradeTableProps = {
   trades: Trade[];
   onEdit: (trade: Trade) => void;
+  onDelete: (id: string) => void;
 };
 
 type SortKey = keyof Trade | "rr";
 
-export function TradeTable({ trades, onEdit }: TradeTableProps) {
+export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [imageInView, setImageInView] = useState<string | null>(null);
+  const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (tradeToDelete) {
+      onDelete(tradeToDelete.id);
+      setTradeToDelete(null);
+    }
+  };
 
   const sortedAndFilteredTrades = useMemo(() => {
     let filtered = trades.filter(trade =>
@@ -161,6 +180,7 @@ export function TradeTable({ trades, onEdit }: TradeTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -185,6 +205,26 @@ export function TradeTable({ trades, onEdit }: TradeTableProps) {
           {imageInView && <Image src={imageInView} alt="Trade Screenshot" width={1200} height={800} className="w-full h-auto object-contain rounded-md" />}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this trade from your log.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete} 
+              className={cn(buttonVariants({ variant: "destructive" }))}
+            >
+                Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

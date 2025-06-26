@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useCallback } from 'react';
 import useLocalStorage from './use-local-storage';
 import { DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
 
@@ -13,7 +12,7 @@ export function useMistakeTags() {
     [...DEFAULT_MISTAKE_TAGS]
   );
 
-  const addMistakeTag = useCallback((newTag: string): boolean => {
+  const addMistakeTag = (newTag: string): boolean => {
     const trimmedTag = newTag.trim();
     if (!trimmedTag) return false;
     
@@ -26,7 +25,11 @@ export function useMistakeTags() {
       return [...prevTags, trimmedTag].sort();
     });
     return success;
-  }, [setMistakeTags]);
+  };
 
-  return { mistakeTags, addMistakeTag, isLoaded };
+  const deleteMistakeTag = (tagToDelete: string) => {
+    setMistakeTags(prev => prev.filter(tag => tag !== tagToDelete));
+  };
+
+  return { mistakeTags, addMistakeTag, deleteMistakeTag, isLoaded };
 }
