@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
 
 const MISTAKE_TAGS_STORAGE_KEY = 'tradevision-mistake-tags';
@@ -15,7 +15,12 @@ export function useMistakeTags() {
     try {
       const storedTags = localStorage.getItem(MISTAKE_TAGS_STORAGE_KEY);
       if (storedTags) {
-        initialTags = JSON.parse(storedTags);
+        const parsed = JSON.parse(storedTags);
+        if (Array.isArray(parsed)) {
+            initialTags = parsed;
+        } else {
+            initialTags = [...DEFAULT_MISTAKE_TAGS];
+        }
       } else {
         initialTags = [...DEFAULT_MISTAKE_TAGS];
       }
@@ -27,28 +32,38 @@ export function useMistakeTags() {
     setIsLoaded(true);
   }, []);
   
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem(MISTAKE_TAGS_STORAGE_KEY, JSON.stringify(mistakeTags));
-      } catch (error) {
-        console.error("Failed to save mistake tags to localStorage", error);
-      }
-    }
-  }, [mistakeTags, isLoaded]);
+  const updateTagsAndStorage = useCallback((updater: (tags: string[]) => string[]) => {
+    setMistakeTags(currentTags => {
+        const newTags = updater(currentTags);
+        const sortedTags = [...newTags].sort();
+        try {
+            localStorage.setItem(MISTAKE_TAGS_STORAGE_KEY, JSON.stringify(sortedTags));
+        } catch (error) {
+            console.error("Failed to save mistake tags to localStorage", error);
+        }
+        return sortedTags;
+    });
+  }, []);
 
-  const addMistakeTag = (newTag: string): boolean => {
+
+  const addMistakeTag = useCallback((newTag: string): boolean => {
     const trimmedTag = newTag.trim();
-    if (!trimmedTag || mistakeTags.some(tag => tag.toLowerCase() === trimmedTag.toLowerCase())) {
-      return false;
-    }
-    setMistakeTags(currentTags => [...currentTags, trimmedTag].sort());
-    return true;
-  };
+    if (!trimmedTag) return false;
+    
+    let wasAdded = false;
+    updateTagsAndStorage(currentTags => {
+        if (currentTags.some(tag => tag.toLowerCase() === trimmedTag.toLowerCase())) {
+            return currentTags;
+        }
+        wasAdded = true;
+        return [...currentTags, trimmedTag];
+    });
+    return wasAdded;
+  }, [updateTagsAndStorage]);
 
-  const removeMistakeTag = (tagToRemove: string) => {
-    setMistakeTags(currentTags => currentTags.filter(tag => tag !== tagToRemove));
-  };
+  const removeMistakeTag = useCallback((tagToRemove: string) => {
+    updateTagsAndStorage(currentTags => currentTags.filter(tag => tag !== tagToRemove));
+  }, [updateTagsAndStorage]);
 
   return { mistakeTags, addMistakeTag, removeMistakeTag, isLoaded };
 }

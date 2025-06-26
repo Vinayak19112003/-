@@ -24,7 +24,7 @@ export function useTrades() {
             if (result.success) {
               return result.data;
             }
-            console.warn("Filtering out invalid trade data from localStorage:", result.error);
+            console.warn("Filtering out invalid trade data from localStorage:", result.error.flatten());
             return null;
           })
           .filter((trade: Trade | null): trade is Trade => trade !== null);
@@ -40,31 +40,31 @@ export function useTrades() {
     }
   }, []);
 
-  const updateStorage = useCallback((updatedTrades: Trade[]) => {
-    // Sort by date descending before saving
-    const sortedTrades = [...updatedTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    setTrades(sortedTrades);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedTrades));
-    } catch (error) {
-      console.error("Failed to save trades to localStorage", error);
-    }
+  const updateTradesAndStorage = useCallback((updater: (trades: Trade[]) => Trade[]) => {
+    setTrades(currentTrades => {
+        const newTrades = updater(currentTrades);
+        const sortedTrades = [...newTrades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedTrades));
+        } catch (error) {
+            console.error("Failed to save trades to localStorage", error);
+        }
+        return sortedTrades;
+    });
   }, []);
 
+
   const addTrade = useCallback((trade: Trade) => {
-    const newTrades = [trade, ...trades];
-    updateStorage(newTrades);
-  }, [trades, updateStorage]);
+    updateTradesAndStorage(currentTrades => [trade, ...currentTrades]);
+  }, [updateTradesAndStorage]);
 
   const updateTrade = useCallback((updatedTrade: Trade) => {
-    const newTrades = trades.map(t => t.id === updatedTrade.id ? updatedTrade : t);
-    updateStorage(newTrades);
-  }, [trades, updateStorage]);
+    updateTradesAndStorage(currentTrades => currentTrades.map(t => t.id === updatedTrade.id ? updatedTrade : t));
+  }, [updateTradesAndStorage]);
   
   const deleteTrade = useCallback((tradeId: string) => {
-    const newTrades = trades.filter(t => t.id !== tradeId);
-    updateStorage(newTrades);
-  }, [trades, updateStorage]);
+    updateTradesAndStorage(currentTrades => currentTrades.filter(t => t.id !== tradeId));
+  }, [updateTradesAndStorage]);
 
   return { trades, addTrade, updateTrade, deleteTrade, isLoaded };
 }
