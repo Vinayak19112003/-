@@ -36,6 +36,7 @@ export default function Home() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
   const { strategies, addStrategy, deleteStrategy } = useStrategies();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -121,6 +122,12 @@ export default function Home() {
   const FormHeaderComponent = isMobile ? SheetHeader : DialogHeader;
   const FormTitleComponent = isMobile ? SheetTitle : DialogTitle;
   const FormDescriptionComponent = isMobile ? SheetDescription : DialogDescription;
+
+  const DonationComponent = isMobile ? Sheet : Dialog;
+  const DonationContentComponent = isMobile ? SheetContent : DialogContent;
+  const DonationHeaderComponent = isMobile ? SheetHeader : DialogHeader;
+  const DonationTitleComponent = isMobile ? SheetTitle : DialogTitle;
+  const DonationDescriptionComponent = isMobile ? SheetDescription : DialogDescription;
 
   if (!isLoaded) {
     return (
@@ -210,58 +217,66 @@ export default function Home() {
                 </div>
             </FormContentComponent>
         </FormComponent>
+
+        <DonationComponent open={isDonationOpen} onOpenChange={setIsDonationOpen}>
+          <DonationContentComponent className={cn(isMobile ? "w-full" : "max-w-2xl")}>
+            <DonationHeaderComponent>
+              <DonationTitleComponent className="flex items-center gap-2 text-xl sm:text-2xl">
+                💰 Support My Work
+              </DonationTitleComponent>
+              <DonationDescriptionComponent>
+                If you find value in this trading journal, consider supporting the project with a small crypto donation. Your support helps me continue building and improving free resources for traders.
+              </DonationDescriptionComponent>
+            </DonationHeaderComponent>
+            <div className={cn("px-4 pb-4 overflow-y-auto max-h-[80vh]")}>
+              <div className="space-y-4">
+                <div className="space-y-3 text-left">
+                  <div>
+                    <Label className="font-semibold">Bitcoin (BTC)</Label>
+                    <div className="flex items-center gap-2 rounded-md border bg-muted p-2">
+                      <code className="text-xs sm:text-sm break-all flex-1 font-mono">bc1pclv0jx7x6haj32k2w26js5t7su6jvgtzljqvef63l409frmhaz5qdx0hdy</code>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleCopy('bc1pclv0jx7x6haj32k2w26js5t7su6jvgtzljqvef63l409frmhaz5qdx0hdy')}>
+                        <ClipboardCopy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Ethereum / EVM (ETH, USDT ERC20, etc)</Label>
+                    <div className="flex items-center gap-2 rounded-md border bg-muted p-2">
+                      <code className="text-xs sm:text-sm break-all flex-1 font-mono">0xC00b329eBa0A16cCC63E650B0122027E6365f89C</code>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleCopy('0xC00b329eBa0A16cCC63E650B0122027E6365f89C')}>
+                        <ClipboardCopy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">USDT (TRC20)</Label>
+                    <div className="flex items-center gap-2 rounded-md border bg-muted p-2">
+                      <code className="text-xs sm:text-sm break-all flex-1 font-mono">TUNPBVYWRcqXVbCEP6guy9pdTRrhhok9YC</code>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleCopy('TUNPBVYWRcqXVbCEP6guy9pdTRrhhok9YC')}>
+                        <ClipboardCopy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-center text-muted-foreground pt-2">Every contribution, big or small, means a lot. Thank you! 🙏</p>
+              </div>
+            </div>
+          </DonationContentComponent>
+        </DonationComponent>
+
        </main>
        <footer className="py-12 text-center text-sm text-muted-foreground">
-        <div className="container flex flex-col items-center justify-center gap-8">
-            <Card className="max-w-2xl text-left w-full">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
-                        💰 Support My Work
-                    </CardTitle>
-                    <CardDescription>
-                        If you find value in this trading journal, consider supporting the project with a small crypto donation. Your support helps me continue building and improving free resources for traders.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-3 text-left">
-                        <div>
-                            <Label className="font-semibold">Bitcoin (BTC)</Label>
-                            <div className="flex items-center gap-2 rounded-md border bg-muted p-2">
-                                <code className="text-xs sm:text-sm break-all flex-1 font-mono">bc1pclv0jx7x6haj32k2w26js5t7su6jvgtzljqvef63l409frmhaz5qdx0hdy</code>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleCopy('bc1pclv0jx7x6haj32k2w26js5t7su6jvgtzljqvef63l409frmhaz5qdx0hdy')}>
-                                    <ClipboardCopy className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div>
-                            <Label className="font-semibold">Ethereum / EVM (ETH, USDT ERC20, etc)</Label>
-                             <div className="flex items-center gap-2 rounded-md border bg-muted p-2">
-                                <code className="text-xs sm:text-sm break-all flex-1 font-mono">0xC00b329eBa0A16cCC63E650B0122027E6365f89C</code>
-                                 <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleCopy('0xC00b329eBa0A16cCC63E650B0122027E6365f89C')}>
-                                    <ClipboardCopy className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div>
-                            <Label className="font-semibold">USDT (TRC20)</Label>
-                            <div className="flex items-center gap-2 rounded-md border bg-muted p-2">
-                                <code className="text-xs sm:text-sm break-all flex-1 font-mono">TUNPBVYWRcqXVbCEP6guy9pdTRrhhok9YC</code>
-                                 <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleCopy('TUNPBVYWRcqXVbCEP6guy9pdTRrhhok9YC')}>
-                                    <ClipboardCopy className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                    <p className="text-center text-muted-foreground pt-2">Every contribution, big or small, means a lot. Thank you! 🙏</p>
-                </CardContent>
-            </Card>
-
+        <div className="container flex flex-col items-center justify-center gap-2">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                 <span>Created by AnonyTrading</span>
                 <span className="hidden sm:inline-block">|</span>
-                <div className="flex gap-4">
+                <div className="flex items-center gap-4">
                     <a href="https://x.com/vinayakICT" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">X</a>
                     <a href="https://discord.gg/rPFQfF5tSb" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">Discord</a>
+                    <button onClick={() => setIsDonationOpen(true)} className="hover:text-primary transition-colors underline">
+                        Donation
+                    </button>
                 </div>
             </div>
         </div>
