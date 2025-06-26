@@ -29,13 +29,28 @@ export function useAssets() {
     }
   }, []);
 
-  const addAsset = useCallback((newAsset: string) => {
-    if (newAsset && !assets.some(a => a.toLowerCase() === newAsset.toLowerCase())) {
-      const updatedAssets = [...assets, newAsset].sort();
-      setAssets(updatedAssets);
-      localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(updatedAssets));
-    }
-  }, [assets]);
+  const updateStorage = useCallback((updatedAssets: string[]) => {
+    const sorted = [...new Set(updatedAssets)].sort();
+    setAssets(sorted);
+    localStorage.setItem(ASSET_STORAGE_KEY, JSON.stringify(sorted));
+  }, []);
 
-  return { assets, addAsset, isLoaded };
+
+  const addAsset = useCallback((newAsset: string): boolean => {
+    const trimmedAsset = newAsset.trim().toUpperCase();
+    if (trimmedAsset && !assets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
+      const updatedAssets = [...assets, trimmedAsset];
+      updateStorage(updatedAssets);
+      return true;
+    }
+    return false;
+  }, [assets, updateStorage]);
+
+  const removeAsset = useCallback((assetToRemove: string) => {
+    const updatedAssets = assets.filter(a => a !== assetToRemove);
+    updateStorage(updatedAssets);
+  }, [assets, updateStorage]);
+
+
+  return { assets, addAsset, removeAsset, isLoaded };
 }

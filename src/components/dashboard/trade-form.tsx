@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -53,7 +53,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
-  const { assets, addAsset } = useAssets();
+  const { assets } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -101,6 +101,13 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
       setValue("rr", parseFloat(rr.toFixed(2)));
     }
   }, [entryPrice, sl, tp, direction, setValue]);
+  
+  useEffect(() => {
+    if (assets.length > 0 && !form.getValues('asset')) {
+        setValue('asset', assets[0]);
+    }
+  }, [assets, form, setValue]);
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -207,7 +214,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <AddAssetDialog onAddAsset={addAsset} />
+                  <AddAssetDialog />
                 </div>
                 <FormMessage />
               </FormItem>

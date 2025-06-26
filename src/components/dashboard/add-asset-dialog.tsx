@@ -14,34 +14,50 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAssets } from "@/hooks/use-assets";
 
-type AddAssetDialogProps = {
-  onAddAsset: (asset: string) => void;
-};
-
-export function AddAssetDialog({ onAddAsset }: AddAssetDialogProps) {
+export function AddAssetDialog() {
   const [open, setOpen] = useState(false);
   const [newAsset, setNewAsset] = useState("");
+  const { assets, addAsset, removeAsset } = useAssets();
   const { toast } = useToast();
 
   const handleAdd = () => {
     const trimmedAsset = newAsset.trim().toUpperCase();
-    if (trimmedAsset) {
-      onAddAsset(trimmedAsset);
+    if (!trimmedAsset) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Asset Name",
+            description: "Asset name cannot be empty.",
+        });
+        return;
+    }
+
+    const success = addAsset(newAsset);
+    if (success) {
       toast({
         title: "Asset Added",
         description: `"${trimmedAsset}" has been added to your asset list.`,
       });
       setNewAsset("");
-      setOpen(false);
     } else {
         toast({
             variant: "destructive",
-            title: "Invalid Asset Name",
-            description: "Asset name cannot be empty.",
+            title: "Asset Exists",
+            description: "This asset is already in your list.",
+        });
+    }
+  };
+
+  const handleRemove = (assetToRemove: string) => {
+    if (window.confirm(`Are you sure you want to remove "${assetToRemove}"? This cannot be undone.`)) {
+        removeAsset(assetToRemove);
+        toast({
+            title: "Asset Removed",
+            description: `"${assetToRemove}" has been removed from your list.`,
         });
     }
   };
@@ -51,43 +67,60 @@ export function AddAssetDialog({ onAddAsset }: AddAssetDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="shrink-0">
           <PlusCircle className="h-4 w-4" />
-          <span className="sr-only">Add new asset</span>
+          <span className="sr-only">Add or manage assets</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Asset</DialogTitle>
+          <DialogTitle>Manage Assets</DialogTitle>
           <DialogDescription>
-            Enter the symbol for the new asset you want to track.
+            Add, remove, and view your tracked assets.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="asset-name" className="text-right">
-              Symbol
-            </Label>
-            <Input
-              id="asset-name"
-              value={newAsset}
-              onChange={(e) => setNewAsset(e.target.value)}
-              className="col-span-3"
-              placeholder="e.g. SPX500"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAdd();
-                }
-              }}
-            />
-          </div>
+            <h4 className="font-medium text-sm">Existing Assets</h4>
+            <ScrollArea className="h-40 w-full rounded-md border p-2">
+                {assets.length > 0 ? (
+                    assets.map(asset => (
+                        <div key={asset} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
+                            <span className="text-sm font-medium">{asset}</span>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleRemove(asset)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                                <span className="sr-only">Remove {asset}</span>
+                            </Button>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-sm text-muted-foreground text-center p-4">No custom assets yet.</p>
+                )}
+            </ScrollArea>
         </div>
-        <DialogFooter>
+        <div className="grid gap-2">
+            <h4 className="font-medium text-sm">Add New Asset</h4>
+            <div className="flex w-full items-center space-x-2">
+                <Input
+                  id="asset-name"
+                  value={newAsset}
+                  onChange={(e) => setNewAsset(e.target.value)}
+                  placeholder="e.g. SPX500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAdd();
+                    }
+                  }}
+                />
+                <Button onClick={handleAdd}>
+                    Add Asset
+                </Button>
+            </div>
+        </div>
+        <DialogFooter className="pt-4">
           <DialogClose asChild>
             <Button type="button" variant="secondary">
-              Cancel
+              Close
             </Button>
           </DialogClose>
-          <Button onClick={handleAdd}>Add Asset</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
