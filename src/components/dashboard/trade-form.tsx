@@ -62,7 +62,7 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
       : {
           date: new Date(),
           asset: "NQ",
-          strategy: "NQ #1",
+          strategy: "9 AM CRT",
           direction: "Buy",
           entryTime: "",
           entryPrice: 0,
@@ -217,9 +217,9 @@ export function TradeForm({ trade, onSave, setOpen }: TradeFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="NQ #1">NQ #1</SelectItem>
-                    <SelectItem value="NQ #2">NQ #2</SelectItem>
-                    <SelectItem value="Gold">Gold</SelectItem>
+                    <SelectItem value="9 AM CRT">9 AM CRT</SelectItem>
+                    <SelectItem value="9.30 15M MODEL">9.30 15M MODEL</SelectItem>
+                    <SelectItem value="ASIAN MODEL">ASIAN MODEL</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

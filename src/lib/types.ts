@@ -5,7 +5,7 @@ export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
   date: z.coerce.date(),
   asset: z.enum(["NQ", "XAU"]),
-  strategy: z.enum(["NQ #1", "NQ #2", "Gold"]),
+  strategy: z.enum(["9 AM CRT", "9.30 15M MODEL", "ASIAN MODEL"]),
   direction: z.enum(["Buy", "Sell"]),
   entryTime: z.string().nonempty({ message: "Entry time is required." }),
   entryPrice: z.coerce.number({ required_error: "Entry price is required." }).default(0),
