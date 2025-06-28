@@ -52,12 +52,13 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
     return dataByDate;
   }, [trades]);
 
-  const firstDay = startOfWeek(startOfMonth(currentDate));
-  const lastDay = endOfWeek(endOfMonth(currentDate));
-  const calendarDays = eachDayOfInterval({ start: firstDay, end: lastDay });
+  const firstDayOfGrid = startOfWeek(startOfMonth(currentDate));
+  const lastDayOfGrid = endOfWeek(endOfMonth(currentDate));
+  const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
   
   const calendarWeeks = useMemo(() => {
     const weeks: Date[][] = [];
+    if (calendarDays.length === 0) return [];
     for (let i = 0; i < calendarDays.length; i += 7) {
         weeks.push(calendarDays.slice(i, i + 7));
     }
@@ -146,7 +147,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-            <div className="flex-grow">
+            <div className="flex-1">
                 <div className="grid grid-cols-7 border-t border-l border-border">
                 {weekdays.map(day => (
                     <div key={day} className="p-2 text-center font-semibold text-muted-foreground text-sm border-b border-r border-border bg-muted/50">{day}</div>
@@ -196,22 +197,23 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                 </div>
             </div>
 
-            <div className="w-full lg:w-48 flex-shrink-0 space-y-2">
-                <h4 className="text-sm font-semibold text-center lg:text-left text-muted-foreground">WEEKLY SUMMARY</h4>
-                {weeklySummaries.map(summary => (
-                    <div key={summary.weekNumber} className="rounded-lg border bg-card p-3 flex flex-col items-center justify-center text-center">
-                        <p className="text-sm font-medium text-muted-foreground">Week {summary.weekNumber}</p>
-                        <p className={cn(
-                            "text-2xl font-bold font-headline",
-                            summary.netR > 0.01 ? 'text-primary' : 
-                            summary.netR < -0.01 ? 'text-destructive' :
-                            'text-foreground'
-                        )}>
-                             {summary.netR > 0 ? '+' : ''}{summary.netR.toFixed(2)}R
-                        </p>
-                        <Badge variant="secondary" className="mt-1">{summary.tradingDays} days</Badge>
-                    </div>
-                ))}
+            <div className="w-full lg:w-48 flex-shrink-0">
+                 <div className="flex lg:flex-col h-full gap-2">
+                    {weeklySummaries.map(summary => (
+                        <div key={summary.weekNumber} className="rounded-lg border bg-card p-3 flex flex-col items-start justify-center text-left flex-1">
+                            <p className="text-sm font-medium text-muted-foreground">Week {summary.weekNumber}</p>
+                            <p className={cn(
+                                "text-2xl font-bold font-headline",
+                                summary.netR > 0.01 ? 'text-primary' : 
+                                summary.netR < -0.01 ? 'text-destructive' :
+                                'text-foreground'
+                            )}>
+                                 {summary.netR > 0 ? '+' : ''}{summary.netR.toFixed(2)}R
+                            </p>
+                            <Badge variant="secondary" className="mt-1">{summary.tradingDays} days</Badge>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
 
