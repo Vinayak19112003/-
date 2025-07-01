@@ -36,6 +36,16 @@ export function useTrades() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!db) {
+      toast({
+        variant: 'destructive',
+        title: 'Database Connection Error',
+        description: 'Could not connect to Firestore. Please check your Firebase setup.',
+      });
+      setIsLoaded(true);
+      return;
+    }
+
     const tradesCollection = collection(db, TRADES_COLLECTION);
     const q = query(tradesCollection, orderBy("date", "desc"));
     
@@ -68,6 +78,10 @@ export function useTrades() {
   }, [toast]);
   
   const addTrade = async (trade: Trade) => {
+    if (!db) {
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+      return;
+    }
     try {
       const newTrade = TradeSchema.parse(trade);
       const tradeData = {
@@ -89,6 +103,10 @@ export function useTrades() {
   };
 
   const updateTrade = async (updatedTrade: Trade) => {
+    if (!db) {
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+      return;
+    }
     try {
       const newTrade = TradeSchema.parse(updatedTrade);
       const tradeRef = doc(db, TRADES_COLLECTION, newTrade.id);
@@ -110,6 +128,10 @@ export function useTrades() {
   };
   
   const deleteTrade = async (id: string) => {
+    if (!db) {
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+      return;
+    }
     try {
         const tradeRef = doc(db, TRADES_COLLECTION, id);
         await deleteDoc(tradeRef);

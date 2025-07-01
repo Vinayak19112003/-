@@ -18,11 +18,27 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
   const { toast } = useToast();
 
   const getSettingsDocRef = useCallback(() => {
+    if (!db) return null;
     return doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
   }, []);
 
   useEffect(() => {
+    if (!db) {
+      toast({
+        variant: 'destructive',
+        title: 'Database Error',
+        description: `Could not load settings. Using default values.`,
+      });
+      setItems([...defaultValues]);
+      setIsLoaded(true);
+      return;
+    }
+
     const docRef = getSettingsDocRef();
+    if (!docRef) {
+        setIsLoaded(true);
+        return;
+    }
 
     const unsubscribe = onSnapshot(docRef, async (docSnap) => {
       if (!docSnap.exists()) {
@@ -70,6 +86,10 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
 
 
   const addItem = async (newItem: string): Promise<boolean> => {
+    if (!db) {
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+      return false;
+    }
     const trimmedItem = key === 'assets' ? newItem.trim().toUpperCase() : newItem.trim();
     if (!trimmedItem) return false;
     
@@ -84,6 +104,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
 
     try {
       const docRef = getSettingsDocRef();
+      if (!docRef) return false;
       await updateDoc(docRef, {
         [key]: arrayUnion(trimmedItem)
       });
@@ -104,8 +125,13 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
   };
 
   const deleteItem = async (itemToDelete: string) => {
+    if (!db) {
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+      return;
+    }
     try {
         const docRef = getSettingsDocRef();
+        if (!docRef) return;
         await updateDoc(docRef, {
             [key]: arrayRemove(itemToDelete)
         });
