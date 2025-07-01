@@ -41,6 +41,7 @@ import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -54,6 +55,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
+  const isMobile = useIsMobile();
 
   const handleConfirmDelete = () => {
     if (tradeToDelete) {
@@ -132,12 +134,12 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
             <TableRow>
               <TableHead onClick={() => requestSort("date")} className="cursor-pointer">Date {getSortIndicator("date")}</TableHead>
               <TableHead onClick={() => requestSort("asset")} className="cursor-pointer">Asset {getSortIndicator("asset")}</TableHead>
-              <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>
+              {!isMobile && <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>}
               <TableHead>Direction</TableHead>
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer">RR {getSortIndicator("rr")}</TableHead>
-              <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer">Confidence {getSortIndicator("confidence")}</TableHead>
+              {!isMobile && <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer">Confidence {getSortIndicator("confidence")}</TableHead>}
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
-              <TableHead>Mistakes</TableHead>
+              {!isMobile && <TableHead>Mistakes</TableHead>}
               <TableHead>Screenshot</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -148,22 +150,24 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                 <TableRow key={trade.id}>
                   <TableCell>{format(trade.date, "dd MMM yyyy")}</TableCell>
                   <TableCell>{trade.asset}</TableCell>
-                  <TableCell>{trade.strategy}</TableCell>
+                  {!isMobile && <TableCell>{trade.strategy}</TableCell>}
                   <TableCell>
                     <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-primary' : 'text-destructive')}>
                         {trade.direction}
                     </span>
                   </TableCell>
                   <TableCell>{trade.rr?.toFixed(2)}</TableCell>
-                  <TableCell>{trade.confidence}</TableCell>
+                  {!isMobile && <TableCell>{trade.confidence}</TableCell>}
                   <TableCell><ResultBadge result={trade.result} /></TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1 max-w-xs">
-                        {trade.mistakes?.map(mistake => (
-                            <Badge key={mistake} variant="outline">{mistake}</Badge>
-                        ))}
-                    </div>
-                  </TableCell>
+                  {!isMobile && 
+                    <TableCell>
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                            {trade.mistakes?.map(mistake => (
+                                <Badge key={mistake} variant="outline">{mistake}</Badge>
+                            ))}
+                        </div>
+                    </TableCell>
+                  }
                   <TableCell>
                     {trade.screenshotURL && (
                       <Dialog>

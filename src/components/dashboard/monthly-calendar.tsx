@@ -19,6 +19,7 @@ import {
   isToday
 } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type MonthlyCalendarProps = {
   trades: Trade[];
@@ -32,6 +33,7 @@ type DailyData = {
 
 export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const isMobile = useIsMobile();
 
   const dailyData = useMemo(() => {
     const dataByDate = new Map<string, DailyData>();
@@ -73,7 +75,9 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   
-  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Week P&L'];
+  const weekdays = isMobile 
+    ? ['S', 'M', 'T', 'W', 'T', 'F', 'S', 'P&L'] 
+    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Week P&L'];
 
   return (
     <Card>
@@ -92,8 +96,8 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
         <div className="grid grid-cols-8 border-t border-l">
             {weekdays.map((day, index) => (
                 <div key={day} className={cn(
-                    "p-2 text-center font-semibold text-muted-foreground text-sm border-r border-b",
-                    index === 7 && "bg-muted"
+                    "p-1 sm:p-2 text-center font-semibold text-muted-foreground text-xs sm:text-sm border-r border-b",
+                    index === 7 && "bg-muted/50"
                 )}>{day}</div>
             ))}
             {calendarDays.map((day, index) => {
@@ -118,14 +122,14 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                 <Fragment key={dateKey}>
                     <div
                         className={cn(
-                            "p-2 aspect-square flex flex-col justify-between cursor-pointer transition-colors border-r border-b",
+                            "p-1 sm:p-2 aspect-square flex flex-col justify-between cursor-pointer transition-colors border-r border-b",
                             bgColorClass,
                         )}
                         onClick={() => onDateSelect(day)}
                     >
                         <span className={cn(
-                            "font-semibold text-sm",
-                            isToday(day) ? "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center" : 
+                            "font-semibold text-xs sm:text-sm",
+                            isToday(day) ? "bg-primary text-primary-foreground rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center" : 
                             isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
                         )}>
                             {format(day, 'd')}
@@ -133,23 +137,23 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         {isCurrentMonth && data && (
                             <div className="text-right">
                                 <p className={cn(
-                                "font-bold text-base",
+                                "font-bold text-sm sm:text-base",
                                 data.netR > 0.01 ? 'text-success' :
                                 data.netR < -0.01 ? 'text-destructive' :
                                 'text-muted-foreground'
                                 )}>
                                     {data.netR > 0 ? '+' : ''}{data.netR.toFixed(2)}R
                                 </p> 
-                                <p className="text-xs text-muted-foreground">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
+                                <p className="text-xs text-muted-foreground hidden sm:block">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
                             </div>
                         )}
                     </div>
                     {isEndOfWeek && (
                         <div className={cn(
-                            "p-2 aspect-square flex flex-col items-center justify-center border-r border-b bg-muted/50"
+                            "p-1 sm:p-2 aspect-square flex flex-col items-center justify-center border-r border-b bg-muted/50"
                         )}>
                            <p className={cn(
-                              "font-bold text-base",
+                              "font-bold text-sm sm:text-base text-center",
                               weekPnlValue > 0.01 ? 'text-success' :
                               weekPnlValue < -0.01 ? 'text-destructive' :
                               'text-muted-foreground'
