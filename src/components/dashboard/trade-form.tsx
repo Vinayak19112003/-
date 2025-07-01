@@ -146,12 +146,12 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
       toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
       setOpen(false);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to save trade:", error);
         toast({
           variant: "destructive",
           title: "Save Failed",
-          description: "Could not save your trade. Please check your connection and try again.",
+          description: error.message || "Could not save your trade. Please check your connection and try again.",
         });
     } finally {
         setIsSaving(false);
@@ -486,3 +486,5 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
     </Form>
   );
 }
+
+    
