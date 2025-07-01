@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, Fragment } from 'react';
@@ -29,6 +28,7 @@ type MonthlyCalendarProps = {
 type DailyData = {
     netR: number;
     totalTrades: number;
+    pnl: number;
 };
 
 export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
@@ -40,9 +40,11 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
     
     trades.forEach(trade => {
         const dateKey = format(new Date(trade.date), 'yyyy-MM-dd');
-        const dayData = dataByDate.get(dateKey) || { netR: 0, totalTrades: 0 };
+        const dayData = dataByDate.get(dateKey) || { netR: 0, totalTrades: 0, pnl: 0 };
         
         dayData.totalTrades += 1;
+        dayData.pnl += trade.pnl || 0;
+        
         if (trade.result === 'Win') {
             dayData.netR += trade.rr || 0;
         } else if (trade.result === 'Loss') {
@@ -65,7 +67,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
         const weeklyTotal = weekDays.reduce((total, day) => {
             const dateKey = format(day, 'yyyy-MM-dd');
             const data = dailyData.get(dateKey);
-            return total + (data?.netR || 0);
+            return total + (data?.pnl || 0);
         }, 0);
         pnlByWeek.push(weeklyTotal);
     }
@@ -107,8 +109,8 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
 
                 let bgColorClass = 'bg-card hover:bg-muted/50';
                 if (isCurrentMonth && data?.totalTrades > 0) {
-                    if (data.netR > 0.01) bgColorClass = 'bg-success/10 hover:bg-success/20';
-                    else if (data.netR < -0.01) bgColorClass = 'bg-destructive/10 hover:bg-destructive/20';
+                    if (data.pnl > 0) bgColorClass = 'bg-success/10 hover:bg-success/20';
+                    else if (data.pnl < 0) bgColorClass = 'bg-destructive/10 hover:bg-destructive/20';
                     else bgColorClass = 'bg-muted/50 hover:bg-muted';
                 } else if (!isCurrentMonth) {
                     bgColorClass = 'bg-muted/30';
@@ -137,12 +139,12 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         {isCurrentMonth && data && (
                             <div className="text-right">
                                 <p className={cn(
-                                "font-bold text-sm sm:text-base",
-                                data.netR > 0.01 ? 'text-success' :
-                                data.netR < -0.01 ? 'text-destructive' :
+                                "font-bold text-xs sm:text-sm",
+                                data.pnl > 0 ? 'text-success' :
+                                data.pnl < 0 ? 'text-destructive' :
                                 'text-muted-foreground'
                                 )}>
-                                    {data.netR > 0 ? '+' : ''}{data.netR.toFixed(2)}R
+                                    {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(2)}
                                 </p> 
                                 <p className="text-xs text-muted-foreground hidden sm:block">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
                             </div>
@@ -153,12 +155,12 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             "p-1 sm:p-2 aspect-square flex flex-col items-center justify-center border-r border-b bg-muted/50"
                         )}>
                            <p className={cn(
-                              "font-bold text-sm sm:text-base text-center",
-                              weekPnlValue > 0.01 ? 'text-success' :
-                              weekPnlValue < -0.01 ? 'text-destructive' :
+                              "font-bold text-xs sm:text-sm text-center",
+                              weekPnlValue > 0 ? 'text-success' :
+                              weekPnlValue < 0 ? 'text-destructive' :
                               'text-muted-foreground'
                             )}>
-                                {weekPnlValue > 0 ? '+' : ''}{weekPnlValue.toFixed(2)}R
+                                {weekPnlValue >= 0 ? '+$' : '-$'}{Math.abs(weekPnlValue).toFixed(2)}
                             </p>
                         </div>
                     )}
