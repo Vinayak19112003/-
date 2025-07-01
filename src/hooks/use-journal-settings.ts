@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "firebase/firestore";
 import { useToast } from './use-toast';
 import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
 import { useAuth } from './use-auth';
@@ -49,18 +49,23 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     const unsubscribe = onSnapshot(docRef, async (docSnap) => {
       if (!docSnap.exists()) {
         try {
-          // Check if document exists before trying to set it.
-          const initialDoc = await getDoc(docRef);
-          if (!initialDoc.exists()) {
-            await setDoc(docRef, {
-              assets: [...DEFAULT_ASSETS],
-              strategies: [...DEFAULT_STRATEGIES],
-              mistakeTags: [...DEFAULT_MISTAKE_TAGS],
-            });
-          }
+          // If the user's settings doc doesn't exist, create it.
+          await setDoc(docRef, {
+            assets: [...DEFAULT_ASSETS],
+            strategies: [...DEFAULT_STRATEGIES],
+            mistakeTags: [...DEFAULT_MISTAKE_TAGS],
+          });
+          // The listener will automatically re-fire with the new data.
         } catch (error) {
           console.error("Failed to initialize settings doc:", error);
+           toast({
+            variant: "destructive",
+            title: "Settings Initialization Failed",
+            description: "Could not create default settings.",
+          });
         }
+        // Set loaded to true to prevent UI from hanging.
+        setIsLoaded(true);
         return;
       }
       
@@ -71,8 +76,6 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
         setItems(currentItems.length > 0 ? currentItems : [...defaultValues]);
       } else {
         setItems([...defaultValues]);
-        // Avoid writing back if data is just missing, could be due to partial creation.
-        // await updateDoc(docRef, { [key]: [...defaultValues] }).catch(e => console.error("Failed to update missing settings field", e));
       }
 
       setIsLoaded(true);
