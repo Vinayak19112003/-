@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, Fragment } from 'react';
@@ -132,7 +133,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         {isCurrentMonth && data && (
                             <div className="text-right">
                                 <p className={cn(
-                                "font-bold text-lg",
+                                "font-bold text-base",
                                 data.netR > 0.01 ? 'text-success' :
                                 data.netR < -0.01 ? 'text-destructive' :
                                 'text-muted-foreground'
@@ -151,7 +152,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             'bg-muted/50'
                         )}>
                            <p className={cn(
-                              "font-bold text-lg",
+                              "font-bold text-base",
                               weekPnlValue > 0.01 ? 'text-success' :
                               weekPnlValue < -0.01 ? 'text-destructive' :
                               'text-muted-foreground'
