@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRef, useState } from 'react';
@@ -42,16 +41,17 @@ export function SharePerformance({ trades }: { trades: Trade[] }) {
     setIsLoading(true);
     try {
         const bgColor = resolvedTheme === 'dark' ? '#14181f' : '#ffffff';
-        const dataUrl = await htmlToImage.toPng(imageRef.current, { 
+        const dataUrl = await htmlToImage.toJpeg(imageRef.current, { 
             cacheBust: true,
             pixelRatio: 2, // for higher quality
             backgroundColor: bgColor,
+            quality: 0.95,
         });
 
         // Create a link and trigger download
         const link = document.createElement('a');
         const date = format(new Date(), 'yyyy-MM-dd');
-        link.download = `anony-trading-performance-${date}.png`;
+        link.download = `anony-trading-performance-${date}.jpeg`;
         link.href = dataUrl;
         link.click();
         
