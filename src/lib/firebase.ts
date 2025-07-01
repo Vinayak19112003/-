@@ -13,33 +13,10 @@ const firebaseConfig = {
   appId: "1:790628334512:web:283fbaee6bb6aa1957b475"
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
-
-if (typeof window !== "undefined") {
-  if (!getApps().length) {
-    try {
-      app = initializeApp(firebaseConfig);
-    } catch (error) {
-      console.error("Firebase initialization error", error);
-    }
-  } else {
-    app = getApp();
-  }
-  
-  if (app) {
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-  } else {
-    // @ts-ignore
-    auth = db = storage = null;
-  }
-} else {
-    // @ts-ignore
-    app = auth = db = storage = null;
-}
+// Initialize Firebase
+const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
 export { app, db, auth, storage };
