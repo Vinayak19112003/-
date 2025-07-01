@@ -93,7 +93,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
             {weekdays.map((day, index) => (
                 <div key={day} className={cn(
                     "p-2 text-center font-semibold text-muted-foreground text-sm border-r border-b",
-                    index === 7 && "bg-muted/50"
+                    index === 7 && "bg-muted"
                 )}>{day}</div>
             ))}
             {calendarDays.map((day, index) => {
@@ -146,10 +146,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                     </div>
                     {isEndOfWeek && (
                         <div className={cn(
-                            "p-2 aspect-square flex flex-col items-center justify-center border-r border-b",
-                            weekPnlValue > 0.01 ? 'bg-success/20' :
-                            weekPnlValue < -0.01 ? 'bg-destructive/20' :
-                            'bg-muted/50'
+                            "p-2 aspect-square flex flex-col items-center justify-center border-r border-b bg-muted/50"
                         )}>
                            <p className={cn(
                               "font-bold text-base",
