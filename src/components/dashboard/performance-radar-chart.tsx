@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from 'react';
@@ -136,7 +137,7 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
                 }}
                 formatter={(value, name, props) => [props.payload.raw, name]}
               />
-              <Radar name="Metrics" dataKey="value" stroke={strokeColor} fill={fillColor} fillOpacity={0.6} />
+              <Radar name="Metrics" dataKey="value" stroke={strokeColor} fill={fillColor} fillOpacity={0.8} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
