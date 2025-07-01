@@ -1,10 +1,12 @@
+
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { Trade } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useTheme } from "next-themes";
+import { Skeleton } from '@/components/ui/skeleton';
 
 type MistakeAnalysisProps = {
     trades: Trade[];
@@ -12,6 +14,11 @@ type MistakeAnalysisProps = {
 
 export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const mistakeCounts = useMemo(() => {
         const counts: { [key: string]: number } = {};
@@ -36,7 +43,9 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
                 <CardDescription>Frequency of your common trading errors.</CardDescription>
             </CardHeader>
             <CardContent>
-                {mistakeCounts.length > 0 ? (
+                 {!mounted ? (
+                    <Skeleton className="h-[250px] w-full" />
+                ) : mistakeCounts.length > 0 ? (
                     <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={mistakeCounts} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>

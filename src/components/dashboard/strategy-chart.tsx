@@ -1,10 +1,12 @@
+
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
 import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type StrategyChartProps = {
   trades: Trade[];
@@ -12,6 +14,11 @@ type StrategyChartProps = {
 
 export function StrategyChart({ trades }: StrategyChartProps) {
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const data = useMemo(() => {
         const strategyPerformance: { [key: string]: { netR: number, trades: number } } = {};
@@ -49,7 +56,9 @@ export function StrategyChart({ trades }: StrategyChartProps) {
         <CardDescription>Net R-value per strategy</CardDescription>
       </CardHeader>
       <CardContent>
-        {trades.length > 0 ? (
+        {!mounted ? (
+          <Skeleton className="h-[300px] w-full" />
+        ) : trades.length > 0 ? (
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>

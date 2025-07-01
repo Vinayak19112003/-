@@ -1,11 +1,13 @@
+
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
 import { useTheme } from "next-themes";
 import { format } from 'date-fns';
+import { Skeleton } from "@/components/ui/skeleton";
 
 type EquityCurveChartProps = {
   trades: Trade[];
@@ -13,6 +15,11 @@ type EquityCurveChartProps = {
 
 export function EquityCurveChart({ trades }: EquityCurveChartProps) {
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const data = useMemo(() => {
         let cumulativeR = 0;
@@ -48,7 +55,9 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
         <CardDescription>Your trading performance over time.</CardDescription>
       </CardHeader>
       <CardContent>
-        {data.length > 0 ? (
+        {!mounted ? (
+          <Skeleton className="h-[300px] w-full" />
+        ) : data.length > 0 ? (
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
