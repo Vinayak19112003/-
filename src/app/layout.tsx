@@ -6,8 +6,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: 'TradeVision Journal',
-  description: 'A modern trading journal for professional traders.',
+  title: 'ANONY JOURNAL',
+  description: 'A modern journal for professionals.',
   viewport: 'width=device-width, initial-scale=1.0',
 };
 

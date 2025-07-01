@@ -98,7 +98,7 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
         <Card>
             <CardHeader>
                 <CardTitle>Performance Metrics</CardTitle>
-                <CardDescription>A visual summary of your key trading stats.</CardDescription>
+                <CardDescription>A visual summary of your key stats.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="h-[250px] flex items-center justify-center text-center text-muted-foreground">
@@ -128,7 +128,7 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
     <Card>
       <CardHeader>
         <CardTitle>Performance Metrics</CardTitle>
-        <CardDescription>A visual summary of your key trading stats.</CardDescription>
+        <CardDescription>A visual summary of your key stats.</CardDescription>
       </CardHeader>
       <CardContent>
         {!mounted ? (

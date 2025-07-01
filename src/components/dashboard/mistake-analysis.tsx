@@ -40,7 +40,7 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
         <Card>
             <CardHeader>
                 <CardTitle>Mistake Analysis</CardTitle>
-                <CardDescription>Frequency of your common trading errors.</CardDescription>
+                <CardDescription>Frequency of your common errors.</CardDescription>
             </CardHeader>
             <CardContent>
                  {!mounted ? (

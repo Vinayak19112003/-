@@ -75,7 +75,7 @@ export default function SignupPage() {
                 <Logo />
             </div>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
-          <CardDescription>Start your professional trading journey today.</CardDescription>
+          <CardDescription>Start your professional journey today.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
