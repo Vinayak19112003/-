@@ -131,17 +131,9 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
       let screenshotURL = trade?.screenshotURL || '';
 
       if (screenshotFile && user) {
-        const uploadTask = async () => {
-          const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
-          const snapshot = await uploadBytes(storageRef, screenshotFile);
-          return await getDownloadURL(snapshot.ref);
-        };
-
-        const timeoutPromise = new Promise<string>((_, reject) =>
-          setTimeout(() => reject(new Error('Image upload timed out after 15 seconds. Please check your network and storage rules.')), 15000)
-        );
-
-        screenshotURL = await Promise.race([uploadTask(), timeoutPromise]);
+        const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
+        const snapshot = await uploadBytes(storageRef, screenshotFile);
+        screenshotURL = await getDownloadURL(snapshot.ref);
       }
 
       const newTrade: Trade = {
