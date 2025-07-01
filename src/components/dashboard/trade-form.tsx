@@ -388,36 +388,6 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
         </div>
         
         <FormField
-            control={form.control}
-            name="screenshotFile"
-            render={({ field: { onChange, value, ...rest } }) => (
-                <FormItem>
-                <FormLabel>Screenshot</FormLabel>
-                {trade?.screenshotURL && !value && (
-                    <div className="relative h-24 w-40 rounded-md overflow-hidden">
-                        <Image src={trade.screenshotURL} alt="Current screenshot" layout="fill" objectFit="cover" />
-                    </div>
-                )}
-                <FormControl>
-                    <Input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => {
-                            if (e.target.files && e.target.files.length > 0) {
-                                onChange(e.target.files[0]);
-                            }
-                        }}
-                    />
-                </FormControl>
-                <FormDescription>
-                    Upload an image of your trade setup or result.
-                </FormDescription>
-                <FormMessage />
-                </FormItem>
-            )}
-        />
-
-        <FormField
           control={form.control}
           name="mistakes"
           render={({ field }) => (
@@ -483,6 +453,36 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
               <FormMessage />
             </FormItem>
           )}
+        />
+
+        <FormField
+            control={form.control}
+            name="screenshotFile"
+            render={({ field: { onChange, value, ...rest } }) => (
+                <FormItem>
+                <FormLabel>Screenshot</FormLabel>
+                {trade?.screenshotURL && !value && (
+                    <div className="relative h-24 w-40 rounded-md overflow-hidden">
+                        <Image src={trade.screenshotURL} alt="Current screenshot" layout="fill" objectFit="cover" />
+                    </div>
+                )}
+                <FormControl>
+                    <Input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                                onChange(e.target.files[0]);
+                            }
+                        }}
+                    />
+                </FormControl>
+                <FormDescription>
+                    Upload an image of your trade setup or result.
+                </FormDescription>
+                <FormMessage />
+                </FormItem>
+            )}
         />
         
         <div className="flex justify-end gap-2 pt-4">
