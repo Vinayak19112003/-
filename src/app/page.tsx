@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { PlusCircle, ClipboardCopy, LogOut } from "lucide-react";
+import { PlusCircle, ClipboardCopy, LogOut, Share2 } from "lucide-react";
 import { useTrades } from "@/hooks/use-trades";
 import { type Trade } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { PerformanceRadarChart } from "@/components/dashboard/performance-radar-chart";
+import { SharePerformance } from "@/components/dashboard/share-performance";
 
 
 function Dashboard() {
@@ -174,6 +175,7 @@ function Dashboard() {
        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
         <Logo />
         <div className="ml-auto flex items-center gap-2">
+            <SharePerformance trades={filteredTrades} />
             <PatternAnalysis trades={filteredTrades} />
             <ModeToggle />
             <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Logout">
