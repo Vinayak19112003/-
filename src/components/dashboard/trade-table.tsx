@@ -136,8 +136,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead onClick={() => requestSort("asset")} className="cursor-pointer">Asset {getSortIndicator("asset")}</TableHead>
               {!isMobile && <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>}
               <TableHead>Direction</TableHead>
-              <TableHead onClick={() => requestSort("rr")} className="cursor-pointer">RR {getSortIndicator("rr")}</TableHead>
-              {!isMobile && <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer">Confidence {getSortIndicator("confidence")}</TableHead>}
+              <TableHead onClick={() => requestSort("rr")} className="cursor-pointer text-center">RR {getSortIndicator("rr")}</TableHead>
+              {!isMobile && <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>}
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               {!isMobile && <TableHead>Mistakes</TableHead>}
               <TableHead>Screenshot</TableHead>
@@ -156,8 +156,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                         {trade.direction}
                     </span>
                   </TableCell>
-                  <TableCell>{trade.rr?.toFixed(2)}</TableCell>
-                  {!isMobile && <TableCell>{trade.confidence}</TableCell>}
+                  <TableCell className="text-center">{trade.rr?.toFixed(2)}</TableCell>
+                  {!isMobile && <TableCell className="text-center">{trade.confidence}</TableCell>}
                   <TableCell><ResultBadge result={trade.result} /></TableCell>
                   {!isMobile && 
                     <TableCell>
