@@ -16,6 +16,7 @@ import {
 import type { Trade } from '@/lib/types';
 import { Loader2, Share2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from 'next-themes';
 import { StatsCards } from './stats-cards';
 import { PerformanceRadarChart } from './performance-radar-chart';
 import { Logo } from '../logo';
@@ -25,6 +26,7 @@ export function SharePerformance({ trades }: { trades: Trade[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
   const imageRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadImage = async () => {
@@ -39,9 +41,11 @@ export function SharePerformance({ trades }: { trades: Trade[] }) {
 
     setIsLoading(true);
     try {
+        const bgColor = resolvedTheme === 'dark' ? '#14181f' : '#ffffff';
         const dataUrl = await htmlToImage.toPng(imageRef.current, { 
             cacheBust: true,
             pixelRatio: 2, // for higher quality
+            backgroundColor: bgColor,
         });
 
         // Create a link and trigger download
