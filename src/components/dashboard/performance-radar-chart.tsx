@@ -113,7 +113,7 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
   ].map(d => ({ ...d, fullMark: 100 }));
 
 
-  const tickColor = theme === 'dark' ? '#888888' : '#333333';
+  const tickColor = theme === 'dark' ? '#e2e8f0' : '#334155';
   const strokeColor = 'hsl(var(--primary))';
   const fillColor = 'hsl(var(--primary))';
 
