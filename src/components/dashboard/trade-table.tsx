@@ -49,7 +49,7 @@ type TradeTableProps = {
   onDelete: (id: string) => void;
 };
 
-type SortKey = keyof Trade | "rr";
+type SortKey = keyof Trade | "returnPercentage";
 
 export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
@@ -74,6 +74,19 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
     if (sortConfig !== null) {
       filtered.sort((a, b) => {
+        if (sortConfig.key === 'returnPercentage') {
+            const riskA = (a.accountSize ?? 0) * ((a.riskPercentage ?? 0) / 100);
+            const returnA = riskA > 0 && a.pnl != null ? (a.pnl / riskA) * 100 : -Infinity;
+            const riskB = (b.accountSize ?? 0) * ((b.riskPercentage ?? 0) / 100);
+            const returnB = riskB > 0 && b.pnl != null ? (b.pnl / riskB) * 100 : -Infinity;
+
+            if (sortConfig.direction === 'asc') {
+                return returnA - returnB;
+            } else {
+                return returnB - returnA;
+            }
+        }
+        
         const aVal = a[sortConfig.key as keyof Trade];
         const bVal = b[sortConfig.key as keyof Trade];
         
@@ -86,8 +99,12 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
             return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
         }
         
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        if (String(aVal) < String(bVal)) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (String(aVal) > String(bVal)) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
@@ -138,6 +155,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead>Direction</TableHead>
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer text-center">RR {getSortIndicator("rr")}</TableHead>
               <TableHead onClick={() => requestSort("pnl")} className="cursor-pointer text-right">PNL ($) {getSortIndicator("pnl")}</TableHead>
+              <TableHead onClick={() => requestSort("returnPercentage")} className="cursor-pointer text-right">Return % {getSortIndicator("returnPercentage")}</TableHead>
               {!isMobile && <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>}
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               {!isMobile && <TableHead>Mistakes</TableHead>}
@@ -147,75 +165,83 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
           </TableHeader>
           <TableBody>
             {sortedAndFilteredTrades.length > 0 ? (
-              sortedAndFilteredTrades.map((trade) => (
-                <TableRow key={trade.id}>
-                  <TableCell>{format(trade.date, "dd MMM yyyy")}</TableCell>
-                  <TableCell>{trade.asset}</TableCell>
-                  {!isMobile && <TableCell>{trade.strategy}</TableCell>}
-                  <TableCell>
-                    <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-primary' : 'text-destructive')}>
-                        {trade.direction}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">{trade.rr?.toFixed(2)}</TableCell>
-                  <TableCell className={cn("text-right font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
-                    {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
-                  </TableCell>
-                  {!isMobile && <TableCell className="text-center">{trade.confidence}</TableCell>}
-                  <TableCell><ResultBadge result={trade.result} /></TableCell>
-                  {!isMobile && 
+              sortedAndFilteredTrades.map((trade) => {
+                const riskAmount = (trade.accountSize ?? 0) * ((trade.riskPercentage ?? 0) / 100);
+                const returnPercentage = riskAmount > 0 && trade.pnl != null ? (trade.pnl / riskAmount) * 100 : 0;
+                
+                return (
+                  <TableRow key={trade.id}>
+                    <TableCell>{format(trade.date, "dd MMM yyyy")}</TableCell>
+                    <TableCell>{trade.asset}</TableCell>
+                    {!isMobile && <TableCell>{trade.strategy}</TableCell>}
                     <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                            {trade.mistakes?.map(mistake => (
-                                <Badge key={mistake} variant="outline">{mistake}</Badge>
-                            ))}
-                        </div>
+                      <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-primary' : 'text-destructive')}>
+                          {trade.direction}
+                      </span>
                     </TableCell>
-                  }
-                  <TableCell>
-                    {trade.screenshotURL && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <ImageIcon className="h-5 w-5" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                              <DialogTitle>Trade Screenshot</DialogTitle>
-                          </DialogHeader>
-                          <div className="relative h-[80vh]">
-                              <Image
-                                  src={trade.screenshotURL}
-                                  alt={`Screenshot for trade on ${trade.asset}`}
-                                  fill
-                                  style={{objectFit: 'contain'}}
-                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              />
+                    <TableCell className="text-center">{trade.rr?.toFixed(2)}</TableCell>
+                    <TableCell className={cn("text-right font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
+                      {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
+                    </TableCell>
+                    <TableCell className={cn("text-right font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
+                      {riskAmount > 0 ? `${returnPercentage.toFixed(1)}%` : 'N/A'}
+                    </TableCell>
+                    {!isMobile && <TableCell className="text-center">{trade.confidence}</TableCell>}
+                    <TableCell><ResultBadge result={trade.result} /></TableCell>
+                    {!isMobile && 
+                      <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                              {trade.mistakes?.map(mistake => (
+                                  <Badge key={mistake} variant="outline">{mistake}</Badge>
+                              ))}
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
+                      </TableCell>
+                    }
+                    <TableCell>
+                      {trade.screenshotURL && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <ImageIcon className="h-5 w-5" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                                <DialogTitle>Trade Screenshot</DialogTitle>
+                            </DialogHeader>
+                            <div className="relative h-[80vh]">
+                                <Image
+                                    src={trade.screenshotURL}
+                                    alt={`Screenshot for trade on ${trade.asset}`}
+                                    fill
+                                    style={{objectFit: 'contain'}}
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                />
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={isMobile ? 8 : 11} className="h-24 text-center">
+                <TableCell colSpan={isMobile ? 9 : 12} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>
