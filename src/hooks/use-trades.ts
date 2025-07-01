@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { Trade, TradeSchema } from '@/lib/types';
 import { useToast } from './use-toast';
+import { useAuth } from './use-auth';
 
 const TRADES_COLLECTION = 'trades';
 
@@ -31,6 +32,7 @@ const convertDocToTrade = (doc: DocumentData): Trade => {
 };
 
 export function useTrades() {
+  const { user } = useAuth();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
@@ -45,8 +47,14 @@ export function useTrades() {
       setIsLoaded(true);
       return;
     }
+    
+    if (!user) {
+      setTrades([]);
+      setIsLoaded(true); // If no user, there are no trades to load
+      return;
+    }
 
-    const tradesCollection = collection(db, TRADES_COLLECTION);
+    const tradesCollection = collection(db, 'users', user.uid, TRADES_COLLECTION);
     const q = query(tradesCollection, orderBy("date", "desc"));
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -73,13 +81,12 @@ export function useTrades() {
       setIsLoaded(true);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, user]);
   
   const addTrade = async (trade: Trade) => {
-    if (!db) {
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+    if (!db || !user) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to add a trade.' });
       return;
     }
     try {
@@ -88,10 +95,9 @@ export function useTrades() {
         ...newTrade,
         date: Timestamp.fromDate(newTrade.date),
       };
-      // remove id because it's managed by firestore
       const { id, ...tradeDataWithoutId } = tradeData;
 
-      await addDoc(collection(db, TRADES_COLLECTION), tradeDataWithoutId);
+      await addDoc(collection(db, 'users', user.uid, TRADES_COLLECTION), tradeDataWithoutId);
     } catch (error) {
        console.error("Error adding trade:", error);
        toast({
@@ -103,13 +109,13 @@ export function useTrades() {
   };
 
   const updateTrade = async (updatedTrade: Trade) => {
-    if (!db) {
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+    if (!db || !user) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to update a trade.' });
       return;
     }
     try {
       const newTrade = TradeSchema.parse(updatedTrade);
-      const tradeRef = doc(db, TRADES_COLLECTION, newTrade.id);
+      const tradeRef = doc(db, 'users', user.uid, TRADES_COLLECTION, newTrade.id);
       const tradeData = {
         ...newTrade,
         date: Timestamp.fromDate(newTrade.date),
@@ -128,12 +134,12 @@ export function useTrades() {
   };
   
   const deleteTrade = async (id: string) => {
-    if (!db) {
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+    if (!db || !user) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to delete a trade.' });
       return;
     }
     try {
-        const tradeRef = doc(db, TRADES_COLLECTION, id);
+        const tradeRef = doc(db, 'users', user.uid, TRADES_COLLECTION, id);
         await deleteDoc(tradeRef);
     } catch (error) {
         console.error("Error deleting trade:", error);

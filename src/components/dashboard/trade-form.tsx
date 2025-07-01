@@ -42,6 +42,9 @@ import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
 import { useAssets } from "@/hooks/use-assets";
 import { AddAssetDialog } from "./add-asset-dialog";
 import { AddStrategyDialog } from "./add-strategy-dialog";
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useAuth } from '@/hooks/use-auth';
 
 const FormSchema = TradeSchema.omit({ id: true });
 
@@ -56,8 +59,10 @@ type TradeFormProps = {
 
 export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, deleteStrategy }: TradeFormProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshot || null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(trade?.screenshotURL || null);
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
 
@@ -82,7 +87,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           result: "Win",
           mistakes: [],
           notes: "",
-          screenshot: "",
+          screenshotURL: "",
         },
   });
 
@@ -111,11 +116,10 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setScreenshotFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setValue("screenshot", base64String);
-        setImagePreview(base64String);
+        setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -123,9 +127,29 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
+    let screenshotURL = trade?.screenshotURL || '';
+
+    if (screenshotFile && user) {
+        try {
+            const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
+            const snapshot = await uploadBytes(storageRef, screenshotFile);
+            screenshotURL = await getDownloadURL(snapshot.ref);
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            toast({
+                variant: "destructive",
+                title: "Image Upload Failed",
+                description: "Could not upload the screenshot. Please try again.",
+            });
+            setIsSaving(false);
+            return;
+        }
+    }
+
     const newTrade: Trade = {
       ...data,
       id: trade?.id || crypto.randomUUID(),
+      screenshotURL,
     };
     await onSave(newTrade);
     setIsSaving(false);
@@ -437,6 +461,17 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                     <Image src={imagePreview} alt="Screenshot preview" width={300} height={180} className="w-full h-auto object-contain" />
                 </div>
             )}
+            <FormField
+              control={form.control}
+              name="screenshotURL"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input type="hidden" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
         </div>
 
         <div className="flex justify-end gap-2 pt-4">

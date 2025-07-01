@@ -3,24 +3,26 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, collection } from "firebase/firestore";
 import { useToast } from './use-toast';
 import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
+import { useAuth } from './use-auth';
 
-const SETTINGS_COLLECTION = 'journalSettings';
+const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'userConfig';
 
 type SettingsKey = 'assets' | 'strategies' | 'mistakeTags';
 
 const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] | string[]) => {
+  const { user } = useAuth();
   const [items, setItems] = useState<string[]>([...defaultValues]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
   const getSettingsDocRef = useCallback(() => {
-    if (!db) return null;
-    return doc(db, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
-  }, []);
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+  }, [user]);
 
   useEffect(() => {
     if (!db) {
@@ -34,6 +36,12 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
       return;
     }
 
+    if (!user) {
+        setItems([...defaultValues]);
+        setIsLoaded(true);
+        return;
+    }
+
     const docRef = getSettingsDocRef();
     if (!docRef) {
         setIsLoaded(true);
@@ -43,7 +51,6 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     const unsubscribe = onSnapshot(docRef, async (docSnap) => {
       if (!docSnap.exists()) {
         try {
-          // Initialize the document if it doesn't exist
           await setDoc(docRef, {
             assets: [...DEFAULT_ASSETS],
             strategies: [...DEFAULT_STRATEGIES],
@@ -52,7 +59,6 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
         } catch (error) {
           console.error("Failed to initialize settings doc:", error);
         }
-        // The listener will be triggered again by setDoc, so we can just return
         return;
       }
       
@@ -60,12 +66,10 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
       const currentItems = data[key];
 
       if (Array.isArray(currentItems)) {
-        // Use the items from DB, or the default list if DB is empty
         setItems(currentItems.length > 0 ? currentItems : [...defaultValues]);
       } else {
-        // The field for this key (e.g. 'assets') is missing, so add it.
         setItems([...defaultValues]);
-        await updateDoc(docRef, { [key]: [...defaultValues] });
+        await updateDoc(docRef, { [key]: [...defaultValues] }).catch(e => console.error("Failed to update missing settings field", e));
       }
 
       setIsLoaded(true);
@@ -82,12 +86,12 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     });
     
     return () => unsubscribe();
-  }, [key, defaultValues, getSettingsDocRef, toast]);
+  }, [key, defaultValues, getSettingsDocRef, toast, user]);
 
 
   const addItem = async (newItem: string): Promise<boolean> => {
-    if (!db) {
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
+    if (!db || !user) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
       return false;
     }
     const trimmedItem = key === 'assets' ? newItem.trim().toUpperCase() : newItem.trim();
@@ -125,9 +129,9 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
   };
 
   const deleteItem = async (itemToDelete: string) => {
-    if (!db) {
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Not connected to Firestore.' });
-      return;
+    if (!db || !user) {
+        toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in.' });
+        return;
     }
     try {
         const docRef = getSettingsDocRef();

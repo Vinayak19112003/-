@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { PlusCircle, ClipboardCopy } from "lucide-react";
+import { PlusCircle, ClipboardCopy, LogOut } from "lucide-react";
 import { useTrades } from "@/hooks/use-trades";
 import { type Trade } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,13 @@ import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { useStrategies } from "@/hooks/use-strategies";
 import { Label } from "@/components/ui/label";
+import AuthGuard from "@/components/auth/auth-guard";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 
-export default function Home() {
+function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
   const { strategies, addStrategy, deleteStrategy } = useStrategies();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -40,6 +44,12 @@ export default function Home() {
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -63,7 +73,6 @@ export default function Home() {
   };
 
   const handleCalendarDateSelect = (date: Date) => {
-    // If the same single day is clicked again, reset the filter to the default (this month)
     if (dateRange?.from && isSameDay(date, dateRange.from) && dateRange.to && isSameDay(date, dateRange.to)) {
         setDateRange({ from: startOfMonth(new Date()), to: new Date() });
     } else {
@@ -76,12 +85,10 @@ export default function Home() {
     return trades.filter(trade => {
         const tradeDate = new Date(trade.date);
         const fromDate = new Date(dateRange.from!);
-        // Set to start of day
         fromDate.setHours(0, 0, 0, 0);
 
         if (dateRange.to) {
             const toDate = new Date(dateRange.to);
-            // Set to end of day
             toDate.setHours(23, 59, 59, 999);
             return tradeDate >= fromDate && tradeDate <= toDate;
         }
@@ -158,6 +165,9 @@ export default function Home() {
         <div className="ml-auto flex items-center gap-2">
             <PatternAnalysis trades={filteredTrades} />
             <ModeToggle />
+            <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Logout">
+              <LogOut className="h-5 w-5"/>
+            </Button>
         </div>
        </header>
        <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -283,4 +293,13 @@ export default function Home() {
        </footer>
     </div>
   );
+}
+
+
+export default function HomePage() {
+  return (
+    <AuthGuard>
+      <Dashboard />
+    </AuthGuard>
+  )
 }

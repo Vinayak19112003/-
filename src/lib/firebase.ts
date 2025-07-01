@@ -1,6 +1,8 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,19 +13,28 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | undefined;
-let db: Firestore | null = null;
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
 
-try {
-  // Check if all required config values are present
-  if (Object.values(firebaseConfig).some(value => !value)) {
-    console.error("Firebase config is missing one or more values. Please check your .env file or environment variables.");
-  } else {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+if (typeof window !== "undefined" && !getApps().length) {
+    try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        storage = getStorage(app);
+    } catch (error) {
+        console.error("Firebase initialization error", error);
+        // Set to a state that can be checked by other parts of the app
+        //@ts-ignore
+        app = auth = db = storage = null;
+    }
+} else {
+    app = getApp();
+    auth = getAuth(app);
     db = getFirestore(app);
-  }
-} catch (error) {
-  console.error("Failed to initialize Firebase:", error);
+    storage = getStorage(app);
 }
 
-export { app, db };
+export { app, db, auth, storage };

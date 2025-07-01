@@ -163,8 +163,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {trade.screenshot ? (
-                      <Button variant="ghost" size="icon" onClick={() => setImageInView(trade.screenshot!)}>
+                    {trade.screenshotURL ? (
+                      <Button variant="ghost" size="icon" onClick={() => setImageInView(trade.screenshotURL!)}>
                         <ImageIcon className="h-5 w-5" />
                       </Button>
                     ) : (
