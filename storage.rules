@@ -1,12 +1,10 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow users to read and write files within their own user folder.
-    // This allows them to upload and delete their own trade screenshots.
+    // Allow users to read, write, and delete files within their own user-specific folder.
     match /users/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
