@@ -137,7 +137,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
         const tradeToSave: Trade = {
             ...data,
             id: tradeId,
-            screenshotURL: screenshotURL,
+            screenshotURL: screenshotURL || "",
         };
         
         // Remove the file from the object before validation and saving
@@ -453,7 +453,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
             </FormItem>
           )}
         />
-
+        
         <FormField
             control={form.control}
             name="screenshotFile"
@@ -483,7 +483,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                 </FormItem>
             )}
         />
-        
+
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button type="submit" disabled={isSaving}>
