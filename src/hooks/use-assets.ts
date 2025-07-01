@@ -1,32 +1,10 @@
 
 "use client";
 
-import useLocalStorage from './use-local-storage';
-
-const DEFAULT_ASSETS = ["NAS100", "EURUSD", "XAUUSD"];
-const ASSETS_STORAGE_KEY = 'user-assets';
+import useJournalSettings from './use-journal-settings';
+import { DEFAULT_ASSETS } from '@/lib/constants';
 
 export function useAssets() {
-  const [assets, setAssets, isLoaded] = useLocalStorage<string[]>(ASSETS_STORAGE_KEY, DEFAULT_ASSETS);
-
-  const addAsset = (newAsset: string): boolean => {
-    const trimmedAsset = newAsset.trim().toUpperCase();
-    if (!trimmedAsset) return false;
-
-    let success = false;
-    setAssets(prevAssets => {
-      if (prevAssets.some(a => a.toLowerCase() === trimmedAsset.toLowerCase())) {
-        return prevAssets;
-      }
-      success = true;
-      return [...prevAssets, trimmedAsset].sort();
-    });
-    return success;
-  };
-
-  const deleteAsset = (assetToDelete: string) => {
-    setAssets(prev => prev.filter(asset => asset !== assetToDelete));
-  };
-
-  return { assets, addAsset, deleteAsset, isLoaded };
+  const { items, addItem, deleteItem, isLoaded } = useJournalSettings('assets', DEFAULT_ASSETS);
+  return { assets: items, addAsset: addItem, deleteAsset: deleteItem, isLoaded };
 }

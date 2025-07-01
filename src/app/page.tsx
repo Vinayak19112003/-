@@ -100,17 +100,17 @@ export default function Home() {
     setIsFormOpen(false);
   };
   
-  const handleSaveTrade = (trade: Trade) => {
+  const handleSaveTrade = async (trade: Trade) => {
     if (editingTrade) {
-      updateTrade(trade);
+      await updateTrade(trade);
     } else {
-      addTrade(trade);
+      await addTrade(trade);
     }
     handleCloseForm();
   };
 
-  const handleDeleteTrade = (id: string) => {
-    deleteTrade(id);
+  const handleDeleteTrade = async (id: string) => {
+    await deleteTrade(id);
     toast({
       title: "Trade Deleted",
       description: "The trade has been removed from your log.",

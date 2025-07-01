@@ -20,8 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddMistakeTagDialogProps = {
   mistakeTags: string[];
-  addMistakeTag: (newTag: string) => boolean;
-  deleteMistakeTag: (tag: string) => void;
+  addMistakeTag: (newTag: string) => Promise<boolean>;
+  deleteMistakeTag: (tag: string) => Promise<void>;
 };
 
 export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, deleteMistakeTag }: AddMistakeTagDialogProps) {
@@ -30,7 +30,7 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, deleteMistakeT
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmedTag = newTag.trim();
     if (!trimmedTag) {
         toast({
@@ -42,22 +42,18 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, deleteMistakeT
     }
 
     setIsLoading(true);
-    const success = addMistakeTag(trimmedTag);
+    const success = await addMistakeTag(trimmedTag);
     if (success) {
-      toast({
-        title: "Mistake Tag Added",
-        description: `"${trimmedTag}" has been added to your list.`,
-      });
       setNewTag("");
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Tag Exists",
-            description: "This mistake tag is already in your list.",
-        });
     }
     setIsLoading(false);
   };
+  
+  const handleDelete = async (tag: string) => {
+    setIsLoading(true);
+    await deleteMistakeTag(tag);
+    setIsLoading(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -81,7 +77,7 @@ export function AddMistakeTagDialog({ mistakeTags, addMistakeTag, deleteMistakeT
                     mistakeTags.map(tag => (
                         <div key={tag} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
                             <span className="text-sm font-medium">{tag}</span>
-                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteMistakeTag(tag)}>
+                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(tag)} disabled={isLoading}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete {tag}</span>
                             </Button>

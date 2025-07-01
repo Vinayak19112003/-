@@ -1,4 +1,13 @@
 
+export const DEFAULT_ASSETS = [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "SPX500",
+    "NAS100",
+    "BTCUSD",
+] as const;
+
 export const DEFAULT_MISTAKE_TAGS = [
   "No SMT",
   "No CISD",

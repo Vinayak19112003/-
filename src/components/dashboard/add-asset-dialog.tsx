@@ -20,8 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddAssetDialogProps = {
   assets: string[];
-  addAsset: (newAsset: string) => void;
-  deleteAsset: (asset: string) => void;
+  addAsset: (newAsset: string) => Promise<boolean>;
+  deleteAsset: (asset: string) => Promise<void>;
 };
 
 export function AddAssetDialog({ assets, addAsset, deleteAsset }: AddAssetDialogProps) {
@@ -30,7 +30,7 @@ export function AddAssetDialog({ assets, addAsset, deleteAsset }: AddAssetDialog
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmedAsset = newAsset.trim().toUpperCase();
     if (!trimmedAsset) {
         toast({
@@ -42,20 +42,16 @@ export function AddAssetDialog({ assets, addAsset, deleteAsset }: AddAssetDialog
     }
 
     setIsLoading(true);
-    const success = addAsset(trimmedAsset);
+    const success = await addAsset(trimmedAsset);
     if (success) {
-      toast({
-        title: "Asset Added",
-        description: `"${trimmedAsset}" has been added to your asset list.`,
-      });
       setNewAsset("");
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Asset Exists",
-            description: "This asset is already in your list.",
-        });
     }
+    setIsLoading(false);
+  };
+  
+  const handleDelete = async (asset: string) => {
+    setIsLoading(true);
+    await deleteAsset(asset);
     setIsLoading(false);
   };
 
@@ -81,7 +77,7 @@ export function AddAssetDialog({ assets, addAsset, deleteAsset }: AddAssetDialog
                     assets.map(asset => (
                         <div key={asset} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
                             <span className="text-sm font-medium">{asset}</span>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteAsset(asset)}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(asset)} disabled={isLoading}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete {asset}</span>
                             </Button>

@@ -20,8 +20,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type AddStrategyDialogProps = {
   strategies: string[];
-  addStrategy: (newStrategy: string) => void;
-  deleteStrategy: (strategy: string) => void;
+  addStrategy: (newStrategy: string) => Promise<boolean>;
+  deleteStrategy: (strategy: string) => Promise<void>;
 };
 
 export function AddStrategyDialog({ strategies, addStrategy, deleteStrategy }: AddStrategyDialogProps) {
@@ -30,7 +30,7 @@ export function AddStrategyDialog({ strategies, addStrategy, deleteStrategy }: A
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmedStrategy = newStrategy.trim();
     if (!trimmedStrategy) {
         toast({
@@ -42,20 +42,16 @@ export function AddStrategyDialog({ strategies, addStrategy, deleteStrategy }: A
     }
 
     setIsLoading(true);
-    const success = addStrategy(trimmedStrategy);
+    const success = await addStrategy(trimmedStrategy);
     if (success) {
-      toast({
-        title: "Strategy Added",
-        description: `"${trimmedStrategy}" has been added to your strategy list.`,
-      });
       setNewStrategy("");
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Strategy Exists",
-            description: "This strategy is already in your list.",
-        });
     }
+    setIsLoading(false);
+  };
+
+  const handleDelete = async (strategy: string) => {
+    setIsLoading(true);
+    await deleteStrategy(strategy);
     setIsLoading(false);
   };
 
@@ -81,7 +77,7 @@ export function AddStrategyDialog({ strategies, addStrategy, deleteStrategy }: A
                     strategies.map(strategy => (
                         <div key={strategy} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
                             <span className="text-sm font-medium">{strategy}</span>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteStrategy(strategy)}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(strategy)} disabled={isLoading}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete {strategy}</span>
                             </Button>
