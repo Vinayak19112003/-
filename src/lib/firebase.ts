@@ -8,6 +8,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAkbLBTJo9-6OSH009jqw0dtx-xKxjE_VQ",
   authDomain: "tradevision-journal-pss69.firebaseapp.com",
   projectId: "tradevision-journal-pss69",
+  storageBucket: "tradevision-journal-pss69.appspot.com",
   messagingSenderId: "790628334512",
   appId: "1:790628334512:web:283fbaee6bb6aa1957b475"
 };
