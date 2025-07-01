@@ -131,9 +131,17 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
       let screenshotURL = trade?.screenshotURL || '';
 
       if (screenshotFile && user) {
-        const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
-        const snapshot = await uploadBytes(storageRef, screenshotFile);
-        screenshotURL = await getDownloadURL(snapshot.ref);
+        const uploadTask = async () => {
+          const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
+          const snapshot = await uploadBytes(storageRef, screenshotFile);
+          return await getDownloadURL(snapshot.ref);
+        };
+
+        const timeoutPromise = new Promise<string>((_, reject) =>
+          setTimeout(() => reject(new Error('Image upload timed out after 15 seconds. Please check your network and storage rules.')), 15000)
+        );
+
+        screenshotURL = await Promise.race([uploadTask(), timeoutPromise]);
       }
 
       const newTrade: Trade = {
@@ -146,15 +154,17 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
       toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
       setOpen(false);
 
-    } catch (error: any) {
-        console.error("Failed to save trade:", error);
-        toast({
-          variant: "destructive",
-          title: "Save Failed",
-          description: error.message || "Could not save your trade. Please check your connection and try again.",
-        });
+    } catch (error) {
+      console.error("A detailed error occurred during save:", error);
+      const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred. Please check the browser console for details.";
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: errorMessage,
+        duration: 9000,
+      });
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   }
 
@@ -486,5 +496,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
     </Form>
   );
 }
+
+    
 
     
