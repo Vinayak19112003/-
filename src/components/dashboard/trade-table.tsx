@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -25,14 +26,21 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-  } from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -129,6 +137,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer">RR {getSortIndicator("rr")}</TableHead>
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               <TableHead>Mistakes</TableHead>
+              <TableHead>Screenshot</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -154,6 +163,31 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
+                    {trade.screenshotURL && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <ImageIcon className="h-5 w-5" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl">
+                          <DialogHeader>
+                              <DialogTitle>Trade Screenshot</DialogTitle>
+                          </DialogHeader>
+                          <div className="relative h-[80vh]">
+                              <Image
+                                  src={trade.screenshotURL}
+                                  alt={`Screenshot for trade on ${trade.asset}`}
+                                  fill
+                                  style={{objectFit: 'contain'}}
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -171,7 +205,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>

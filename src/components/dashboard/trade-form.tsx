@@ -41,8 +41,14 @@ import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
 import { useAssets } from "@/hooks/use-assets";
 import { AddAssetDialog } from "./add-asset-dialog";
 import { AddStrategyDialog } from "./add-strategy-dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { storage } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import Image from "next/image";
 
-const FormSchema = TradeSchema.omit({ id: true });
+const FormSchema = TradeSchema.omit({ id: true }).extend({
+    screenshotFile: z.instanceof(File).optional(),
+});
 
 type TradeFormProps = {
   trade?: Trade;
@@ -58,6 +64,8 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
   const [isSaving, setIsSaving] = useState(false);
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
+  const { user } = useAuth();
+
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -80,6 +88,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           result: "Win",
           mistakes: [],
           notes: "",
+          screenshotURL: "",
         },
   });
 
@@ -107,27 +116,48 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
-    try {
-      const newTrade: Trade = {
-        ...data,
-        id: trade?.id || crypto.randomUUID(),
-      };
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Not Authenticated', description: 'You must be logged in to save a trade.' });
+        setIsSaving(false);
+        return;
+    }
 
-      await onSave(newTrade);
-      toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
-      setOpen(false);
+    try {
+        const tradeId = trade?.id || crypto.randomUUID();
+        let screenshotURL: string | undefined = trade?.screenshotURL;
+
+        if (data.screenshotFile) {
+            const file = data.screenshotFile;
+            const filePath = `screenshots/${user.uid}/${tradeId}/${file.name}`;
+            const fileRef = storageRef(storage, filePath);
+            await uploadBytes(fileRef, file);
+            screenshotURL = await getDownloadURL(fileRef);
+        }
+
+        const tradeToSave: Trade = {
+            ...data,
+            id: tradeId,
+            screenshotURL: screenshotURL,
+        };
+        
+        // Remove the file from the object before validation and saving
+        delete (tradeToSave as any).screenshotFile;
+
+        await onSave(tradeToSave);
+        toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
+        setOpen(false);
 
     } catch (error) {
-      console.error("A detailed error occurred during save:", error);
-      const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred. Please check the browser console for details.";
-      toast({
-        variant: "destructive",
-        title: "Save Failed",
-        description: errorMessage,
-        duration: 9000,
-      });
+        console.error("A detailed error occurred during save:", error);
+        const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred. Please check the browser console for details.";
+        toast({
+            variant: "destructive",
+            title: "Save Failed",
+            description: errorMessage,
+            duration: 9000,
+        });
     } finally {
-      setIsSaving(false);
+        setIsSaving(false);
     }
   }
 
@@ -357,6 +387,36 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           />
         </div>
         
+        <FormField
+            control={form.control}
+            name="screenshotFile"
+            render={({ field: { onChange, value, ...rest } }) => (
+                <FormItem>
+                <FormLabel>Screenshot</FormLabel>
+                {trade?.screenshotURL && !value && (
+                    <div className="relative h-24 w-40 rounded-md overflow-hidden">
+                        <Image src={trade.screenshotURL} alt="Current screenshot" layout="fill" objectFit="cover" />
+                    </div>
+                )}
+                <FormControl>
+                    <Input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                                onChange(e.target.files[0]);
+                            }
+                        }}
+                    />
+                </FormControl>
+                <FormDescription>
+                    Upload an image of your trade setup or result.
+                </FormDescription>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
+
         <FormField
           control={form.control}
           name="mistakes"

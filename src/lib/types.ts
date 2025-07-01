@@ -16,6 +16,7 @@ export const TradeSchema = z.object({
   result: z.enum(["Win", "Loss", "BE", "Missed"]),
   mistakes: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
+  screenshotURL: z.string().optional(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
