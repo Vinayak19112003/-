@@ -75,6 +75,9 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           ...trade,
           rr: trade.rr ?? 0,
           confidence: trade.confidence ?? 5,
+          accountSize: trade.accountSize ?? 0,
+          riskPercentage: trade.riskPercentage ?? 0,
+          pnl: trade.pnl ?? 0,
         }
       : {
           date: new Date(),
@@ -91,6 +94,9 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           mistakes: [],
           notes: "",
           screenshotURL: "",
+          accountSize: 0,
+          riskPercentage: 0,
+          pnl: 0,
         },
   });
 
@@ -98,6 +104,10 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
   const entryPrice = watch("entryPrice");
   const sl = watch("sl");
   const exitPrice = watch("exitPrice");
+  const accountSize = watch("accountSize");
+  const riskPercentage = watch("riskPercentage");
+  const rr = watch("rr");
+  const result = watch("result");
 
   useEffect(() => {
     const entry = parseFloat(entryPrice as any);
@@ -114,6 +124,26 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
       setValue("rr", parseFloat(rr.toFixed(2)));
     }
   }, [entryPrice, sl, exitPrice, setValue]);
+
+  useEffect(() => {
+    const size = parseFloat(accountSize as any);
+    const risk = parseFloat(riskPercentage as any);
+    const rRatio = parseFloat(rr as any);
+    const tradeResult = result;
+
+    if (!isNaN(size) && size > 0 && !isNaN(risk) && risk > 0) {
+      const riskAmount = size * (risk / 100);
+      let calculatedPnl = 0;
+      if (tradeResult === 'Win' && !isNaN(rRatio)) {
+        calculatedPnl = riskAmount * rRatio;
+      } else if (tradeResult === 'Loss') {
+        calculatedPnl = -riskAmount;
+      }
+      setValue("pnl", parseFloat(calculatedPnl.toFixed(2)));
+    } else {
+      setValue("pnl", 0);
+    }
+  }, [accountSize, riskPercentage, rr, result, setValue]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
@@ -372,6 +402,48 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+                control={form.control}
+                name="accountSize"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Account Size ($)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="any" placeholder="e.g. 10000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="riskPercentage"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Risk (%)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="any" placeholder="e.g. 1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="pnl"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Profit/Loss ($)</FormLabel>
+                    <FormControl>
+                        <Input type="number" {...field} readOnly className="bg-muted"/>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
         </div>
         
         <FormField

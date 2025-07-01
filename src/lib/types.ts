@@ -17,6 +17,9 @@ export const TradeSchema = z.object({
   mistakes: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
   screenshotURL: z.string().optional().default(""),
+  accountSize: z.coerce.number().optional().default(0),
+  riskPercentage: z.coerce.number().optional().default(0),
+  pnl: z.coerce.number().optional().default(0),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;

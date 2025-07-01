@@ -137,6 +137,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               {!isMobile && <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>}
               <TableHead>Direction</TableHead>
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer text-center">RR {getSortIndicator("rr")}</TableHead>
+              <TableHead onClick={() => requestSort("pnl")} className="cursor-pointer text-right">PNL ($) {getSortIndicator("pnl")}</TableHead>
               {!isMobile && <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>}
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               {!isMobile && <TableHead>Mistakes</TableHead>}
@@ -157,6 +158,9 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     </span>
                   </TableCell>
                   <TableCell className="text-center">{trade.rr?.toFixed(2)}</TableCell>
+                  <TableCell className={cn("text-right font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
+                    {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
+                  </TableCell>
                   {!isMobile && <TableCell className="text-center">{trade.confidence}</TableCell>}
                   <TableCell><ResultBadge result={trade.result} /></TableCell>
                   {!isMobile && 
@@ -211,7 +215,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center">
+                <TableCell colSpan={isMobile ? 8 : 11} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>
