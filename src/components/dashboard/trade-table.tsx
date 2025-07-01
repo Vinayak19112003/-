@@ -17,12 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -38,8 +32,7 @@ import { Input } from "@/components/ui/input";
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { MoreHorizontal, ArrowUpDown, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
+import { MoreHorizontal, ArrowUpDown } from "lucide-react";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -52,7 +45,6 @@ type SortKey = keyof Trade | "rr";
 export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
-  const [imageInView, setImageInView] = useState<string | null>(null);
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
 
   const handleConfirmDelete = () => {
@@ -137,7 +129,6 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer">RR {getSortIndicator("rr")}</TableHead>
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               <TableHead>Mistakes</TableHead>
-              <TableHead>Screenshot</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -163,15 +154,6 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {trade.screenshotURL ? (
-                      <Button variant="ghost" size="icon" onClick={() => setImageInView(trade.screenshotURL!)}>
-                        <ImageIcon className="h-5 w-5" />
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">None</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -189,7 +171,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>
@@ -197,15 +179,6 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
           </TableBody>
         </Table>
       </div>
-
-      <Dialog open={!!imageInView} onOpenChange={(open) => !open && setImageInView(null)}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Trade Screenshot</DialogTitle>
-          </DialogHeader>
-          {imageInView && <Image src={imageInView} alt="Trade Screenshot" width={1200} height={800} className="w-full h-auto object-contain rounded-md" />}
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
         <AlertDialogContent>
