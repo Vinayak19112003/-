@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc } from "firebase/firestore";
 import { useToast } from './use-toast';
 import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS } from '@/lib/constants';
 import { useAuth } from './use-auth';
@@ -20,13 +20,56 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
   const { toast } = useToast();
 
   const getSettingsDocRef = useCallback(() => {
-    if (!user) return null;
-    // Conditional check for db to prevent errors if Firebase fails to initialize
-    return db ? doc(db, 'users', user.uid, SETTINGS_COLLECTION, SETTINGS_DOC_ID) : null;
+    if (!user || !db) return null;
+    return doc(db, 'users', user.uid, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
   }, [user]);
 
+  // Effect to initialize settings for a new user
+  useEffect(() => {
+    const initializeSettings = async () => {
+      const docRef = getSettingsDocRef();
+      if (!docRef) return;
+
+      try {
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          // If the user's settings doc doesn't exist, create it.
+          await setDoc(docRef, {
+            assets: [...DEFAULT_ASSETS],
+            strategies: [...DEFAULT_STRATEGIES],
+            mistakeTags: [...DEFAULT_MISTAKE_TAGS],
+          });
+        }
+      } catch (error) {
+        console.error("Failed to check or initialize settings doc:", error);
+        toast({
+          variant: "destructive",
+          title: "Settings Initialization Failed",
+          description: "Could not create default settings.",
+        });
+      }
+    };
+
+    if (user) {
+      initializeSettings();
+    }
+  }, [user, getSettingsDocRef, toast]);
+  
+
+  // Effect to listen for real-time updates
   useEffect(() => {
     if (!user) {
+        setItems([...defaultValues]);
+        setIsLoaded(true);
+        return;
+    }
+    
+    if (!db) {
+        toast({
+            variant: 'destructive',
+            title: 'Database Connection Error',
+            description: 'Could not connect to the database. Using default values.',
+        });
         setItems([...defaultValues]);
         setIsLoaded(true);
         return;
@@ -34,52 +77,22 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
 
     const docRef = getSettingsDocRef();
     if (!docRef) {
-        if (user) { // Only show toast if user is logged in but db is not available
-            toast({
-                variant: 'destructive',
-                title: 'Database Error',
-                description: `Could not load settings. Using default values.`,
-            });
-        }
-        setItems([...defaultValues]);
         setIsLoaded(true);
         return;
     }
 
-    const unsubscribe = onSnapshot(docRef, async (docSnap) => {
-      if (!docSnap.exists()) {
-        try {
-          // If the user's settings doc doesn't exist, create it.
-          await setDoc(docRef, {
-            assets: [...DEFAULT_ASSETS],
-            strategies: [...DEFAULT_STRATEGIES],
-            mistakeTags: [...DEFAULT_MISTAKE_TAGS],
-          });
-          // The listener will automatically re-fire with the new data.
-        } catch (error) {
-          console.error("Failed to initialize settings doc:", error);
-           toast({
-            variant: "destructive",
-            title: "Settings Initialization Failed",
-            description: "Could not create default settings.",
-          });
-        }
-        // Set loaded to true to prevent UI from hanging.
-        setIsLoaded(true);
-        return;
-      }
-      
-      const data = docSnap.data();
-      const currentItems = data[key];
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+          const data = docSnap.data();
+          const currentItems = data[key];
 
-      if (Array.isArray(currentItems)) {
-        setItems(currentItems.length > 0 ? currentItems : [...defaultValues]);
-      } else {
-        setItems([...defaultValues]);
+          if (Array.isArray(currentItems)) {
+            setItems(currentItems.length > 0 ? currentItems : [...defaultValues]);
+          } else {
+            setItems([...defaultValues]);
+          }
       }
-
       setIsLoaded(true);
-
     }, (error) => {
       console.error(`Error with settings snapshot for ${key}:`, error);
       toast({
@@ -92,7 +105,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     });
     
     return () => unsubscribe();
-  }, [key, defaultValues, getSettingsDocRef, toast, user]);
+  }, [user, key, defaultValues, getSettingsDocRef, toast]);
 
 
   const addItem = async (newItem: string): Promise<boolean> => {
