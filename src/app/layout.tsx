@@ -1,5 +1,5 @@
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -8,7 +8,11 @@ import { AuthProvider } from '@/contexts/auth-context';
 export const metadata: Metadata = {
   title: 'Anony Trading',
   description: 'A modern journal for professionals.',
-  viewport: 'width=device-width, initial-scale=1.0',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1.0,
 };
 
 export default function RootLayout({
