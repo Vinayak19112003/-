@@ -102,9 +102,10 @@ export function useTrades() {
        console.error("Error adding trade:", error);
        toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not save the trade.",
+        title: "Error Saving Trade",
+        description: "Could not save the trade. Check permissions or network.",
       });
+      throw error;
     }
   };
 
@@ -127,9 +128,10 @@ export function useTrades() {
       console.error("Error updating trade:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not update the trade.",
+        title: "Error Updating Trade",
+        description: "Could not update the trade. Check permissions or network.",
       });
+      throw error;
     }
   };
   

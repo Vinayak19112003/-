@@ -127,34 +127,31 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
-    let screenshotURL = trade?.screenshotURL || '';
+    try {
+      let screenshotURL = trade?.screenshotURL || '';
 
-    if (screenshotFile && user) {
-        try {
-            const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
-            const snapshot = await uploadBytes(storageRef, screenshotFile);
-            screenshotURL = await getDownloadURL(snapshot.ref);
-        } catch (error) {
-            console.error("Error uploading image:", error);
-            toast({
-                variant: "destructive",
-                title: "Image Upload Failed",
-                description: "Could not upload the screenshot. Please try again.",
-            });
-            setIsSaving(false);
-            return;
-        }
+      if (screenshotFile && user) {
+        const storageRef = ref(storage, `users/${user.uid}/screenshots/${Date.now()}_${screenshotFile.name}`);
+        const snapshot = await uploadBytes(storageRef, screenshotFile);
+        screenshotURL = await getDownloadURL(snapshot.ref);
+      }
+
+      const newTrade: Trade = {
+        ...data,
+        id: trade?.id || crypto.randomUUID(),
+        screenshotURL,
+      };
+
+      await onSave(newTrade);
+      toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
+      setOpen(false);
+
+    } catch (error) {
+        console.error("Failed to save trade:", error);
+        // Toast for the error is handled in the useTrades hook
+    } finally {
+        setIsSaving(false);
     }
-
-    const newTrade: Trade = {
-      ...data,
-      id: trade?.id || crypto.randomUUID(),
-      screenshotURL,
-    };
-    await onSave(newTrade);
-    setIsSaving(false);
-    toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
-    setOpen(false);
   }
 
   return (
