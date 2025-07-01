@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import type { Trade } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -56,10 +55,24 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   const lastDayOfGrid = endOfWeek(endOfMonth(currentDate));
   const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
 
+  const weeklyPnl = useMemo(() => {
+    const pnlByWeek: number[] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+        const weekDays = calendarDays.slice(i, i + 7);
+        const weeklyTotal = weekDays.reduce((total, day) => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const data = dailyData.get(dateKey);
+            return total + (data?.netR || 0);
+        }, 0);
+        pnlByWeek.push(weeklyTotal);
+    }
+    return pnlByWeek;
+  }, [calendarDays, dailyData]);
+
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   
-  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Week P&L'];
 
   return (
     <Card>
@@ -75,54 +88,79 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-7 border-t border-l">
-            {weekdays.map(day => (
-                <div key={day} className="p-2 text-center font-semibold text-muted-foreground text-sm border-r border-b">{day}</div>
+        <div className="grid grid-cols-8 border-t border-l">
+            {weekdays.map((day, index) => (
+                <div key={day} className={cn(
+                    "p-2 text-center font-semibold text-muted-foreground text-sm border-r border-b",
+                    index === 7 && "bg-muted/50"
+                )}>{day}</div>
             ))}
-            {calendarDays.map(day => {
+            {calendarDays.map((day, index) => {
                 const dateKey = format(day, 'yyyy-MM-dd');
                 const data = dailyData.get(dateKey);
                 const isCurrentMonth = isSameMonth(day, currentDate);
 
-                let bgColor = 'bg-card hover:bg-muted/50';
-                if (isCurrentMonth && data && data.totalTrades > 0) {
-                    if (data.netR > 0.01) bgColor = 'bg-success/10 hover:bg-success/20';
-                    else if (data.netR < -0.01) bgColor = 'bg-destructive/10 hover:bg-destructive/20';
-                    else bgColor = 'bg-muted/50 hover:bg-muted';
+                let bgColorClass = 'bg-card hover:bg-muted/50';
+                if (isCurrentMonth && data?.totalTrades > 0) {
+                    if (data.netR > 0.01) bgColorClass = 'bg-success/10 hover:bg-success/20';
+                    else if (data.netR < -0.01) bgColorClass = 'bg-destructive/10 hover:bg-destructive/20';
+                    else bgColorClass = 'bg-muted/50 hover:bg-muted';
                 } else if (!isCurrentMonth) {
-                    bgColor = 'bg-muted/30';
+                    bgColorClass = 'bg-muted/30';
                 }
 
+                const isEndOfWeek = (index + 1) % 7 === 0;
+                const weekIndex = Math.floor(index / 7);
+                const weekPnlValue = weeklyPnl[weekIndex];
+
                 return (
-                <div
-                    key={dateKey}
-                    className={cn(
-                        "p-2 aspect-square flex flex-col justify-between cursor-pointer transition-colors border-r border-b",
-                        bgColor,
-                    )}
-                    onClick={() => onDateSelect(day)}
-                >
-                    <span className={cn(
-                        "font-semibold text-sm",
-                        isToday(day) ? "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center" : 
-                        isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
-                    )}>
-                        {format(day, 'd')}
-                    </span>
-                    {isCurrentMonth && data && (
-                        <div className="text-right">
-                            <p className={cn(
-                            "font-bold text-lg",
-                            data.netR > 0.01 ? 'text-success' :
-                            data.netR < -0.01 ? 'text-destructive' :
-                            'text-muted-foreground'
+                <Fragment key={dateKey}>
+                    <div
+                        className={cn(
+                            "p-2 aspect-square flex flex-col justify-between cursor-pointer transition-colors border-r border-b",
+                            bgColorClass,
+                        )}
+                        onClick={() => onDateSelect(day)}
+                    >
+                        <span className={cn(
+                            "font-semibold text-sm",
+                            isToday(day) ? "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center" : 
+                            isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
+                        )}>
+                            {format(day, 'd')}
+                        </span>
+                        {isCurrentMonth && data && (
+                            <div className="text-right">
+                                <p className={cn(
+                                "font-bold text-lg",
+                                data.netR > 0.01 ? 'text-success' :
+                                data.netR < -0.01 ? 'text-destructive' :
+                                'text-muted-foreground'
+                                )}>
+                                    {data.netR > 0 ? '+' : ''}{data.netR.toFixed(2)}R
+                                </p> 
+                                <p className="text-xs text-muted-foreground">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
+                            </div>
+                        )}
+                    </div>
+                    {isEndOfWeek && (
+                        <div className={cn(
+                            "p-2 aspect-square flex flex-col items-center justify-center border-r border-b",
+                            weekPnlValue > 0.01 ? 'bg-success/20' :
+                            weekPnlValue < -0.01 ? 'bg-destructive/20' :
+                            'bg-muted/50'
+                        )}>
+                           <p className={cn(
+                              "font-bold text-lg",
+                              weekPnlValue > 0.01 ? 'text-success' :
+                              weekPnlValue < -0.01 ? 'text-destructive' :
+                              'text-muted-foreground'
                             )}>
-                                {data.netR > 0 ? '+' : ''}{data.netR.toFixed(2)}R
-                            </p> 
-                            <p className="text-xs text-muted-foreground">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
+                                {weekPnlValue > 0 ? '+' : ''}{weekPnlValue.toFixed(2)}R
+                            </p>
                         </div>
                     )}
-                </div>
+                </Fragment>
                 );
             })}
         </div>
