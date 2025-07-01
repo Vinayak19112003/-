@@ -45,6 +45,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { storage } from "@/lib/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
+import { Slider } from "@/components/ui/slider";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -73,6 +74,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
       ? { 
           ...trade,
           rr: trade.rr ?? 0,
+          confidence: trade.confidence ?? 5,
         }
       : {
           date: new Date(),
@@ -86,6 +88,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           exitPrice: 0,
           rr: 0,
           result: "Win",
+          confidence: 5,
           mistakes: [],
           notes: "",
           screenshotURL: "",
@@ -148,11 +151,11 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
         setOpen(false);
 
     } catch (error) {
-        console.error("Image upload failed:", error);
+        console.error("Trade save/upload failed:", error);
         toast({
             variant: "destructive",
-            title: "Upload Failed",
-            description: error instanceof Error ? error.message : "An unknown error occurred during upload.",
+            title: "Save Failed",
+            description: error instanceof Error ? error.message : "An unknown error occurred during saving.",
             duration: 9000,
         });
     } finally {
@@ -386,6 +389,30 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           />
         </div>
         
+        <FormField
+            control={form.control}
+            name="confidence"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Confidence (1-10)</FormLabel>
+                <div className="flex items-center gap-4 pt-2">
+                    <FormControl>
+                        <Slider
+                            min={1}
+                            max={10}
+                            step={1}
+                            value={[field.value]}
+                            onValueChange={(value) => field.onChange(value[0])}
+                            className="w-full"
+                        />
+                    </FormControl>
+                    <span className="font-bold text-lg w-10 text-center">{field.value}</span>
+                </div>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
+
         <FormField
           control={form.control}
           name="mistakes"

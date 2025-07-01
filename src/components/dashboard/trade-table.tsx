@@ -135,6 +135,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>
               <TableHead>Direction</TableHead>
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer">RR {getSortIndicator("rr")}</TableHead>
+              <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer">Confidence {getSortIndicator("confidence")}</TableHead>
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               <TableHead>Mistakes</TableHead>
               <TableHead>Screenshot</TableHead>
@@ -154,6 +155,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     </span>
                   </TableCell>
                   <TableCell>{trade.rr?.toFixed(2)}</TableCell>
+                  <TableCell>{trade.confidence}</TableCell>
                   <TableCell><ResultBadge result={trade.result} /></TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1 max-w-xs">
@@ -205,7 +207,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={10} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>

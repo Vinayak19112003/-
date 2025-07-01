@@ -14,9 +14,10 @@ export const TradeSchema = z.object({
   rr: z.coerce.number().optional().default(0),
   exitPrice: z.coerce.number({ required_error: "Exit price is required." }).default(0),
   result: z.enum(["Win", "Loss", "BE", "Missed"]),
+  confidence: z.coerce.number().min(1).max(10).default(5),
   mistakes: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
-  screenshotURL: z.string().optional(),
+  screenshotURL: z.string().optional().default(""),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
