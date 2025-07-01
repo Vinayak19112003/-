@@ -18,23 +18,39 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
+// Check if all required environment variables are present.
+const isConfigComplete = 
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.storageBucket &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.appId;
+
+
 if (typeof window !== "undefined" && !getApps().length) {
     try {
-        app = initializeApp(firebaseConfig);
+        // Initialize with config only if all variables are set, otherwise let Firebase auto-configure.
+        app = isConfigComplete ? initializeApp(firebaseConfig) : initializeApp({});
         auth = getAuth(app);
         db = getFirestore(app);
         storage = getStorage(app);
     } catch (error) {
         console.error("Firebase initialization error", error);
-        // Set to a state that can be checked by other parts of the app
         //@ts-ignore
         app = auth = db = storage = null;
     }
-} else {
+} else if (getApps().length) {
     app = getApp();
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+} else {
+    // This case is for server-side rendering where the app might not be initialized yet.
+    // It will be initialized on the client.
+    //@ts-ignore
+    app = auth = db = storage = null;
 }
+
 
 export { app, db, auth, storage };
