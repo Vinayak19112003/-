@@ -108,12 +108,19 @@ function Dashboard() {
   };
   
   const handleSaveTrade = async (trade: Trade) => {
-    if (editingTrade) {
-      await updateTrade(trade);
-    } else {
-      await addTrade(trade);
+    try {
+      if (editingTrade) {
+        await updateTrade(trade);
+      } else {
+        await addTrade(trade);
+      }
+      handleCloseForm();
+    } catch (error) {
+      // The form's catch block handles user-facing toasts.
+      // We re-throw the error so the form is aware of the failure.
+      console.error("Error saving trade from page level:", error);
+      throw error;
     }
-    handleCloseForm();
   };
 
   const handleDeleteTrade = async (id: string) => {

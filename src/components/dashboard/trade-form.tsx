@@ -148,7 +148,11 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
 
     } catch (error) {
         console.error("Failed to save trade:", error);
-        // Toast for the error is handled in the useTrades hook
+        toast({
+          variant: "destructive",
+          title: "Save Failed",
+          description: "Could not save your trade. Please check your connection and try again.",
+        });
     } finally {
         setIsSaving(false);
     }
