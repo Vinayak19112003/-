@@ -1,21 +1,12 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      // Allow a user to access their own user document.
+    // This rule allows a user to read and write any document
+    // within their own user-specific collection. The wildcard {document=**}
+    // ensures this access applies to all sub-collections like 'trades' and 'settings'.
+    match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-
-      // Allow a user to read, create, update, and delete their own trades.
-      match /trades/{tradeId} {
-        allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-      }
-
-      // Allow a user to read and write their own settings documents.
-      match /settings/{docId} {
-         allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
     }
   }
 }
