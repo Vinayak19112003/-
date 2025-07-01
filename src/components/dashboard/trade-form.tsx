@@ -148,12 +148,11 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
         setOpen(false);
 
     } catch (error) {
-        console.error("A detailed error occurred during save:", error);
-        const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred. Please check the browser console for details.";
+        console.error("Image upload failed:", error);
         toast({
             variant: "destructive",
-            title: "Save Failed",
-            description: errorMessage,
+            title: "Upload Failed",
+            description: error instanceof Error ? error.message : "An unknown error occurred during upload.",
             duration: 9000,
         });
     } finally {
