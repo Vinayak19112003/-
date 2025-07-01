@@ -84,7 +84,6 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           entryTime: "",
           entryPrice: 0,
           sl: 0,
-          tp: 0,
           exitPrice: 0,
           rr: 0,
           result: "Win",
@@ -98,24 +97,23 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
   const { watch, setValue } = form;
   const entryPrice = watch("entryPrice");
   const sl = watch("sl");
-  const tp = watch("tp");
-  const direction = watch("direction");
+  const exitPrice = watch("exitPrice");
 
   useEffect(() => {
     const entry = parseFloat(entryPrice as any);
     const stopLoss = parseFloat(sl as any);
-    const takeProfit = parseFloat(tp as any);
+    const exit = parseFloat(exitPrice as any);
 
-    if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(takeProfit) && stopLoss !== entry) {
+    if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(exit) && stopLoss !== entry) {
       let rr = 0;
       const risk = Math.abs(entry - stopLoss);
-      const reward = Math.abs(takeProfit - entry);
+      const reward = Math.abs(exit - entry);
       if (risk > 0) {
         rr = reward / risk;
       }
       setValue("rr", parseFloat(rr.toFixed(2)));
     }
-  }, [entryPrice, sl, tp, direction, setValue]);
+  }, [entryPrice, sl, exitPrice, setValue]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);
@@ -295,7 +293,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           />
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="entryPrice"
@@ -322,35 +320,9 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="tp"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Take Profit (TP)</FormLabel>
-                <FormControl>
-                   <Input type="number" step="any" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="rr"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Risk/Reward (RR)</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} readOnly className="bg-muted"/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="exitPrice"
@@ -383,6 +355,19 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                     <SelectItem value="Missed">Missed</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="rr"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Risk/Reward (RR)</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} readOnly className="bg-muted"/>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
