@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -85,7 +86,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
 
                 let bgColor = 'bg-card hover:bg-muted/50';
                 if (isCurrentMonth && data && data.totalTrades > 0) {
-                    if (data.netR > 0.01) bgColor = 'bg-primary/10 hover:bg-primary/20';
+                    if (data.netR > 0.01) bgColor = 'bg-success/10 hover:bg-success/20';
                     else if (data.netR < -0.01) bgColor = 'bg-destructive/10 hover:bg-destructive/20';
                     else bgColor = 'bg-muted/50 hover:bg-muted';
                 } else if (!isCurrentMonth) {
@@ -112,7 +113,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         <div className="text-right">
                             <p className={cn(
                             "font-bold text-lg",
-                            data.netR > 0.01 ? 'text-primary' :
+                            data.netR > 0.01 ? 'text-success' :
                             data.netR < -0.01 ? 'text-destructive' :
                             'text-muted-foreground'
                             )}>
