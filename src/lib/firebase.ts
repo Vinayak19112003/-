@@ -17,8 +17,7 @@ const firebaseConfig = {
 const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
-// Explicitly providing the storage bucket URL can resolve timeout issues.
-const storage: FirebaseStorage = getStorage(app, "gs://tradevision-journal-pss69.appspot.com");
+const storage: FirebaseStorage = getStorage(app);
 
 export { app, db, auth, storage };
 
