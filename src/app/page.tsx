@@ -244,10 +244,10 @@ function Dashboard() {
           <DonationContentComponent className={cn(isMobile ? "w-full" : "max-w-2xl")}>
             <DonationHeaderComponent>
               <DonationTitleComponent className="flex items-center gap-2 text-xl sm:text-2xl">
-                💰 Support ANONY JOURNAL
+                💰 Support Anony Trading
               </DonationTitleComponent>
               <DonationDescriptionComponent>
-                If you find value in ANONY JOURNAL, consider supporting the project with a small crypto donation. Your support helps continue building and improving free resources for traders.
+                If you find value in Anony Trading, consider supporting the project with a small crypto donation. Your support helps continue building and improving free resources for traders.
               </DonationDescriptionComponent>
             </DonationHeaderComponent>
             <div className={cn("px-4 pb-4 overflow-y-auto max-h-[80vh]")}>
@@ -291,7 +291,7 @@ function Dashboard() {
        <footer className="py-12 text-center text-sm text-muted-foreground">
         <div className="container flex flex-col items-center justify-center gap-2">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                <span>Created by ANONY JOURNAL</span>
+                <span>Created by Anony Trading</span>
                 <span className="hidden sm:inline-block">|</span>
                 <div className="flex items-center gap-4">
                     <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">X</a>

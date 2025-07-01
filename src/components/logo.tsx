@@ -19,7 +19,7 @@ export function Logo() {
         <circle cx="12" cy="14.5" r="1.5" fill="currentColor" strokeWidth="0" />
       </svg>
       <h1 className="font-headline text-xl font-semibold tracking-tight">
-        ANONY JOURNAL
+        Anony Trading
       </h1>
     </div>
   );

@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: 'ANONY JOURNAL',
+  title: 'Anony Trading',
   description: 'A modern journal for professionals.',
   viewport: 'width=device-width, initial-scale=1.0',
 };
