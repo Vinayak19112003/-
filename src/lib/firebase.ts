@@ -5,12 +5,12 @@ import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAkbLBTJo9-6OSH009jqw0dtx-xKxjE_VQ",
+  authDomain: "tradevision-journal-pss69.firebaseapp.com",
+  projectId: "tradevision-journal-pss69",
+  storageBucket: "tradevision-journal-pss69.appspot.com",
+  messagingSenderId: "790628334512",
+  appId: "1:790628334512:web:283fbaee6bb6aa1957b475"
 };
 
 let app: FirebaseApp;
@@ -18,39 +18,28 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// Check if all required environment variables are present.
-const isConfigComplete = 
-    firebaseConfig.apiKey &&
-    firebaseConfig.authDomain &&
-    firebaseConfig.projectId &&
-    firebaseConfig.storageBucket &&
-    firebaseConfig.messagingSenderId &&
-    firebaseConfig.appId;
-
-
-if (typeof window !== "undefined" && !getApps().length) {
+if (typeof window !== "undefined") {
+  if (!getApps().length) {
     try {
-        // Initialize with config only if all variables are set, otherwise let Firebase auto-configure.
-        app = isConfigComplete ? initializeApp(firebaseConfig) : initializeApp({});
-        auth = getAuth(app);
-        db = getFirestore(app);
-        storage = getStorage(app);
+      app = initializeApp(firebaseConfig);
     } catch (error) {
-        console.error("Firebase initialization error", error);
-        //@ts-ignore
-        app = auth = db = storage = null;
+      console.error("Firebase initialization error", error);
     }
-} else if (getApps().length) {
+  } else {
     app = getApp();
+  }
+  
+  if (app) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+  } else {
+    // @ts-ignore
+    auth = db = storage = null;
+  }
 } else {
-    // This case is for server-side rendering where the app might not be initialized yet.
-    // It will be initialized on the client.
-    //@ts-ignore
+    // @ts-ignore
     app = auth = db = storage = null;
 }
-
 
 export { app, db, auth, storage };

@@ -232,10 +232,10 @@ function Dashboard() {
           <DonationContentComponent className={cn(isMobile ? "w-full" : "max-w-2xl")}>
             <DonationHeaderComponent>
               <DonationTitleComponent className="flex items-center gap-2 text-xl sm:text-2xl">
-                💰 Support My Work
+                💰 Support TradeVision
               </DonationTitleComponent>
               <DonationDescriptionComponent>
-                If you find value in this trading journal, consider supporting the project with a small crypto donation. Your support helps me continue building and improving free resources for traders.
+                If you find value in TradeVision Journal, consider supporting the project with a small crypto donation. Your support helps continue building and improving free resources for traders.
               </DonationDescriptionComponent>
             </DonationHeaderComponent>
             <div className={cn("px-4 pb-4 overflow-y-auto max-h-[80vh]")}>
@@ -279,11 +279,11 @@ function Dashboard() {
        <footer className="py-12 text-center text-sm text-muted-foreground">
         <div className="container flex flex-col items-center justify-center gap-2">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                <span>Created by AnonyTrading</span>
+                <span>Created by TradeVision</span>
                 <span className="hidden sm:inline-block">|</span>
                 <div className="flex items-center gap-4">
-                    <a href="https://x.com/vinayakICT" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">X</a>
-                    <a href="https://discord.gg/rPFQfF5tSb" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">Discord</a>
+                    <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">X</a>
+                    <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline">Discord</a>
                     <button onClick={() => setIsDonationOpen(true)} className="hover:text-primary transition-colors underline">
                         Donation
                     </button>

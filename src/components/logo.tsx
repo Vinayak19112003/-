@@ -1,3 +1,4 @@
+
 import { AreaChart } from "lucide-react";
 
 export function Logo() {
@@ -5,7 +6,7 @@ export function Logo() {
     <div className="flex items-center gap-2">
       <AreaChart className="h-6 w-6 text-primary" />
       <h1 className="font-headline text-xl font-semibold tracking-tight">
-        Anony Journal
+        TradeVision Journal
       </h1>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -5,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: 'Anony Journal',
+  title: 'TradeVision Journal',
   description: 'A modern trading journal for professional traders.',
   viewport: 'width=device-width, initial-scale=1.0',
 };
