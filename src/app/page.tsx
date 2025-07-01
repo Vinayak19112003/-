@@ -34,6 +34,7 @@ import AuthGuard from "@/components/auth/auth-guard";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { PerformanceRadarChart } from "@/components/dashboard/performance-radar-chart";
 
 
 function Dashboard() {
@@ -209,6 +210,7 @@ function Dashboard() {
                 </Card>
             </div>
             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                 <PerformanceRadarChart trades={filteredTrades} />
                  <StrategyAnalytics trades={filteredTrades} />
                  <MistakeAnalysis trades={filteredTrades} />
             </div>
