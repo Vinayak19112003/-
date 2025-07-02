@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
 import type { Trade } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from '@/components/ui/skeleton';
 
 type MistakeAnalysisProps = {
@@ -20,14 +21,17 @@ const COLORS = [
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0];
-      const { name, value } = data.payload;
+      const data = payload[0].payload;
       return (
         <div className="rounded-lg border bg-background p-2.5 text-sm shadow-xl">
-          <div className="mb-2 font-medium">{name}</div>
-          <div className="flex items-center justify-between">
+          <div className="mb-2 font-medium">{data.name}</div>
+          <div className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">Frequency</span>
-            <span className="font-bold">{value}</span>
+            <span className="font-bold">{data.value}</span>
+          </div>
+           <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Of total</span>
+            <span className="font-bold">{(data.percent * 100).toFixed(1)}%</span>
           </div>
         </div>
       );
@@ -37,12 +41,13 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
     const [mounted, setMounted] = useState(false);
+    const [hoveredData, setHoveredData] = useState<{ name: string; value: number; percent: number } | null>(null);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const mistakeCounts = useMemo(() => {
+    const mistakeData = useMemo(() => {
         const counts: { [key: string]: number } = {};
         trades.forEach(trade => {
             trade.mistakes?.forEach(mistake => {
@@ -50,63 +55,77 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
             });
         });
 
+        const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
         return Object.entries(counts)
-            .map(([name, value]) => ({ name, value }))
+            .map(([name, value]) => ({ name, value, percent: total > 0 ? value / total : 0 }))
             .sort((a, b) => b.value - a.value);
     }, [trades]);
+
+    // Set initial hovered data to the most frequent mistake
+    useEffect(() => {
+        if (mistakeData.length > 0) {
+            setHoveredData(mistakeData[0]);
+        } else {
+            setHoveredData(null);
+        }
+    }, [mistakeData]);
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Mistake Analysis</CardTitle>
-                <CardDescription>Frequency of your common errors.</CardDescription>
+                <CardDescription>Hover over a slice to see details.</CardDescription>
             </CardHeader>
             <CardContent>
                  {!mounted ? (
                     <Skeleton className="h-[250px] w-full" />
-                ) : mistakeCounts.length > 0 ? (
-                    <div className="h-[250px] w-full">
+                ) : mistakeData.length > 0 ? (
+                    <div className="h-[250px] w-full relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={mistakeCounts}
+                                    data={mistakeData}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
                                     outerRadius={100}
-                                    innerRadius={70}
+                                    innerRadius={75}
                                     dataKey="value"
-                                    paddingAngle={3}
+                                    paddingAngle={2}
+                                    onMouseEnter={(_, index) => setHoveredData(mistakeData[index])}
                                 >
-                                    {mistakeCounts.map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${index}`} 
-                                            fill={COLORS[index % COLORS.length]} 
-                                            className="focus:outline-none" 
-                                            stroke="hsl(var(--background))" 
-                                            strokeWidth={2}
+                                    {mistakeData.map((entry, index) => (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={COLORS[index % COLORS.length]}
+                                            className="focus:outline-none"
+                                            stroke="hsl(var(--background))"
+                                            strokeWidth={4}
+                                            style={{
+                                                transform: hoveredData && entry.name === hoveredData.name ? 'scale(1.05)' : 'scale(1)',
+                                                transformOrigin: '50% 50%',
+                                                transition: 'transform 200ms ease-in-out',
+                                            }}
                                         />
                                     ))}
                                 </Pie>
                                 <Tooltip
                                     cursor={{ fill: 'hsla(var(--accent) / 0.1)' }}
-                                    contentStyle={{
-                                        background: 'hsl(var(--background))',
-                                        borderColor: 'hsl(var(--border))',
-                                        borderRadius: 'var(--radius)',
-                                        boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
-                                    }}
                                     content={<CustomTooltip />}
-                                />
-                                <Legend 
-                                    iconSize={12} 
-                                    wrapperStyle={{fontSize: "14px", paddingTop: "20px"}}
-                                    verticalAlign="bottom"
-                                    align="center"
-                                    layout="horizontal"
                                 />
                             </PieChart>
                         </ResponsiveContainer>
+                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -mt-2">
+                            {hoveredData && (
+                                <>
+                                    <span className="text-3xl font-bold font-headline">
+                                        {(hoveredData.percent * 100).toFixed(1)}%
+                                    </span>
+                                    <span className="text-sm text-muted-foreground max-w-[120px] text-center truncate">{hoveredData.name}</span>
+                                </>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <div className="h-[250px] flex flex-col items-center justify-center text-center text-muted-foreground p-4">
