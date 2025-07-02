@@ -228,40 +228,38 @@ function Dashboard() {
         </div>
         <StatsCards trades={filteredTrades} />
         <div className="flex flex-col gap-4 md:gap-8">
-            <div className="relative">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-8">
                 <EquityCurveChart trades={filteredTrades} />
-                <div className="absolute top-4 right-4 w-full max-w-xs sm:max-w-sm md:max-w-md">
-                   <Card className="bg-card/90 backdrop-blur-sm supports-[backdrop-filter]:bg-card/60">
-                        <Tabs defaultValue="mistakes" className="w-full">
-                            <CardHeader>
-                                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                                    <div className="grid gap-1">
-                                        <CardTitle>Analytics</CardTitle>
-                                        <CardDescription>
-                                            A detailed breakdown of your performance.
-                                        </CardDescription>
-                                    </div>
-                                    <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-                                        <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-                                        <TabsTrigger value="performance">Metrics</TabsTrigger>
-                                        <TabsTrigger value="strategy">Strategy</TabsTrigger>
-                                    </TabsList>
+                <Card>
+                    <Tabs defaultValue="mistakes" className="w-full">
+                        <CardHeader>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                                <div className="grid gap-1">
+                                    <CardTitle>Analytics</CardTitle>
+                                    <CardDescription>
+                                        A detailed breakdown of your performance.
+                                    </CardDescription>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-0">
-                                <TabsContent value="mistakes" className="mt-4">
-                                    <MistakeAnalysis trades={filteredTrades} />
-                                </TabsContent>
-                                <TabsContent value="performance" className="mt-4">
-                                    <PerformanceRadarChart trades={filteredTrades} />
-                                </TabsContent>
-                                <TabsContent value="strategy" className="mt-4">
-                                    <StrategyAnalytics trades={filteredTrades} />
-                                </TabsContent>
-                            </CardContent>
-                        </Tabs>
-                    </Card>
-                </div>
+                                <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+                                    <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
+                                    <TabsTrigger value="performance">Metrics</TabsTrigger>
+                                    <TabsTrigger value="strategy">Strategy</TabsTrigger>
+                                </TabsList>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <TabsContent value="mistakes" className="mt-4">
+                                <MistakeAnalysis trades={filteredTrades} />
+                            </TabsContent>
+                            <TabsContent value="performance" className="mt-4">
+                                <PerformanceRadarChart trades={filteredTrades} />
+                            </TabsContent>
+                            <TabsContent value="strategy" className="mt-4">
+                                <StrategyAnalytics trades={filteredTrades} />
+                            </TabsContent>
+                        </CardContent>
+                    </Tabs>
+                </Card>
             </div>
 
             <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
@@ -388,3 +386,4 @@ export default function HomePage() {
     
 
     
+
