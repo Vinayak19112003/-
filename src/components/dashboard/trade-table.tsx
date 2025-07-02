@@ -41,7 +41,7 @@ import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMobile } from "@/hooks/use-mobile";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -55,7 +55,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
-  const isMobile = useIsMobile();
+  const isMobile = useMobile();
 
   const handleConfirmDelete = () => {
     if (tradeToDelete) {
@@ -75,10 +75,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     if (sortConfig !== null) {
       filtered.sort((a, b) => {
         if (sortConfig.key === 'returnPercentage') {
-            const riskA = (a.accountSize ?? 0) * ((a.riskPercentage ?? 0) / 100);
-            const returnA = riskA > 0 && a.pnl != null ? (a.pnl / riskA) * 100 : -Infinity;
-            const riskB = (b.accountSize ?? 0) * ((b.riskPercentage ?? 0) / 100);
-            const returnB = riskB > 0 && b.pnl != null ? (b.pnl / riskB) * 100 : -Infinity;
+            const returnA = a.accountSize && a.accountSize > 0 && a.pnl != null ? (a.pnl / a.accountSize) * 100 : -Infinity;
+            const returnB = b.accountSize && b.accountSize > 0 && b.pnl != null ? (b.pnl / b.accountSize) * 100 : -Infinity;
 
             if (sortConfig.direction === 'asc') {
                 return returnA - returnB;
@@ -166,8 +164,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
           <TableBody>
             {sortedAndFilteredTrades.length > 0 ? (
               sortedAndFilteredTrades.map((trade) => {
-                const riskAmount = (trade.accountSize ?? 0) * ((trade.riskPercentage ?? 0) / 100);
-                const returnPercentage = riskAmount > 0 && trade.pnl != null ? (trade.pnl / riskAmount) * 100 : 0;
+                const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
                 
                 return (
                   <TableRow key={trade.id}>
@@ -184,7 +181,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                       {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
                     </TableCell>
                     <TableCell className={cn("text-right font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
-                      {riskAmount > 0 ? `${returnPercentage.toFixed(1)}%` : 'N/A'}
+                      {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
                     </TableCell>
                     {!isMobile && <TableCell className="text-center">{trade.confidence}</TableCell>}
                     <TableCell><ResultBadge result={trade.result} /></TableCell>
