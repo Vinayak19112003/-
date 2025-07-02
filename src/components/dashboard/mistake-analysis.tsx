@@ -65,48 +65,50 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
                  {!mounted ? (
                     <Skeleton className="h-[250px] w-full" />
                 ) : mistakeCounts.length > 0 ? (
-                    <div className="h-[250px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={mistakeCounts}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    outerRadius={100}
-                                    innerRadius={70}
-                                    dataKey="value"
-                                    paddingAngle={3}
-                                >
-                                    {mistakeCounts.map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${index}`} 
-                                            fill={COLORS[index % COLORS.length]} 
-                                            className="focus:outline-none" 
-                                            stroke="hsl(var(--background))" 
-                                            strokeWidth={2}
-                                        />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    cursor={{ fill: 'hsla(var(--accent) / 0.1)' }}
-                                    contentStyle={{
-                                        background: 'hsl(var(--background))',
-                                        borderColor: 'hsl(var(--border))',
-                                        borderRadius: 'var(--radius)',
-                                        boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
-                                    }}
-                                    content={<CustomTooltip />}
-                                />
-                                <Legend 
-                                    iconSize={12} 
-                                    wrapperStyle={{fontSize: "14px", paddingTop: "20px"}}
-                                    verticalAlign="bottom"
-                                    align="center"
-                                    layout="horizontal"
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    <div className="h-[250px] w-full group">
+                        <div className="h-full w-full transition-transform duration-1000 ease-in-out group-hover:rotate-[360deg]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={mistakeCounts}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        outerRadius={100}
+                                        innerRadius={70}
+                                        dataKey="value"
+                                        paddingAngle={3}
+                                    >
+                                        {mistakeCounts.map((entry, index) => (
+                                            <Cell 
+                                                key={`cell-${index}`} 
+                                                fill={COLORS[index % COLORS.length]} 
+                                                className="focus:outline-none" 
+                                                stroke="hsl(var(--background))" 
+                                                strokeWidth={2}
+                                            />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        cursor={{ fill: 'hsla(var(--accent) / 0.1)' }}
+                                        contentStyle={{
+                                            background: 'hsl(var(--background))',
+                                            borderColor: 'hsl(var(--border))',
+                                            borderRadius: 'var(--radius)',
+                                            boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
+                                        }}
+                                        content={<CustomTooltip />}
+                                    />
+                                    <Legend 
+                                        iconSize={12} 
+                                        wrapperStyle={{fontSize: "14px", paddingTop: "20px"}}
+                                        verticalAlign="bottom"
+                                        align="center"
+                                        layout="horizontal"
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 ) : (
                     <div className="h-[250px] flex flex-col items-center justify-center text-center text-muted-foreground p-4">
