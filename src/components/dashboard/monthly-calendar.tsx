@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, Fragment } from 'react';
@@ -60,18 +61,23 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   const lastDayOfGrid = endOfWeek(endOfMonth(currentDate));
   const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
 
-  const weeklyPnl = useMemo(() => {
-    const pnlByWeek: number[] = [];
+  const weeklyTotals = useMemo(() => {
+    const totalsByWeek: { pnl: number; netR: number }[] = [];
     for (let i = 0; i < calendarDays.length; i += 7) {
-        const weekDays = calendarDays.slice(i, i + 7);
-        const weeklyTotal = weekDays.reduce((total, day) => {
-            const dateKey = format(day, 'yyyy-MM-dd');
-            const data = dailyData.get(dateKey);
-            return total + (data?.pnl || 0);
-        }, 0);
-        pnlByWeek.push(weeklyTotal);
+      const weekDays = calendarDays.slice(i, i + 7);
+      const weeklyTotal = weekDays.reduce(
+        (totals, day) => {
+          const dateKey = format(day, 'yyyy-MM-dd');
+          const data = dailyData.get(dateKey);
+          totals.pnl += data?.pnl || 0;
+          totals.netR += data?.netR || 0;
+          return totals;
+        },
+        { pnl: 0, netR: 0 }
+      );
+      totalsByWeek.push(weeklyTotal);
     }
-    return pnlByWeek;
+    return totalsByWeek;
   }, [calendarDays, dailyData]);
 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -118,7 +124,6 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
 
                 const isEndOfWeek = (index + 1) % 7 === 0;
                 const weekIndex = Math.floor(index / 7);
-                const weekPnlValue = weeklyPnl[weekIndex];
 
                 return (
                 <Fragment key={dateKey}>
@@ -137,16 +142,23 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             {format(day, 'd')}
                         </span>
                         {isCurrentMonth && data && (
-                            <div className="text-right">
+                            <div className="text-right space-y-0.5">
                                 <p className={cn(
-                                "font-bold text-xs sm:text-sm",
+                                "font-bold text-[11px] sm:text-xs leading-tight",
                                 data.pnl > 0 ? 'text-success' :
                                 data.pnl < 0 ? 'text-destructive' :
                                 'text-muted-foreground'
                                 )}>
                                     {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(2)}
                                 </p> 
-                                <p className="text-xs text-muted-foreground hidden sm:block">{data.totalTrades} trade{data.totalTrades !== 1 ? 's' : ''}</p>
+                                <p className={cn(
+                                "font-semibold text-[10px] sm:text-xs leading-tight",
+                                data.netR > 0 ? 'text-success/80' :
+                                data.netR < 0 ? 'text-destructive/80' :
+                                'text-muted-foreground'
+                                )}>
+                                    {data.netR.toFixed(2)}R
+                                </p> 
                             </div>
                         )}
                     </div>
@@ -156,11 +168,19 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         )}>
                            <p className={cn(
                               "font-bold text-xs sm:text-sm text-center",
-                              weekPnlValue > 0 ? 'text-success' :
-                              weekPnlValue < 0 ? 'text-destructive' :
+                              weeklyTotals[weekIndex].pnl > 0 ? 'text-success' :
+                              weeklyTotals[weekIndex].pnl < 0 ? 'text-destructive' :
                               'text-muted-foreground'
                             )}>
-                                {weekPnlValue >= 0 ? '+$' : '-$'}{Math.abs(weekPnlValue).toFixed(2)}
+                                {weeklyTotals[weekIndex].pnl >= 0 ? '+$' : '-$'}{Math.abs(weeklyTotals[weekIndex].pnl).toFixed(2)}
+                            </p>
+                            <p className={cn(
+                              "font-semibold text-[10px] sm:text-xs text-center",
+                               weeklyTotals[weekIndex].netR > 0 ? 'text-success/80' :
+                               weeklyTotals[weekIndex].netR < 0 ? 'text-destructive/80' :
+                               'text-muted-foreground'
+                            )}>
+                                {weeklyTotals[weekIndex].netR.toFixed(2)}R
                             </p>
                         </div>
                     )}
