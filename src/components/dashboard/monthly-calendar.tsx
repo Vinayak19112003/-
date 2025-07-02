@@ -88,7 +88,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
     : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Week P&L'];
 
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <h3 className="text-xl font-semibold">{format(currentDate, 'MMMM yyyy')}</h3>
         <div className="flex items-center gap-2">
@@ -100,8 +100,8 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
             </Button>
         </div>
       </CardHeader>
-      <CardContent className="h-full">
-        <div className="grid grid-cols-8 border-t border-l h-full">
+      <CardContent>
+        <div className="grid grid-cols-8 border-t border-l">
             {weekdays.map((day, index) => (
                 <div key={day} className={cn(
                     "p-2 text-center font-semibold text-muted-foreground text-sm border-r border-b",
