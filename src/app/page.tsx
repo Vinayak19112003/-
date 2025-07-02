@@ -21,6 +21,7 @@ import type { DateRange } from "react-day-picker";
 import { startOfMonth, isSameDay } from "date-fns";
 import { useTheme } from "next-themes";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
@@ -252,9 +253,36 @@ function Dashboard() {
                 </Card>
             </div>
             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                 <MistakeAnalysis trades={filteredTrades} />
-                 <PerformanceRadarChart trades={filteredTrades} />
-                 <StrategyAnalytics trades={filteredTrades} />
+                 <Card>
+                    <Tabs defaultValue="mistakes" className="w-full">
+                        <CardHeader>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                                <div className="grid gap-1">
+                                    <CardTitle>Analytics</CardTitle>
+                                    <CardDescription>
+                                        A detailed breakdown of your performance.
+                                    </CardDescription>
+                                </div>
+                                <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+                                    <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
+                                    <TabsTrigger value="performance">Metrics</TabsTrigger>
+                                    <TabsTrigger value="strategy">Strategy</TabsTrigger>
+                                </TabsList>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <TabsContent value="mistakes" className="mt-4">
+                                <MistakeAnalysis trades={filteredTrades} />
+                            </TabsContent>
+                            <TabsContent value="performance" className="mt-4">
+                                <PerformanceRadarChart trades={filteredTrades} />
+                            </TabsContent>
+                            <TabsContent value="strategy" className="mt-4">
+                                <StrategyAnalytics trades={filteredTrades} />
+                            </TabsContent>
+                        </CardContent>
+                    </Tabs>
+                </Card>
             </div>
         </div>
 
@@ -354,5 +382,7 @@ export default function HomePage() {
     </AuthGuard>
   )
 }
+
+    
 
     
