@@ -125,11 +125,11 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
   const ResultBadge = ({ result }: { result: Trade["result"] }) => {
     const variant = {
-      Win: "default",
+      Win: "success",
       Loss: "destructive",
       BE: "secondary",
       Missed: "secondary"
-    }[result] as "default" | "destructive" | "secondary";
+    }[result] as "success" | "destructive" | "secondary";
     return <Badge variant={variant}>{result}</Badge>;
   };
   
