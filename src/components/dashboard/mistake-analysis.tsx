@@ -1,19 +1,45 @@
-
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
 import type { Trade } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bar, BarChart, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { useTheme } from "next-themes";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Skeleton } from '@/components/ui/skeleton';
 
 type MistakeAnalysisProps = {
     trades: Trade[];
 };
 
+const COLORS = [
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+];
+
+const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="rounded-lg border bg-background p-2 shadow-sm">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col space-y-1">
+              <span className="text-sm text-muted-foreground">Mistake</span>
+              <span className="font-bold">{data.payload.name}</span>
+            </div>
+            <div className="flex flex-col space-y-1">
+              <span className="text-sm text-muted-foreground">Count</span>
+              <span className="font-bold">{data.value}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
 export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
-    const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -29,12 +55,9 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
         });
 
         return Object.entries(counts)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count);
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
     }, [trades]);
-
-    const tickColor = theme === 'dark' ? '#888888' : '#333333';
-    const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
     return (
         <Card>
@@ -46,22 +69,34 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
                  {!mounted ? (
                     <Skeleton className="h-[250px] w-full" />
                 ) : mistakeCounts.length > 0 ? (
-                    <div className="h-[250px]">
+                    <div className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={mistakeCounts} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                                <XAxis type="number" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis type="category" dataKey="name" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} width={80} />
+                            <PieChart>
+                                <Pie
+                                    data={mistakeCounts}
+                                    cx="50%"
+                                    cy="45%"
+                                    labelLine={false}
+                                    outerRadius={80}
+                                    innerRadius={50}
+                                    dataKey="value"
+                                    paddingAngle={2}
+                                >
+                                    {mistakeCounts.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="focus:outline-none stroke-background" strokeWidth={2}/>
+                                    ))}
+                                </Pie>
                                 <Tooltip
-                                    cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
-                                    contentStyle={{
-                                        background: 'hsl(var(--background))',
-                                        borderColor: 'hsl(var(--border))',
-                                        borderRadius: 'var(--radius)',
-                                    }}
+                                    cursor={{ fill: 'hsla(var(--accent) / 0.1)' }}
+                                    content={<CustomTooltip />}
                                 />
-                                <Bar dataKey="count" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
-                            </BarChart>
+                                <Legend 
+                                    iconSize={10} 
+                                    wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}
+                                    verticalAlign="bottom"
+                                    align="center"
+                                />
+                            </PieChart>
                         </ResponsiveContainer>
                     </div>
                 ) : (
