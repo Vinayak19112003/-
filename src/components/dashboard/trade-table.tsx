@@ -41,7 +41,7 @@ import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -55,7 +55,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   const handleConfirmDelete = () => {
     if (tradeToDelete) {
@@ -75,8 +75,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     if (sortConfig !== null) {
       filtered.sort((a, b) => {
         if (sortConfig.key === 'returnPercentage') {
-            const returnA = a.accountSize && a.accountSize > 0 && a.pnl != null ? (a.pnl / a.accountSize) * 100 : -Infinity;
-            const returnB = b.accountSize && b.accountSize > 0 && b.pnl != null ? (b.pnl / b.accountSize) * 100 : -Infinity;
+            const returnA = a.accountSize && a.accountSize > 0 && a.pnl != null ? (a.pnl / a.accountSize) * 100 : 0;
+            const returnB = b.accountSize && b.accountSize > 0 && b.pnl != null ? (b.pnl / b.accountSize) * 100 : 0;
 
             if (sortConfig.direction === 'asc') {
                 return returnA - returnB;
