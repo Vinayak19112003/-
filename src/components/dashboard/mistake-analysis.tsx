@@ -12,11 +12,11 @@ type MistakeAnalysisProps = {
 };
 
 const COLORS = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "hsl(var(--destructive))",
+    "hsl(0, 70%, 65%)",
+    "hsl(15, 80%, 60%)",
+    "hsl(30, 90%, 55%)",
+    "hsl(45, 95%, 50%)",
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
