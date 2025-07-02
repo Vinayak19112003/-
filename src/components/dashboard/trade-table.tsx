@@ -172,7 +172,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     <TableCell>{trade.asset}</TableCell>
                     {!isMobile && <TableCell>{trade.strategy}</TableCell>}
                     <TableCell>
-                      <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-primary' : 'text-destructive')}>
+                      <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-success' : 'text-destructive')}>
                           {trade.direction}
                       </span>
                     </TableCell>
