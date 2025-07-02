@@ -227,63 +227,65 @@ function Dashboard() {
             <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
         </div>
         <StatsCards trades={filteredTrades} />
-        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:gap-8">
-            <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+        <div className="flex flex-col gap-4 md:gap-8">
+            <div className="relative">
                 <EquityCurveChart trades={filteredTrades} />
-                <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
-                <Card>
-                    <CardHeader className="flex flex-row items-center">
-                        <div className="grid gap-2">
-                            <CardTitle>Trade Log</CardTitle>
-                            <CardDescription>Your filtered history of trades.</CardDescription>
-                        </div>
-                        <div className="ml-auto flex items-center gap-2">
-                           <ExportTrades trades={filteredTrades}/>
-                           <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
-                                <PlusCircle className="h-3.5 w-3.5" />
-                                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                    Add Trade
-                                </span>
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                       <TradeTable trades={filteredTrades} onEdit={handleOpenForm} onDelete={handleDeleteTrade}/>
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                 <Card>
-                    <Tabs defaultValue="mistakes" className="w-full">
-                        <CardHeader>
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                                <div className="grid gap-1">
-                                    <CardTitle>Analytics</CardTitle>
-                                    <CardDescription>
-                                        A detailed breakdown of your performance.
-                                    </CardDescription>
+                <div className="absolute top-4 right-4 w-full max-w-xs sm:max-w-sm md:max-w-md">
+                   <Card className="bg-card/90 backdrop-blur-sm supports-[backdrop-filter]:bg-card/60">
+                        <Tabs defaultValue="mistakes" className="w-full">
+                            <CardHeader>
+                                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                                    <div className="grid gap-1">
+                                        <CardTitle>Analytics</CardTitle>
+                                        <CardDescription>
+                                            A detailed breakdown of your performance.
+                                        </CardDescription>
+                                    </div>
+                                    <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+                                        <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
+                                        <TabsTrigger value="performance">Metrics</TabsTrigger>
+                                        <TabsTrigger value="strategy">Strategy</TabsTrigger>
+                                    </TabsList>
                                 </div>
-                                <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-                                    <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-                                    <TabsTrigger value="performance">Metrics</TabsTrigger>
-                                    <TabsTrigger value="strategy">Strategy</TabsTrigger>
-                                </TabsList>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <TabsContent value="mistakes" className="mt-4">
-                                <MistakeAnalysis trades={filteredTrades} />
-                            </TabsContent>
-                            <TabsContent value="performance" className="mt-4">
-                                <PerformanceRadarChart trades={filteredTrades} />
-                            </TabsContent>
-                            <TabsContent value="strategy" className="mt-4">
-                                <StrategyAnalytics trades={filteredTrades} />
-                            </TabsContent>
-                        </CardContent>
-                    </Tabs>
-                </Card>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <TabsContent value="mistakes" className="mt-4">
+                                    <MistakeAnalysis trades={filteredTrades} />
+                                </TabsContent>
+                                <TabsContent value="performance" className="mt-4">
+                                    <PerformanceRadarChart trades={filteredTrades} />
+                                </TabsContent>
+                                <TabsContent value="strategy" className="mt-4">
+                                    <StrategyAnalytics trades={filteredTrades} />
+                                </TabsContent>
+                            </CardContent>
+                        </Tabs>
+                    </Card>
+                </div>
             </div>
+
+            <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
+
+            <Card>
+                <CardHeader className="flex flex-row items-center">
+                    <div className="grid gap-2">
+                        <CardTitle>Trade Log</CardTitle>
+                        <CardDescription>Your filtered history of trades.</CardDescription>
+                    </div>
+                    <div className="ml-auto flex items-center gap-2">
+                       <ExportTrades trades={filteredTrades}/>
+                       <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
+                            <PlusCircle className="h-3.5 w-3.5" />
+                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                Add Trade
+                            </span>
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                   <TradeTable trades={filteredTrades} onEdit={handleOpenForm} onDelete={handleDeleteTrade}/>
+                </CardContent>
+            </Card>
         </div>
 
         <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
