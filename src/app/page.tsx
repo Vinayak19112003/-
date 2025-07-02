@@ -227,9 +227,12 @@ function Dashboard() {
             <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
         </div>
         <StatsCards trades={filteredTrades} />
-        <div className="flex flex-col gap-4 md:gap-8">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-8">
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
+            <div className="lg:col-span-2">
                 <EquityCurveChart trades={filteredTrades} />
+            </div>
+            <div className="lg:col-span-1 space-y-4 md:space-y-8">
                 <Card>
                     <Tabs defaultValue="mistakes" className="w-full">
                         <CardHeader>
@@ -260,31 +263,30 @@ function Dashboard() {
                         </CardContent>
                     </Tabs>
                 </Card>
+                <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
             </div>
-
-            <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
-
-            <Card>
-                <CardHeader className="flex flex-row items-center">
-                    <div className="grid gap-2">
-                        <CardTitle>Trade Log</CardTitle>
-                        <CardDescription>Your filtered history of trades.</CardDescription>
-                    </div>
-                    <div className="ml-auto flex items-center gap-2">
-                       <ExportTrades trades={filteredTrades}/>
-                       <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
-                            <PlusCircle className="h-3.5 w-3.5" />
-                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                Add Trade
-                            </span>
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                   <TradeTable trades={filteredTrades} onEdit={handleOpenForm} onDelete={handleDeleteTrade}/>
-                </CardContent>
-            </Card>
         </div>
+
+        <Card>
+            <CardHeader className="flex flex-row items-center">
+                <div className="grid gap-2">
+                    <CardTitle>Trade Log</CardTitle>
+                    <CardDescription>Your filtered history of trades.</CardDescription>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                   <ExportTrades trades={filteredTrades}/>
+                   <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            Add Trade
+                        </span>
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+               <TradeTable trades={filteredTrades} onEdit={handleOpenForm} onDelete={handleDeleteTrade}/>
+            </CardContent>
+        </Card>
 
         <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
             <FormContentComponent className={cn(isMobile ? "w-full" : "max-w-4xl")}>
@@ -382,8 +384,3 @@ export default function HomePage() {
     </AuthGuard>
   )
 }
-
-    
-
-    
-

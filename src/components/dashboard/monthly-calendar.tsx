@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, Fragment } from 'react';
@@ -103,7 +104,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
         <div className="grid grid-cols-8 border-t border-l">
             {weekdays.map((day, index) => (
                 <div key={day} className={cn(
-                    "p-1 text-center font-semibold text-muted-foreground text-xs border-r border-b",
+                    "p-0.5 text-center font-semibold text-muted-foreground text-xs border-r border-b",
                     index === 7 && "bg-muted/50"
                 )}>{day}</div>
             ))}
@@ -128,14 +129,14 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                 <Fragment key={dateKey}>
                     <div
                         className={cn(
-                            "p-1 aspect-square flex flex-col justify-between cursor-pointer transition-colors border-r border-b",
+                            "p-0.5 aspect-square flex flex-col justify-between cursor-pointer transition-colors border-r border-b text-[10px]",
                             bgColorClass,
                         )}
                         onClick={() => onDateSelect(day)}
                     >
                         <span className={cn(
-                            "font-semibold text-xs",
-                            isToday(day) ? "bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center" : 
+                            "font-semibold",
+                            isToday(day) ? "bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center" : 
                             isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
                         )}>
                             {format(day, 'd')}
@@ -143,15 +144,15 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         {isCurrentMonth && data && (
                             <div className="text-right space-y-0">
                                 <p className={cn(
-                                "font-bold text-[10px] leading-none",
+                                "font-bold text-[9px] leading-tight",
                                 data.pnl > 0 ? 'text-success' :
                                 data.pnl < 0 ? 'text-destructive' :
                                 'text-muted-foreground'
                                 )}>
-                                    {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(isMobile ? 0 : 2)}
+                                    {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(isMobile ? 0 : 1)}
                                 </p> 
                                 <p className={cn(
-                                "font-semibold text-[9px] leading-none",
+                                "font-semibold text-[8px] leading-tight",
                                 data.netR > 0 ? 'text-success/80' :
                                 data.netR < 0 ? 'text-destructive/80' :
                                 'text-muted-foreground'
@@ -163,18 +164,18 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                     </div>
                     {isEndOfWeek && (
                         <div className={cn(
-                            "p-1 aspect-square flex flex-col items-center justify-center border-r border-b bg-muted/50"
+                            "p-0.5 aspect-square flex flex-col items-center justify-center border-r border-b bg-muted/50"
                         )}>
                            <p className={cn(
-                              "font-bold text-xs text-center",
+                              "font-bold text-[10px] text-center",
                               weeklyTotals[weekIndex].pnl > 0 ? 'text-success' :
                               weeklyTotals[weekIndex].pnl < 0 ? 'text-destructive' :
                               'text-muted-foreground'
                             )}>
-                                {weeklyTotals[weekIndex].pnl >= 0 ? '+$' : '-$'}{Math.abs(weeklyTotals[weekIndex].pnl).toFixed(isMobile ? 0 : 2)}
+                                {weeklyTotals[weekIndex].pnl >= 0 ? '+$' : '-$'}{Math.abs(weeklyTotals[weekIndex].pnl).toFixed(isMobile ? 0 : 1)}
                             </p>
                             <p className={cn(
-                              "font-semibold text-[9px] text-center",
+                              "font-semibold text-[8px] text-center",
                                weeklyTotals[weekIndex].netR > 0 ? 'text-success/80' :
                                weeklyTotals[weekIndex].netR < 0 ? 'text-destructive/80' :
                                'text-muted-foreground'
