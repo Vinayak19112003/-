@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
@@ -137,17 +136,31 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+                <defs>
+                    <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
+                        <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
+                    </radialGradient>
+                </defs>
                 <PolarGrid stroke={gridColor}/>
-                <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12 }} />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
                 <Tooltip
                   contentStyle={{
                       background: 'hsl(var(--background))',
                       borderColor: 'hsl(var(--border))',
                       borderRadius: 'var(--radius)',
+                      boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
                   }}
                   formatter={(value, name, props) => [props.payload.raw, name]}
                 />
-                <Radar name="Metrics" dataKey="value" stroke={strokeColor} fill={fillColor} fillOpacity={0.8} />
+                <Radar 
+                    name="Metrics" 
+                    dataKey="value" 
+                    stroke={strokeColor} 
+                    strokeWidth={2}
+                    fill="url(#radar-gradient)"
+                    dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
+                />
               </RadarChart>
             </ResponsiveContainer>
           </div>
