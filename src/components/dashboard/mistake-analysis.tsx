@@ -11,8 +11,8 @@ type MistakeAnalysisProps = {
 };
 
 const COLORS = [
-    "hsl(var(--chart-2))",
     "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
     "hsl(var(--chart-3))",
     "hsl(var(--chart-4))",
     "hsl(var(--chart-5))",
@@ -21,17 +21,13 @@ const COLORS = [
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0];
+      const { name, value } = data.payload;
       return (
-        <div className="rounded-lg border bg-background p-2 shadow-sm">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col space-y-1">
-              <span className="text-sm text-muted-foreground">Mistake</span>
-              <span className="font-bold">{data.payload.name}</span>
-            </div>
-            <div className="flex flex-col space-y-1">
-              <span className="text-sm text-muted-foreground">Count</span>
-              <span className="font-bold">{data.value}</span>
-            </div>
+        <div className="rounded-lg border bg-background p-2.5 text-sm shadow-xl">
+          <div className="mb-2 font-medium">{name}</div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Frequency</span>
+            <span className="font-bold">{value}</span>
           </div>
         </div>
       );
@@ -75,33 +71,50 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
                                 <Pie
                                     data={mistakeCounts}
                                     cx="50%"
-                                    cy="45%"
+                                    cy="50%"
                                     labelLine={false}
-                                    outerRadius={80}
-                                    innerRadius={50}
+                                    outerRadius={100}
+                                    innerRadius={70}
                                     dataKey="value"
-                                    paddingAngle={2}
+                                    paddingAngle={3}
                                 >
                                     {mistakeCounts.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="focus:outline-none stroke-background" strokeWidth={2}/>
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={COLORS[index % COLORS.length]} 
+                                            className="focus:outline-none" 
+                                            stroke="hsl(var(--background))" 
+                                            strokeWidth={2}
+                                        />
                                     ))}
                                 </Pie>
                                 <Tooltip
                                     cursor={{ fill: 'hsla(var(--accent) / 0.1)' }}
+                                    contentStyle={{
+                                        background: 'hsl(var(--background))',
+                                        borderColor: 'hsl(var(--border))',
+                                        borderRadius: 'var(--radius)',
+                                        boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
+                                    }}
                                     content={<CustomTooltip />}
                                 />
                                 <Legend 
-                                    iconSize={10} 
-                                    wrapperStyle={{fontSize: "12px", paddingTop: "10px"}}
+                                    iconSize={12} 
+                                    wrapperStyle={{fontSize: "14px", paddingTop: "20px"}}
                                     verticalAlign="bottom"
                                     align="center"
+                                    layout="horizontal"
                                 />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="h-[250px] flex items-center justify-center text-center text-muted-foreground">
-                        No mistakes logged in this period. Great job!
+                    <div className="h-[250px] flex flex-col items-center justify-center text-center text-muted-foreground p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-12 w-12 text-success mb-2">
+                           <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                        <p className="font-semibold">No Mistakes Logged</p>
+                        <p className="text-sm">Great job! No errors recorded in this period.</p>
                     </div>
                 )}
             </CardContent>
