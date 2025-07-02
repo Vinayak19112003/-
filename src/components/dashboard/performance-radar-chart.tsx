@@ -120,8 +120,8 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
 
 
   const tickColor = theme === 'dark' ? '#e2e8f0' : '#334155';
-  const strokeColor = 'hsl(var(--primary))';
-  const fillColor = 'hsl(var(--primary))';
+  const strokeColor = 'hsl(var(--success))';
+  const fillColor = 'hsl(var(--success))';
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   return (
