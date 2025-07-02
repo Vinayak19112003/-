@@ -40,7 +40,7 @@ export function SharePerformance({ trades }: { trades: Trade[] }) {
 
     setIsLoading(true);
     try {
-        const bgColor = resolvedTheme === 'dark' ? '#14181f' : '#ffffff';
+        const bgColor = resolvedTheme === 'dark' ? '#000000' : '#ffffff';
         const dataUrl = await htmlToImage.toJpeg(imageRef.current, { 
             cacheBust: true,
             pixelRatio: 2, // for higher quality
@@ -82,7 +82,7 @@ export function SharePerformance({ trades }: { trades: Trade[] }) {
                 Share
             </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
                 <Share2 className="h-5 w-5 text-primary"/>

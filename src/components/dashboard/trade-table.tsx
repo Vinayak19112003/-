@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -50,6 +51,16 @@ type TradeTableProps = {
 };
 
 type SortKey = keyof Trade | "returnPercentage";
+
+const ResultBadge = ({ result }: { result: Trade["result"] }) => {
+    const variant = {
+      Win: "success",
+      Loss: "destructive",
+      BE: "secondary",
+      Missed: "secondary"
+    }[result] as "success" | "destructive" | "secondary";
+    return <Badge variant={variant}>{result}</Badge>;
+};
 
 export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
@@ -122,17 +133,140 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-30" />;
     return sortConfig.direction === 'desc' ? '🔽' : '🔼';
   };
-
-  const ResultBadge = ({ result }: { result: Trade["result"] }) => {
-    const variant = {
-      Win: "success",
-      Loss: "destructive",
-      BE: "secondary",
-      Missed: "secondary"
-    }[result] as "success" | "destructive" | "secondary";
-    return <Badge variant={variant}>{result}</Badge>;
-  };
   
+  if (isMobile) {
+    return (
+        <div className="w-full space-y-4">
+            <div className="flex flex-col md:flex-row gap-2">
+                <Input
+                placeholder="Filter by asset, strategy, notes, mistakes..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full"
+                />
+            </div>
+            <div className="space-y-4">
+            {sortedAndFilteredTrades.length > 0 ? (
+              sortedAndFilteredTrades.map((trade) => {
+                const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
+                return (
+                    <Card key={trade.id} className="w-full">
+                        <CardHeader className="p-4">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle>{trade.asset}</CardTitle>
+                                    <CardDescription>{format(trade.date, "PPP")}</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ResultBadge result={trade.result} />
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                            <div className="font-medium text-muted-foreground">Direction</div>
+                            <div className={cn("font-semibold", trade.direction === 'Buy' ? 'text-success' : 'text-destructive')}>{trade.direction}</div>
+                            
+                            <div className="font-medium text-muted-foreground">PNL ($)</div>
+                            <div className={cn("font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
+                                {trade.pnl != null ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'N/A'}
+                            </div>
+
+                            <div className="font-medium text-muted-foreground">Return %</div>
+                            <div className={cn("font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
+                                {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
+                            </div>
+                            
+                            <div className="font-medium text-muted-foreground">RR</div>
+                            <div>{trade.rr?.toFixed(2)}</div>
+                            
+                            <div className="font-medium text-muted-foreground">Strategy</div>
+                            <div className="truncate">{trade.strategy}</div>
+                            
+                            <div className="font-medium text-muted-foreground">Confidence</div>
+                            <div>{trade.confidence} / 10</div>
+
+                            {trade.mistakes && trade.mistakes.length > 0 && (
+                                <>
+                                    <div className="font-medium text-muted-foreground col-span-2 mt-2">Mistakes</div>
+                                    <div className="col-span-2 flex flex-wrap gap-1">
+                                    {trade.mistakes.map(mistake => (
+                                        <Badge key={mistake} variant="outline">{mistake}</Badge>
+                                    ))}
+                                    </div>
+                                </>
+                            )}
+                            
+                             {trade.screenshotURL && (
+                                <div className="col-span-2 mt-2">
+                                    <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm" className="w-full">
+                                            <ImageIcon className="mr-2 h-4 w-4" />
+                                            View Screenshot
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-md w-[90vw]">
+                                        <DialogHeader>
+                                            <DialogTitle>Trade Screenshot</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="relative h-[60vh]">
+                                            <Image
+                                                src={trade.screenshotURL}
+                                                alt={`Screenshot for trade on ${trade.asset}`}
+                                                fill
+                                                style={{objectFit: 'contain'}}
+                                                sizes="90vw"
+                                            />
+                                        </div>
+                                    </DialogContent>
+                                    </Dialog>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )
+              })
+            ) : (
+                <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+                    No trades found.
+                </div>
+            )}
+            </div>
+            <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
+                <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete this trade from your log.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                    onClick={handleConfirmDelete} 
+                    className={cn(buttonVariants({ variant: "destructive" }))}
+                    >
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    )
+  }
+
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-col md:flex-row gap-2">
@@ -149,14 +283,14 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
             <TableRow>
               <TableHead onClick={() => requestSort("date")} className="cursor-pointer">Date {getSortIndicator("date")}</TableHead>
               <TableHead onClick={() => requestSort("asset")} className="cursor-pointer">Asset {getSortIndicator("asset")}</TableHead>
-              {!isMobile && <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>}
+              <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>
               <TableHead>Direction</TableHead>
               <TableHead onClick={() => requestSort("rr")} className="cursor-pointer text-center">RR {getSortIndicator("rr")}</TableHead>
               <TableHead onClick={() => requestSort("pnl")} className="cursor-pointer text-right">PNL ($) {getSortIndicator("pnl")}</TableHead>
               <TableHead onClick={() => requestSort("returnPercentage")} className="cursor-pointer text-right">Return % {getSortIndicator("returnPercentage")}</TableHead>
-              {!isMobile && <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>}
+              <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
-              {!isMobile && <TableHead>Mistakes</TableHead>}
+              <TableHead>Mistakes</TableHead>
               <TableHead>Screenshot</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -170,7 +304,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                   <TableRow key={trade.id}>
                     <TableCell>{format(trade.date, "dd MMM yyyy")}</TableCell>
                     <TableCell>{trade.asset}</TableCell>
-                    {!isMobile && <TableCell>{trade.strategy}</TableCell>}
+                    <TableCell>{trade.strategy}</TableCell>
                     <TableCell>
                       <span className={cn("font-semibold", trade.direction === 'Buy' ? 'text-success' : 'text-destructive')}>
                           {trade.direction}
@@ -183,17 +317,15 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                     <TableCell className={cn("text-right font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
                       {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
                     </TableCell>
-                    {!isMobile && <TableCell className="text-center">{trade.confidence}</TableCell>}
+                    <TableCell className="text-center">{trade.confidence}</TableCell>
                     <TableCell><ResultBadge result={trade.result} /></TableCell>
-                    {!isMobile && 
-                      <TableCell>
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                              {trade.mistakes?.map(mistake => (
-                                  <Badge key={mistake} variant="outline">{mistake}</Badge>
-                              ))}
-                          </div>
-                      </TableCell>
-                    }
+                    <TableCell>
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                            {trade.mistakes?.map(mistake => (
+                                <Badge key={mistake} variant="outline">{mistake}</Badge>
+                            ))}
+                        </div>
+                    </TableCell>
                     <TableCell>
                       {trade.screenshotURL && (
                         <Dialog>
@@ -238,7 +370,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={isMobile ? 9 : 12} className="h-24 text-center">
+                <TableCell colSpan={12} className="h-24 text-center">
                   No trades found.
                 </TableCell>
               </TableRow>
