@@ -191,8 +191,8 @@ function Dashboard() {
         <StatsCards trades={filteredTrades} />
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:gap-8">
             <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
-                <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
                 <EquityCurveChart trades={filteredTrades} />
+                <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
                 <Card>
                     <CardHeader className="flex flex-row items-center">
                         <div className="grid gap-2">
@@ -215,9 +215,9 @@ function Dashboard() {
                 </Card>
             </div>
             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                 <MistakeAnalysis trades={filteredTrades} />
                  <PerformanceRadarChart trades={filteredTrades} />
                  <StrategyAnalytics trades={filteredTrades} />
-                 <MistakeAnalysis trades={filteredTrades} />
             </div>
         </div>
 
@@ -317,3 +317,5 @@ export default function HomePage() {
     </AuthGuard>
   )
 }
+
+    
