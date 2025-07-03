@@ -93,12 +93,12 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
   }, [trades]);
 
   if (!mounted) {
-    return <Skeleton className="h-full w-full" />;
+    return <Skeleton className="h-[250px] w-full" />;
   }
   
   if (!metrics) {
     return (
-        <div className="h-full flex items-center justify-center text-center text-muted-foreground">
+        <div className="h-[250px] flex items-center justify-center text-center text-muted-foreground">
             Not enough trade data to generate performance metrics.
         </div>
     )
@@ -120,7 +120,7 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   return (
-      <div className="h-full w-full">
+      <div className="h-[250px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
             <defs>

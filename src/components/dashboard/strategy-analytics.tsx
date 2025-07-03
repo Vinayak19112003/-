@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo } from 'react';
@@ -46,7 +47,7 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     }, [trades]);
 
     return (
-        <div className="h-full">
+        <div>
             {analytics.length > 0 ? (
                 <TooltipProvider>
                     <Table>

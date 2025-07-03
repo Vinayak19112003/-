@@ -234,9 +234,9 @@ function Dashboard() {
             <div className="lg:col-span-4">
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
             </div>
-            <div className="lg:col-span-3 flex flex-col">
-                <Card className="flex-1 flex flex-col">
-                    <Tabs defaultValue="performance" className="w-full flex-1 flex flex-col">
+            <div className="lg:col-span-3">
+                <Card>
+                    <Tabs defaultValue="performance" className="w-full">
                         <CardHeader>
                             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
                                 <div className="grid gap-1">
@@ -252,14 +252,14 @@ function Dashboard() {
                                 </TabsList>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0 flex-1">
-                            <TabsContent value="mistakes" className="h-full">
+                        <CardContent className="p-4 pt-0">
+                            <TabsContent value="mistakes">
                                 <MistakeAnalysis trades={filteredTrades} />
                             </TabsContent>
-                            <TabsContent value="performance" className="h-full">
+                            <TabsContent value="performance">
                                 <PerformanceRadarChart trades={filteredTrades} />
                             </TabsContent>
-                            <TabsContent value="strategy" className="h-full">
+                            <TabsContent value="strategy">
                                 <StrategyAnalytics trades={filteredTrades} />
                             </TabsContent>
                         </CardContent>
