@@ -2,8 +2,10 @@
 
 import { useMemo } from 'react';
 import type { Trade } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type StrategyAnalyticsProps = {
     trades: Trade[];
@@ -44,41 +46,53 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     }, [trades]);
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Strategy Analytics</CardTitle>
-                <CardDescription>Performance breakdown by strategy.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {analytics.length > 0 ? (
-                     <Table>
+        <div className="h-full">
+            {analytics.length > 0 ? (
+                <TooltipProvider>
+                    <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Strategy</TableHead>
-                                <TableHead className="text-right">Net R</TableHead>
-                                <TableHead className="text-right">W/R</TableHead>
-                                <TableHead className="text-right">Avg RR</TableHead>
-                                <TableHead className="text-right">Trades</TableHead>
+                                <TableHead className="w-[120px] p-2">Strategy</TableHead>
+                                <TableHead className="p-2">Win Rate</TableHead>
+                                <TableHead className="text-right p-2">Avg. RR</TableHead>
+                                <TableHead className="text-right p-2">Net R</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {analytics.map(stat => (
                                 <TableRow key={stat.strategy}>
-                                    <TableCell className="font-medium">{stat.strategy}</TableCell>
-                                    <TableCell className="text-right">{stat.netR.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right">{stat.winRate.toFixed(1)}%</TableCell>
-                                    <TableCell className="text-right">{stat.avgRr.toFixed(2)}</TableCell>
-                                    <TableCell className="text-right">{stat.totalTrades}</TableCell>
+                                    <TableCell className="font-medium truncate p-2">{stat.strategy}</TableCell>
+                                    <TableCell className="p-2">
+                                        <Tooltip delayDuration={150}>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center gap-2">
+                                                    <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
+                                                    <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{stat.wins} Wins / {stat.losses} Losses</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell className="text-right p-2">{stat.avgRr.toFixed(2)}</TableCell>
+                                    <TableCell className={cn(
+                                        "text-right font-semibold p-2",
+                                        stat.netR > 0 && "text-success",
+                                        stat.netR < 0 && "text-destructive"
+                                    )}>
+                                        {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                ) : (
-                    <div className="h-40 flex items-center justify-center text-muted-foreground">
-                        No trade data to analyze.
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                </TooltipProvider>
+            ) : (
+                <div className="h-40 flex items-center justify-center text-muted-foreground p-4 text-center">
+                    <p>No strategy data to analyze.</p>
+                </div>
+            )}
+        </div>
     )
 }
