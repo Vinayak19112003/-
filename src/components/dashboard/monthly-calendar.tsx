@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, Fragment, useEffect } from 'react';
@@ -166,7 +165,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             const DayCell = (
                                 <div
                                     className={cn(
-                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full min-h-[110px]",
+                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full min-h-[95px]",
                                         bgColorClass,
                                     )}
                                     onClick={() => onDateSelect(day)}
