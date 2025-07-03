@@ -217,8 +217,7 @@ function Dashboard() {
             <div className="lg:col-span-2">
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
             </div>
-            <div className="lg:col-span-1 flex flex-col gap-4 md:gap-8">
-                <EquityCurveChart trades={filteredTrades} />
+            <div className="lg:col-span-1">
                 <Card>
                     <Tabs defaultValue="mistakes" className="w-full">
                         <CardHeader>
@@ -251,6 +250,8 @@ function Dashboard() {
                 </Card>
             </div>
         </div>
+
+        <EquityCurveChart trades={filteredTrades} />
 
         <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-2">
