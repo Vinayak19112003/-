@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -43,6 +43,7 @@ import { format } from "date-fns";
 import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -66,7 +67,12 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
+  const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleConfirmDelete = () => {
     if (tradeToDelete) {
@@ -134,6 +140,15 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     return sortConfig.direction === 'desc' ? '🔽' : '🔼';
   };
   
+  if (!mounted) {
+    return (
+        <div className="space-y-2">
+            <Skeleton className="h-10 w-full max-w-sm" />
+            <Skeleton className="h-72 w-full" />
+        </div>
+    );
+  }
+
   if (isMobile) {
     return (
         <div className="w-full space-y-4">
