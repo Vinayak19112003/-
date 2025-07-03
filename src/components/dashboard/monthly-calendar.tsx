@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, Fragment, useEffect } from 'react';
@@ -83,7 +84,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   
   const weekdays = isMobile 
-    ? ['S', 'M', 'T', 'W', 'Th', 'F', 'S'] 
+    ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] 
     : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const showWeeklyPnl = !isMobile;
   const gridColsClass = showWeeklyPnl ? 'grid-cols-8' : 'grid-cols-7';
