@@ -1,8 +1,8 @@
+
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Trade } from '@/lib/types';
 import { useTheme } from 'next-themes';
 import { format } from 'date-fns';
@@ -92,19 +92,15 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
     };
   }, [trades]);
 
+  if (!mounted) {
+    return <Skeleton className="h-full w-full" />;
+  }
+  
   if (!metrics) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Performance Metrics</CardTitle>
-                <CardDescription>A visual summary of your key stats.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="h-[250px] flex items-center justify-center text-center text-muted-foreground">
-                    Not enough trade data to generate performance metrics.
-                </div>
-            </CardContent>
-        </Card>
+        <div className="h-full flex items-center justify-center text-center text-muted-foreground">
+            Not enough trade data to generate performance metrics.
+        </div>
     )
   }
 
@@ -124,48 +120,36 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Performance Metrics</CardTitle>
-        <CardDescription>A visual summary of your key stats.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!mounted ? (
-          <Skeleton className="h-[250px] w-full" />
-        ) : (
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-                <defs>
-                    <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
-                        <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
-                    </radialGradient>
-                </defs>
-                <PolarGrid stroke={gridColor}/>
-                <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
-                <Tooltip
-                  contentStyle={{
-                      background: 'hsl(var(--background))',
-                      borderColor: 'hsl(var(--border))',
-                      borderRadius: 'var(--radius)',
-                      boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
-                  }}
-                  formatter={(value, name, props) => [props.payload.raw, name]}
-                />
-                <Radar 
-                    name="Metrics" 
-                    dataKey="value" 
-                    stroke={strokeColor} 
-                    strokeWidth={2}
-                    fill="url(#radar-gradient)"
-                    dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      <div className="h-full w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+            <defs>
+                <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
+                    <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
+                </radialGradient>
+            </defs>
+            <PolarGrid stroke={gridColor}/>
+            <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
+            <Tooltip
+              contentStyle={{
+                  background: 'hsl(var(--background))',
+                  borderColor: 'hsl(var(--border))',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
+              }}
+              formatter={(value, name, props) => [props.payload.raw, name]}
+            />
+            <Radar 
+                name="Metrics" 
+                dataKey="value" 
+                stroke={strokeColor} 
+                strokeWidth={2}
+                fill="url(#radar-gradient)"
+                dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
   );
 }
