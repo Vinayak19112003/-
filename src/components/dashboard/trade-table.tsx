@@ -40,8 +40,8 @@ import { Input } from "@/components/ui/input";
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { MoreHorizontal, ArrowUpDown, ImageIcon } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { MoreHorizontal, ArrowUpDown, ImageIcon, Trash2, Edit } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -67,12 +67,13 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
-  const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
 
   const handleConfirmDelete = () => {
     if (tradeToDelete) {
@@ -152,14 +153,12 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   if (isMobile) {
     return (
         <div className="w-full space-y-4">
-            <div className="flex flex-col md:flex-row gap-2">
-                <Input
-                placeholder="Filter by asset, strategy, notes, mistakes..."
+            <Input
+                placeholder="Filter trades..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="w-full"
-                />
-            </div>
+            />
             <div className="space-y-4">
             {sortedAndFilteredTrades.length > 0 ? (
               sortedAndFilteredTrades.map((trade) => {
@@ -169,24 +168,10 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                         <CardHeader className="p-4">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <CardTitle>{trade.asset}</CardTitle>
+                                    <CardTitle className="text-base">{trade.asset}</CardTitle>
                                     <CardDescription>{format(trade.date, "PPP")}</CardDescription>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <ResultBadge result={trade.result} />
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Open menu</span>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">Delete</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
+                                <ResultBadge result={trade.result} />
                             </div>
                         </CardHeader>
                         <CardContent className="p-4 pt-0 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -204,7 +189,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                             </div>
                             
                             <div className="font-medium text-muted-foreground">RR</div>
-                            <div>{trade.rr?.toFixed(2)}</div>
+                            <div>{trade.rr?.toFixed(2) ?? 'N/A'}</div>
                             
                             <div className="font-medium text-muted-foreground">Strategy</div>
                             <div className="truncate">{trade.strategy}</div>
@@ -223,13 +208,13 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                                 </>
                             )}
                             
-                             {trade.screenshotURL && (
-                                <div className="col-span-2 mt-2">
+                            <div className="col-span-2 mt-4 flex gap-2">
+                                {trade.screenshotURL && (
                                     <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm" className="w-full">
+                                        <Button variant="outline" size="sm" className="flex-1">
                                             <ImageIcon className="mr-2 h-4 w-4" />
-                                            View Screenshot
+                                            View Chart
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="max-w-md w-[90vw]">
@@ -247,8 +232,14 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                                         </div>
                                     </DialogContent>
                                     </Dialog>
-                                </div>
-                            )}
+                                )}
+                                <Button variant="secondary" size="sm" className="flex-1" onClick={() => onEdit(trade)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setTradeToDelete(trade)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
                 )
@@ -284,14 +275,12 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex flex-col md:flex-row gap-2">
         <Input
           placeholder="Filter by asset, strategy, notes, mistakes..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
         />
-      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -306,8 +295,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
               <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>
               <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
               <TableHead>Mistakes</TableHead>
-              <TableHead>Screenshot</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="text-center">Screenshot</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -317,7 +306,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                 
                 return (
                   <TableRow key={trade.id}>
-                    <TableCell>{format(trade.date, "dd MMM yyyy")}</TableCell>
+                    <TableCell className="font-medium">{format(trade.date, "dd MMM yyyy")}</TableCell>
                     <TableCell>{trade.asset}</TableCell>
                     <TableCell>{trade.strategy}</TableCell>
                     <TableCell>
@@ -325,7 +314,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                           {trade.direction}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">{trade.rr?.toFixed(2)}</TableCell>
+                    <TableCell className="text-center">{trade.rr?.toFixed(2) ?? 'N/A'}</TableCell>
                     <TableCell className={cn("text-right font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
                       {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
                     </TableCell>
@@ -341,7 +330,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                             ))}
                         </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {trade.screenshotURL && (
                         <Dialog>
                           <DialogTrigger asChild>
@@ -366,7 +355,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                         </Dialog>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">

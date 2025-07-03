@@ -6,7 +6,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
 import { useTheme } from "next-themes";
-import { format } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 
 type EquityCurveChartProps = {
@@ -22,25 +22,41 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
     }, []);
 
     const data = useMemo(() => {
-        let cumulativeR = 0;
         if (trades.length === 0) return [];
+        
+        let cumulativeR = 0;
+        const dailyNetR: { [date: string]: number } = {};
 
-        return trades
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-            .map((trade, index) => {
-                let rValue = 0;
-                if (trade.result === 'Win' && trade.rr) {
-                    rValue = trade.rr;
-                } else if (trade.result === 'Loss') {
-                    rValue = -1;
-                }
-                cumulativeR += rValue;
+        // Sort trades by date to process them chronologically
+        const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        sortedTrades.forEach(trade => {
+            const dateKey = format(startOfDay(new Date(trade.date)), 'yyyy-MM-dd');
+            if (!dailyNetR[dateKey]) {
+                dailyNetR[dateKey] = 0;
+            }
+            let rValue = 0;
+            if (trade.result === 'Win' && trade.rr) {
+                rValue = trade.rr;
+            } else if (trade.result === 'Loss') {
+                rValue = -1;
+            }
+            dailyNetR[dateKey] += rValue;
+        });
+
+        const chartData = Object.keys(dailyNetR)
+            .sort()
+            .map(dateKey => {
+                cumulativeR += dailyNetR[dateKey];
                 return {
-                    name: `Trade ${index + 1}`,
-                    date: format(trade.date, 'dd MMM'),
+                    date: format(new Date(dateKey), 'dd MMM'),
                     cumulativeR: parseFloat(cumulativeR.toFixed(2)),
                 };
             });
+        
+        // Add a starting point at 0
+        return [{ date: 'Start', cumulativeR: 0 }, ...chartData];
+
     }, [trades]);
 
   const tickColor = theme === 'dark' ? '#888888' : '#333333';
@@ -51,14 +67,14 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Equity Curve (Cumulative R)</CardTitle>
-        <CardDescription>Your trading performance over time.</CardDescription>
+        <CardTitle>Equity Curve</CardTitle>
+        <CardDescription>Cumulative R-value over time.</CardDescription>
       </CardHeader>
       <CardContent>
         {!mounted ? (
-          <Skeleton className="h-[300px] w-full" />
-        ) : data.length > 0 ? (
-          <div className="h-[300px]">
+          <Skeleton className="h-[250px] w-full" />
+        ) : data.length > 1 ? (
+          <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <defs>
@@ -69,7 +85,7 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis dataKey="date" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'R Value', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12 }} />
+                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} label={{ value: 'R Value', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }} />
                 <Tooltip
                   cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
                   contentStyle={{
@@ -79,13 +95,13 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
                   }}
                   labelStyle={{ fontWeight: 'bold' }}
                 />
-                <Area type="monotone" dataKey="cumulativeR" stroke={strokeColor} fillOpacity={1} fill="url(#colorUv)" />
+                <Area type="monotone" dataKey="cumulativeR" stroke={strokeColor} strokeWidth={2} fillOpacity={1} fill="url(#colorUv)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            No trade data in selected date range.
+          <div className="h-[250px] flex items-center justify-center text-muted-foreground p-4 text-center">
+            No trade data in the selected date range to display chart.
           </div>
         )}
       </CardContent>
