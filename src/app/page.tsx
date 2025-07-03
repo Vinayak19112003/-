@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { PlusCircle, LogOut, Settings, Sun, Moon, Video } from "lucide-react";
+import { PlusCircle, LogOut, Settings, Sun, Moon, Video, Target } from "lucide-react";
 import { useTrades } from "@/hooks/use-trades";
 import { type Trade } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import { SharePerformance } from "@/components/dashboard/share-performance";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { SetTargetsDialog } from "@/components/dashboard/set-targets-dialog";
 
 function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
@@ -149,11 +150,11 @@ function Dashboard() {
                 <Skeleton className="h-28" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-                <div className="lg:col-span-4"><Skeleton className="h-[450px]" /></div>
+                <div className="lg:col-span-4"><Skeleton className="h-[350px]" /></div>
                 <div className="lg:col-span-3 space-y-4 md:space-y-8">
-                  <Skeleton className="h-[240px]" />
-                  <Skeleton className="h-[240px]" />
-                  <Skeleton className="h-[240px]" />
+                  <Skeleton className="h-[180px]" />
+                  <Skeleton className="h-[180px]" />
+                  <Skeleton className="h-[180px]" />
                 </div>
             </div>
             <div>
@@ -217,6 +218,12 @@ function Dashboard() {
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
+                <SetTargetsDialog>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Target className="mr-2 h-4 w-4" />
+                    <span>Set Targets</span>
+                  </DropdownMenuItem>
+                </SetTargetsDialog>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
@@ -286,7 +293,7 @@ function Dashboard() {
                    <ExportTrades trades={filteredTrades}/>
                    <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
                         <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        <span className="sr-only sm:not-sr-only sm:whitespace-rap">
                             Add Trade
                         </span>
                     </Button>

@@ -4,15 +4,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
 import { useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { StreamerModeText } from "@/components/streamer-mode-text";
+import { useTargets } from "@/hooks/use-targets";
+import { Progress } from "@/components/ui/progress";
 
 type StatsCardsProps = {
   trades: Trade[];
 };
 
 export function StatsCards({ trades }: StatsCardsProps) {
+  const { targets } = useTargets();
+
   const stats = useMemo(() => {
     const totalTrades = trades.length;
     if (totalTrades === 0) {
@@ -24,11 +27,16 @@ export function StatsCards({ trades }: StatsCardsProps) {
         wins: 0,
         losses: 0,
         bes: 0,
+        avgWin: 0,
+        avgLoss: 0,
+        totalLosingPnl: 0,
       };
     }
 
-    const wins = trades.filter((t) => t.result === "Win").length;
-    const losses = trades.filter((t) => t.result === "Loss").length;
+    const winTrades = trades.filter((t) => t.result === "Win");
+    const lossTrades = trades.filter((t) => t.result === "Loss");
+    const wins = winTrades.length;
+    const losses = lossTrades.length;
     const bes = trades.filter((t) => t.result === "BE").length;
     const winRate = (wins / (wins + losses)) * 100 || 0;
     
@@ -40,6 +48,12 @@ export function StatsCards({ trades }: StatsCardsProps) {
 
     const totalPnl = trades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
 
+    const totalWinningPnl = winTrades.reduce((acc, t) => acc + (t.pnl || 0), 0);
+    const totalLosingPnl = lossTrades.reduce((acc, t) => acc + (t.pnl || 0), 0);
+
+    const avgWin = wins > 0 ? totalWinningPnl / wins : 0;
+    const avgLoss = losses > 0 ? totalLosingPnl / losses : 0;
+
 
     return {
       totalTrades,
@@ -49,10 +63,17 @@ export function StatsCards({ trades }: StatsCardsProps) {
       wins,
       losses,
       bes,
+      avgWin,
+      avgLoss,
+      totalLosingPnl,
     };
   }, [trades]);
 
-  const StatCard = ({ title, value, unit, description, badge, valueClassName }: { title: string, value: string | React.ReactNode, unit?: string, description?: string, badge?: React.ReactNode, valueClassName?: string }) => (
+  const profitProgress = targets.profit > 0 && stats.totalPnl > 0 ? (stats.totalPnl / targets.profit) * 100 : 0;
+  const lossProgress = targets.loss > 0 && stats.totalLosingPnl < 0 ? (Math.abs(stats.totalLosingPnl) / targets.loss) * 100 : 0;
+
+
+  const StatCard = ({ title, value, unit, description, badge, valueClassName, children }: { title: string, value: string | React.ReactNode, unit?: string, description?: string, badge?: React.ReactNode, valueClassName?: string, children?: React.ReactNode }) => (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -64,6 +85,7 @@ export function StatsCards({ trades }: StatsCardsProps) {
           {unit && <span className="text-sm font-body font-normal text-muted-foreground">{unit}</span>}
         </div>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {children}
       </CardContent>
     </Card>
   );
@@ -89,6 +111,52 @@ export function StatsCards({ trades }: StatsCardsProps) {
         description="Total R value across all trades"
         valueClassName={stats.netR > 0 ? 'text-success' : stats.netR < 0 ? 'text-destructive' : ''}
       />
+      <StatCard 
+        title="Avg. Win ($)"
+        value={
+          <StreamerModeText>
+            {`+${stats.avgWin.toFixed(2)}`}
+          </StreamerModeText>
+        }
+        valueClassName="text-success"
+        description="Average PNL of winning trades"
+      />
+      <StatCard 
+        title="Avg. Loss ($)"
+        value={
+          <StreamerModeText>
+            {`${stats.avgLoss.toFixed(2)}`}
+          </StreamerModeText>
+        }
+        valueClassName="text-destructive"
+        description="Average PNL of losing trades"
+      />
+      <StatCard
+        title="Profit Target"
+        value={
+            <StreamerModeText>
+                {`$${targets.profit.toLocaleString()}`}
+            </StreamerModeText>
+        }
+        description={
+            targets.profit > 0 ? `You've made ${profitProgress.toFixed(0)}% of your target.` : "No target set."
+        }
+      >
+        {targets.profit > 0 && stats.totalPnl > 0 && <Progress value={profitProgress} className="h-2 mt-2" indicatorClassName="bg-success" />}
+      </StatCard>
+      <StatCard
+        title="Loss Limit"
+        value={
+            <StreamerModeText>
+                {`$${targets.loss.toLocaleString()}`}
+            </StreamerModeText>
+        }
+        description={
+             targets.loss > 0 ? `You are at ${lossProgress.toFixed(0)}% of your loss limit.` : "No limit set."
+        }
+      >
+        {targets.loss > 0 && stats.totalLosingPnl < 0 && <Progress value={lossProgress} className="h-2 mt-2" indicatorClassName="bg-destructive" />}
+      </StatCard>
     </div>
   );
 }
