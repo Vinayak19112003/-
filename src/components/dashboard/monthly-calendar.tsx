@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, Fragment, useEffect } from 'react';
@@ -72,12 +71,23 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   const lastDayOfGrid = endOfWeek(endOfMonth(currentDate));
   const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
 
+  const weeks = useMemo(() => {
+    const weekChunks: Date[][] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+        weekChunks.push(calendarDays.slice(i, i + 7));
+    }
+    return weekChunks;
+  }, [calendarDays]);
+
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   
   const weekdays = isMobile 
-    ? ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa'] 
+    ? ['S', 'M', 'T', 'W', 'Th', 'F', 'S'] 
     : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const showWeeklyPnl = !isMobile;
+  const gridColsClass = showWeeklyPnl ? 'grid-cols-8' : 'grid-cols-7';
+
 
   if (!mounted) {
     return (
@@ -111,90 +121,130 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
       </CardHeader>
       <CardContent className="p-2 flex-1">
         <TooltipProvider>
-        <div className="grid grid-cols-7 border-t border-l h-full">
+        <div className={cn("grid border-t border-l h-full", gridColsClass)}>
             {weekdays.map((day) => (
                 <div key={day} className="p-1 text-center font-semibold text-muted-foreground text-[10px] sm:text-xs border-r border-b">
                     {day}
                 </div>
             ))}
-            {calendarDays.map((day) => {
-                const dateKey = format(day, 'yyyy-MM-dd');
-                const data = dailyData.get(dateKey);
-                const isCurrentMonth = isSameMonth(day, currentDate);
+            {showWeeklyPnl && (
+                <div className="p-1 text-center font-semibold text-muted-foreground text-[10px] sm:text-xs border-r border-b">
+                    Weekly
+                </div>
+            )}
+            {weeks.map((week, weekIndex) => {
+                const { pnl, netR } = week.reduce(
+                    (totals, day) => {
+                        const dateKey = format(day, "yyyy-MM-dd");
+                        const data = dailyData.get(dateKey);
+                        if (data) {
+                            totals.pnl += data.pnl;
+                            totals.netR += data.netR;
+                        }
+                        return totals;
+                    },
+                    { pnl: 0, netR: 0 }
+                );
+                return (
+                    <Fragment key={weekIndex}>
+                        {week.map((day) => {
+                            const dateKey = format(day, 'yyyy-MM-dd');
+                            const data = dailyData.get(dateKey);
+                            const isCurrentMonth = isSameMonth(day, currentDate);
 
-                let bgColorClass = 'bg-card hover:bg-muted/50';
-                if (isCurrentMonth && data?.totalTrades) {
-                    if (data.pnl > 0) bgColorClass = 'bg-success/10 hover:bg-success/20';
-                    else if (data.pnl < 0) bgColorClass = 'bg-destructive/10 hover:bg-destructive/20';
-                    else bgColorClass = 'bg-muted/50 hover:bg-muted';
-                } else if (!isCurrentMonth) {
-                    bgColorClass = 'bg-muted/30';
-                }
+                            let bgColorClass = 'bg-card hover:bg-muted/50';
+                            if (isCurrentMonth && data?.totalTrades) {
+                                if (data.pnl > 0) bgColorClass = 'bg-success/10 hover:bg-success/20';
+                                else if (data.pnl < 0) bgColorClass = 'bg-destructive/10 hover:bg-destructive/20';
+                                else bgColorClass = 'bg-muted/50 hover:bg-muted';
+                            } else if (!isCurrentMonth) {
+                                bgColorClass = 'bg-muted/30';
+                            }
 
-                const DayCell = (
-                    <div
-                        className={cn(
-                            "p-1.5 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full",
-                            bgColorClass,
-                        )}
-                        onClick={() => onDateSelect(day)}
-                    >
-                        <span className={cn(
-                            "font-semibold text-[10px] sm:text-xs",
-                            isToday(day) ? "bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center" : 
-                            isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
-                        )}>
-                            {format(day, 'd')}
-                        </span>
-                        {isCurrentMonth && data && (
-                            <div className="text-right space-y-0.5">
+                            const DayCell = (
+                                <div
+                                    className={cn(
+                                        "p-1.5 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full min-h-[90px]",
+                                        bgColorClass,
+                                    )}
+                                    onClick={() => onDateSelect(day)}
+                                >
+                                    <span className={cn(
+                                        "font-semibold text-xs",
+                                        isToday(day) ? "bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center" : 
+                                        isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
+                                    )}>
+                                        {format(day, 'd')}
+                                    </span>
+                                    {isCurrentMonth && data && (
+                                        <div className="text-right space-y-0.5">
+                                            <p className={cn(
+                                            "font-bold text-xs",
+                                            data.pnl > 0 ? 'text-success' :
+                                            data.pnl < 0 ? 'text-destructive' :
+                                            'text-muted-foreground'
+                                            )}>
+                                                {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(1)}
+                                            </p> 
+                                            <p className={cn(
+                                            "font-semibold text-[10px]",
+                                            data.netR > 0 ? 'text-success/80' :
+                                            data.netR < 0 ? 'text-destructive/80' :
+                                            'text-muted-foreground'
+                                            )}>
+                                                {data.netR.toFixed(1)}R
+                                            </p> 
+                                        </div>
+                                    )}
+                                </div>
+                            )
+
+                            if (isCurrentMonth && data) {
+                                return (
+                                    <Tooltip key={dateKey} delayDuration={100}>
+                                        <TooltipTrigger asChild>{DayCell}</TooltipTrigger>
+                                        <TooltipContent>
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                                <span className="font-semibold">P&L:</span>
+                                                <span className={cn(data.pnl > 0 ? 'text-success' : data.pnl < 0 ? 'text-destructive' : '')}>
+                                                    {data.pnl.toFixed(2)}
+                                                </span>
+                                                <span className="font-semibold">Net R:</span>
+                                                <span>{data.netR.toFixed(2)}</span>
+                                                <span className="font-semibold">Trades:</span>
+                                                <span>{data.totalTrades}</span>
+                                                <span className="font-semibold">Wins:</span>
+                                                <span className="text-success">{data.wins}</span>
+                                                <span className="font-semibold">Losses:</span>
+                                                <span className="text-destructive">{data.losses}</span>
+                                            </div>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )
+                            }
+
+                            return (
+                                <Fragment key={dateKey}>{DayCell}</Fragment>
+                            );
+                        })}
+                        {showWeeklyPnl && (
+                            <div className="p-1.5 flex flex-col justify-center items-center text-center border-r border-b h-full bg-muted/20">
+                                <p className="text-[10px] text-muted-foreground font-semibold">Total</p>
                                 <p className={cn(
-                                "font-bold text-[10px] sm:text-xs",
-                                data.pnl > 0 ? 'text-success' :
-                                data.pnl < 0 ? 'text-destructive' :
-                                'text-muted-foreground'
+                                    "font-bold text-sm",
+                                    pnl > 0 ? 'text-success' : pnl < 0 ? 'text-destructive' : 'text-muted-foreground'
                                 )}>
-                                    {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(isMobile ? 0 : 1)}
-                                </p> 
+                                    {pnl >= 0 ? '+$' : '-$'}{Math.abs(pnl).toFixed(1)}
+                                </p>
                                 <p className={cn(
-                                "font-semibold text-[9px] sm:text-[10px]",
-                                data.netR > 0 ? 'text-success/80' :
-                                data.netR < 0 ? 'text-destructive/80' :
-                                'text-muted-foreground'
+                                    "font-semibold text-xs",
+                                    netR > 0 ? 'text-success/80' : netR < 0 ? 'text-destructive/80' : 'text-muted-foreground'
                                 )}>
-                                    {data.netR.toFixed(1)}R
-                                </p> 
+                                    {netR.toFixed(1)}R
+                                </p>
                             </div>
                         )}
-                    </div>
-                )
-
-                if (isCurrentMonth && data) {
-                    return (
-                        <Tooltip key={dateKey} delayDuration={100}>
-                            <TooltipTrigger asChild>{DayCell}</TooltipTrigger>
-                            <TooltipContent>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                    <span className="font-semibold">P&L:</span>
-                                    <span className={cn(data.pnl > 0 ? 'text-success' : data.pnl < 0 ? 'text-destructive' : '')}>
-                                        {data.pnl.toFixed(2)}
-                                    </span>
-                                    <span className="font-semibold">Net R:</span>
-                                    <span>{data.netR.toFixed(2)}</span>
-                                    <span className="font-semibold">Trades:</span>
-                                    <span>{data.totalTrades}</span>
-                                    <span className="font-semibold">Wins:</span>
-                                    <span className="text-success">{data.wins}</span>
-                                    <span className="font-semibold">Losses:</span>
-                                    <span className="text-destructive">{data.losses}</span>
-                                </div>
-                            </TooltipContent>
-                        </Tooltip>
-                    )
-                }
-
-                return (
-                    <Fragment key={dateKey}>{DayCell}</Fragment>
+                    </Fragment>
                 );
             })}
         </div>
