@@ -54,9 +54,9 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
     return (
         <div className="h-full">
             {!mounted ? (
-                <Skeleton className="h-[250px] w-full" />
+                <Skeleton className="h-[180px] w-full" />
             ) : mistakeData.length > 0 ? (
-                <div className="h-[250px] w-full relative">
+                <div className="h-[180px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -103,7 +103,7 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
                     </div>
                 </div>
             ) : (
-                <div className="h-[250px] flex flex-col items-center justify-center text-center text-muted-foreground p-4">
+                <div className="h-[180px] flex flex-col items-center justify-center text-center text-muted-foreground p-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-12 w-12 text-success mb-2">
                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="m9 12 2 2 4-4"></path>
                     </svg>

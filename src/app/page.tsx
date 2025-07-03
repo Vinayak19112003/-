@@ -151,9 +151,9 @@ function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
                 <div className="lg:col-span-4"><Skeleton className="h-[450px]" /></div>
                 <div className="lg:col-span-3 space-y-4 md:space-y-8">
-                  <Skeleton className="h-[250px]" />
-                  <Skeleton className="h-[250px]" />
-                  <Skeleton className="h-[250px]" />
+                  <Skeleton className="h-[240px]" />
+                  <Skeleton className="h-[240px]" />
+                  <Skeleton className="h-[240px]" />
                 </div>
             </div>
             <div>
@@ -260,14 +260,14 @@ function Dashboard() {
                         <MistakeAnalysis trades={filteredTrades} />
                     </CardContent>
                 </Card>
-                <Card className="flex flex-col flex-1">
+                <Card>
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>
                             Performance breakdown by trading strategy.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 overflow-hidden">
+                    <CardContent>
                         <StrategyAnalytics trades={filteredTrades} />
                     </CardContent>
                 </Card>

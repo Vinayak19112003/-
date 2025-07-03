@@ -48,55 +48,53 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     }, [trades]);
 
     return (
-        <div className="h-full">
+        <ScrollArea className="h-[180px]">
             {analytics.length > 0 ? (
-                <ScrollArea className="h-full">
-                    <TooltipProvider>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[120px] p-2">Strategy</TableHead>
-                                    <TableHead className="p-2">Win Rate</TableHead>
-                                    <TableHead className="text-right p-2">Avg. RR</TableHead>
-                                    <TableHead className="text-right p-2">Net R</TableHead>
+                <TooltipProvider>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[120px] p-2">Strategy</TableHead>
+                                <TableHead className="p-2">Win Rate</TableHead>
+                                <TableHead className="text-right p-2">Avg. RR</TableHead>
+                                <TableHead className="text-right p-2">Net R</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {analytics.map(stat => (
+                                <TableRow key={stat.strategy}>
+                                    <TableCell className="font-medium truncate p-2">{stat.strategy}</TableCell>
+                                    <TableCell className="p-2">
+                                        <Tooltip delayDuration={150}>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center gap-2">
+                                                    <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
+                                                    <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{stat.wins} Wins / {stat.losses} Losses</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell className="text-right p-2">{stat.avgRr.toFixed(2)}</TableCell>
+                                    <TableCell className={cn(
+                                        "text-right font-semibold p-2",
+                                        stat.netR > 0 && "text-success",
+                                        stat.netR < 0 && "text-destructive"
+                                    )}>
+                                        {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {analytics.map(stat => (
-                                    <TableRow key={stat.strategy}>
-                                        <TableCell className="font-medium truncate p-2">{stat.strategy}</TableCell>
-                                        <TableCell className="p-2">
-                                            <Tooltip delayDuration={150}>
-                                                <TooltipTrigger asChild>
-                                                    <div className="flex items-center gap-2">
-                                                        <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
-                                                        <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{stat.wins} Wins / {stat.losses} Losses</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TableCell>
-                                        <TableCell className="text-right p-2">{stat.avgRr.toFixed(2)}</TableCell>
-                                        <TableCell className={cn(
-                                            "text-right font-semibold p-2",
-                                            stat.netR > 0 && "text-success",
-                                            stat.netR < 0 && "text-destructive"
-                                        )}>
-                                            {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TooltipProvider>
-                </ScrollArea>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TooltipProvider>
             ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
                     <p>No strategy data to analyze.</p>
                 </div>
             )}
-        </div>
+        </ScrollArea>
     )
 }
