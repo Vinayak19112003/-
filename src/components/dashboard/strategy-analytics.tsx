@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type StrategyAnalyticsProps = {
     trades: Trade[];
@@ -47,50 +48,52 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     }, [trades]);
 
     return (
-        <div>
+        <div className="h-full">
             {analytics.length > 0 ? (
-                <TooltipProvider>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[120px] p-2">Strategy</TableHead>
-                                <TableHead className="p-2">Win Rate</TableHead>
-                                <TableHead className="text-right p-2">Avg. RR</TableHead>
-                                <TableHead className="text-right p-2">Net R</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {analytics.map(stat => (
-                                <TableRow key={stat.strategy}>
-                                    <TableCell className="font-medium truncate p-2">{stat.strategy}</TableCell>
-                                    <TableCell className="p-2">
-                                        <Tooltip delayDuration={150}>
-                                            <TooltipTrigger asChild>
-                                                <div className="flex items-center gap-2">
-                                                    <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
-                                                    <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{stat.wins} Wins / {stat.losses} Losses</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TableCell>
-                                    <TableCell className="text-right p-2">{stat.avgRr.toFixed(2)}</TableCell>
-                                    <TableCell className={cn(
-                                        "text-right font-semibold p-2",
-                                        stat.netR > 0 && "text-success",
-                                        stat.netR < 0 && "text-destructive"
-                                    )}>
-                                        {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
-                                    </TableCell>
+                <ScrollArea className="h-full">
+                    <TooltipProvider>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[120px] p-2">Strategy</TableHead>
+                                    <TableHead className="p-2">Win Rate</TableHead>
+                                    <TableHead className="text-right p-2">Avg. RR</TableHead>
+                                    <TableHead className="text-right p-2">Net R</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TooltipProvider>
+                            </TableHeader>
+                            <TableBody>
+                                {analytics.map(stat => (
+                                    <TableRow key={stat.strategy}>
+                                        <TableCell className="font-medium truncate p-2">{stat.strategy}</TableCell>
+                                        <TableCell className="p-2">
+                                            <Tooltip delayDuration={150}>
+                                                <TooltipTrigger asChild>
+                                                    <div className="flex items-center gap-2">
+                                                        <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
+                                                        <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{stat.wins} Wins / {stat.losses} Losses</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TableCell>
+                                        <TableCell className="text-right p-2">{stat.avgRr.toFixed(2)}</TableCell>
+                                        <TableCell className={cn(
+                                            "text-right font-semibold p-2",
+                                            stat.netR > 0 && "text-success",
+                                            stat.netR < 0 && "text-destructive"
+                                        )}>
+                                            {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TooltipProvider>
+                </ScrollArea>
             ) : (
-                <div className="h-40 flex items-center justify-center text-muted-foreground p-4 text-center">
+                <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
                     <p>No strategy data to analyze.</p>
                 </div>
             )}
