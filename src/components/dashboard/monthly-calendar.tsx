@@ -125,12 +125,12 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
         <TooltipProvider>
         <div className={cn("grid border-t border-l h-full", gridColsClass)}>
             {weekdays.map((day) => (
-                <div key={day} className="p-1 text-center font-semibold text-muted-foreground text-[10px] sm:text-xs border-r border-b">
+                <div key={day} className="p-1 text-center font-semibold text-muted-foreground text-xs sm:text-sm border-r border-b">
                     {day}
                 </div>
             ))}
             {showWeeklyPnl && (
-                <div className="p-1 text-center font-semibold text-muted-foreground text-[10px] sm:text-xs border-r border-b">
+                <div className="p-1 text-center font-semibold text-muted-foreground text-xs sm:text-sm border-r border-b">
                     Weekly
                 </div>
             )}
@@ -166,23 +166,23 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             const DayCell = (
                                 <div
                                     className={cn(
-                                        "p-1.5 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full min-h-[90px]",
+                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full min-h-[120px]",
                                         bgColorClass,
                                     )}
                                     onClick={() => onDateSelect(day)}
                                 >
                                     <span className={cn(
-                                        "font-semibold text-xs",
-                                        isToday(day) ? "bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center" : 
+                                        "font-semibold text-sm",
+                                        isToday(day) ? "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center" : 
                                         isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"
                                     )}>
                                         {format(day, 'd')}
                                     </span>
                                     {isCurrentMonth && data && (
-                                        <div className="text-right space-y-0.5">
+                                        <div className="text-right space-y-1">
                                             <StreamerModeText>
                                                 <p className={cn(
-                                                "font-bold text-xs",
+                                                "font-bold text-sm",
                                                 data.pnl > 0 ? 'text-success' :
                                                 data.pnl < 0 ? 'text-destructive' :
                                                 'text-muted-foreground'
@@ -191,7 +191,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                                                 </p> 
                                             </StreamerModeText>
                                             <p className={cn(
-                                            "font-semibold text-[10px]",
+                                            "font-semibold text-xs",
                                             data.netR > 0 ? 'text-success/80' :
                                             data.netR < 0 ? 'text-destructive/80' :
                                             'text-muted-foreground'
@@ -233,17 +233,17 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         })}
                         {showWeeklyPnl && (
                             <div className="p-1.5 flex flex-col justify-center items-center text-center border-r border-b h-full bg-muted/20">
-                                <p className="text-[10px] text-muted-foreground font-semibold">Total</p>
+                                <p className="text-xs text-muted-foreground font-semibold">Total</p>
                                 <StreamerModeText>
                                     <p className={cn(
-                                        "font-bold text-sm",
+                                        "font-bold text-base",
                                         pnl > 0 ? 'text-success' : pnl < 0 ? 'text-destructive' : 'text-muted-foreground'
                                     )}>
                                         {pnl >= 0 ? '+$' : '-$'}{Math.abs(pnl).toFixed(1)}
                                     </p>
                                 </StreamerModeText>
                                 <p className={cn(
-                                    "font-semibold text-xs",
+                                    "font-semibold text-sm",
                                     netR > 0 ? 'text-success/80' : netR < 0 ? 'text-destructive/80' : 'text-muted-foreground'
                                 )}>
                                     {netR.toFixed(1)}R
