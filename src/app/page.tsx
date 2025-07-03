@@ -21,7 +21,6 @@ import type { DateRange } from "react-day-picker";
 import { startOfMonth, isSameDay } from "date-fns";
 import { useTheme } from "next-themes";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
 import { StrategyAnalytics } from "@/components/dashboard/strategy-analytics";
@@ -149,14 +148,18 @@ function Dashboard() {
                 <Skeleton className="h-28" />
                 <Skeleton className="h-28" />
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-                <div className="lg:col-span-2"><Skeleton className="h-[500px]" /></div>
-                <div className="lg:col-span-1 space-y-4 md:space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
+                <div className="lg:col-span-4"><Skeleton className="h-[600px]" /></div>
+                <div className="lg:col-span-3 space-y-4 md:space-y-8">
                   <Skeleton className="h-[300px]" />
-                  <Skeleton className="h-[400px]" />
+                  <Skeleton className="h-[250px]" />
+                  <Skeleton className="h-[200px]" />
                 </div>
             </div>
-            <Skeleton className="h-96" />
+            <div className="full-width-chart">
+                <Skeleton className="h-[400px]" />
+            </div>
+            <Skeleton className="h-[400px]" />
         </main>
       </div>
     );
@@ -234,36 +237,39 @@ function Dashboard() {
             <div className="lg:col-span-4">
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-4 md:space-y-8">
                 <Card>
-                    <Tabs defaultValue="performance" className="w-full">
-                        <CardHeader>
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                                <div className="grid gap-1">
-                                    <CardTitle>Analytics</CardTitle>
-                                    <CardDescription>
-                                        A detailed breakdown of your performance.
-                                    </CardDescription>
-                                </div>
-                                <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-                                    <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-                                    <TabsTrigger value="performance">Metrics</TabsTrigger>
-                                    <TabsTrigger value="strategy">Strategy</TabsTrigger>
-                                </TabsList>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <TabsContent value="mistakes">
-                                <MistakeAnalysis trades={filteredTrades} />
-                            </TabsContent>
-                            <TabsContent value="performance">
-                                <PerformanceRadarChart trades={filteredTrades} />
-                            </TabsContent>
-                            <TabsContent value="strategy">
-                                <StrategyAnalytics trades={filteredTrades} />
-                            </TabsContent>
-                        </CardContent>
-                    </Tabs>
+                    <CardHeader>
+                        <CardTitle>Performance Metrics</CardTitle>
+                        <CardDescription>
+                            A radar view of your key performance indicators.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <PerformanceRadarChart trades={filteredTrades} />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Mistake Analysis</CardTitle>
+                        <CardDescription>
+                            Breakdown of your most common trading errors.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <MistakeAnalysis trades={filteredTrades} />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Strategy Analytics</CardTitle>
+                        <CardDescription>
+                            Performance breakdown by trading strategy.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <StrategyAnalytics trades={filteredTrades} />
+                    </CardContent>
                 </Card>
             </div>
         </div>
@@ -332,3 +338,5 @@ export default function HomePage() {
     </AuthGuard>
   )
 }
+
+    
