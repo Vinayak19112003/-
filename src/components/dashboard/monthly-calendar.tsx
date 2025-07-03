@@ -109,7 +109,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   }
 
   return (
-    <Card className="flex flex-col">
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <h3 className="text-lg sm:text-xl font-semibold font-headline">{format(currentDate, 'MMMM yyyy')}</h3>
         <div className="flex items-center gap-2">
