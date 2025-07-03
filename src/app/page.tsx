@@ -148,6 +148,10 @@ function Dashboard() {
                 <Skeleton className="h-28" />
                 <Skeleton className="h-28" />
                 <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
                 <div className="lg:col-span-4"><Skeleton className="h-[350px]" /></div>
@@ -252,7 +256,7 @@ function Dashboard() {
                             A radar view of your key performance indicators.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="h-[180px]">
                         <PerformanceRadarChart trades={filteredTrades} />
                     </CardContent>
                 </Card>
@@ -263,18 +267,18 @@ function Dashboard() {
                             Breakdown of your most common trading errors.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="h-[180px]">
                         <MistakeAnalysis trades={filteredTrades} />
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="flex flex-col">
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>
                             Performance breakdown by trading strategy.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-1 h-[180px]">
                         <StrategyAnalytics trades={filteredTrades} />
                     </CardContent>
                 </Card>
