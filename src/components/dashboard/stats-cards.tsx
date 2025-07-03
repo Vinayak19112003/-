@@ -6,6 +6,7 @@ import { type Trade } from "@/lib/types";
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { StreamerModeText } from "@/components/streamer-mode-text";
 
 type StatsCardsProps = {
   trades: Trade[];
@@ -51,7 +52,7 @@ export function StatsCards({ trades }: StatsCardsProps) {
     };
   }, [trades]);
 
-  const StatCard = ({ title, value, unit, description, badge, valueClassName }: { title: string, value: string, unit?: string, description?: string, badge?: React.ReactNode, valueClassName?: string }) => (
+  const StatCard = ({ title, value, unit, description, badge, valueClassName }: { title: string, value: string | React.ReactNode, unit?: string, description?: string, badge?: React.ReactNode, valueClassName?: string }) => (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -73,7 +74,11 @@ export function StatsCards({ trades }: StatsCardsProps) {
       <StatCard title="Win Rate" value={stats.winRate.toFixed(2)} unit="%" description={`${stats.wins} Wins / ${stats.losses} Losses`}/>
       <StatCard 
         title="Net PNL ($)" 
-        value={`${stats.totalPnl >= 0 ? '+' : ''}${stats.totalPnl.toFixed(2)}`}
+        value={
+          <StreamerModeText>
+            {`${stats.totalPnl >= 0 ? '+' : ''}${stats.totalPnl.toFixed(2)}`}
+          </StreamerModeText>
+        }
         description="Total profit across all trades"
         valueClassName={stats.totalPnl > 0 ? 'text-success' : stats.totalPnl < 0 ? 'text-destructive' : ''}
       />

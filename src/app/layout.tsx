@@ -4,6 +4,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
+import { StreamerModeProvider } from '@/contexts/streamer-mode-context';
 
 export const metadata: Metadata = {
   title: 'Anony Trading',
@@ -35,8 +36,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
-            <Toaster />
+            <StreamerModeProvider>
+              {children}
+              <Toaster />
+            </StreamerModeProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

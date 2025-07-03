@@ -44,6 +44,7 @@ import { MoreHorizontal, ArrowUpDown, ImageIcon, Trash2, Edit } from "lucide-rea
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StreamerModeText } from "@/components/streamer-mode-text";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -179,13 +180,17 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                             <div className={cn("font-semibold", trade.direction === 'Buy' ? 'text-success' : 'text-destructive')}>{trade.direction}</div>
                             
                             <div className="font-medium text-muted-foreground">PNL ($)</div>
-                            <div className={cn("font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
-                                {trade.pnl != null ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'N/A'}
+                            <div>
+                                <StreamerModeText className={cn("font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
+                                    {trade.pnl != null ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'N/A'}
+                                </StreamerModeText>
                             </div>
 
                             <div className="font-medium text-muted-foreground">Return %</div>
-                            <div className={cn("font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
-                                {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
+                            <div>
+                                <StreamerModeText className={cn("font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
+                                    {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
+                                </StreamerModeText>
                             </div>
                             
                             <div className="font-medium text-muted-foreground">RR</div>
@@ -315,11 +320,15 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                       </span>
                     </TableCell>
                     <TableCell className="text-center">{trade.rr?.toFixed(2) ?? 'N/A'}</TableCell>
-                    <TableCell className={cn("text-right font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
-                      {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
+                    <TableCell>
+                      <StreamerModeText className={cn("text-right font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
+                        {trade.pnl != null ? `$${trade.pnl.toFixed(2)}` : 'N/A'}
+                      </StreamerModeText>
                     </TableCell>
-                    <TableCell className={cn("text-right font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
-                      {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
+                    <TableCell>
+                       <StreamerModeText className={cn("text-right font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
+                        {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
+                       </StreamerModeText>
                     </TableCell>
                     <TableCell className="text-center">{trade.confidence}</TableCell>
                     <TableCell><ResultBadge result={trade.result} /></TableCell>

@@ -46,6 +46,7 @@ import { storage } from "@/lib/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
 import { Slider } from "@/components/ui/slider";
+import { useStreamerMode } from "@/contexts/streamer-mode-context";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -66,6 +67,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
   const { user } = useAuth();
+  const { isStreamerMode } = useStreamerMode();
 
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -412,7 +414,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                     <FormItem>
                     <FormLabel>Account Size ($)</FormLabel>
                     <FormControl>
-                        <Input type="number" step="any" placeholder="e.g. 10000" {...field} />
+                        <Input type="number" step="any" placeholder="e.g. 10000" {...field} className={cn(isStreamerMode && "blur-sm")} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -425,7 +427,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                     <FormItem>
                     <FormLabel>Risk (%)</FormLabel>
                     <FormControl>
-                        <Input type="number" step="any" placeholder="e.g. 1" {...field} />
+                        <Input type="number" step="any" placeholder="e.g. 1" {...field} className={cn(isStreamerMode && "blur-sm")} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -438,7 +440,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                     <FormItem>
                     <FormLabel>Profit/Loss ($)</FormLabel>
                     <FormControl>
-                        <Input type="number" {...field} readOnly className="bg-muted"/>
+                        <Input type="number" {...field} readOnly className={cn("bg-muted", isStreamerMode && "blur-sm")}/>
                     </FormControl>
                     <FormMessage />
                     </FormItem>

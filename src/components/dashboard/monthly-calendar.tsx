@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StreamerModeText } from '@/components/streamer-mode-text';
 
 type MonthlyCalendarProps = {
   trades: Trade[];
@@ -179,14 +180,16 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                                     </span>
                                     {isCurrentMonth && data && (
                                         <div className="text-right space-y-0.5">
-                                            <p className={cn(
-                                            "font-bold text-xs",
-                                            data.pnl > 0 ? 'text-success' :
-                                            data.pnl < 0 ? 'text-destructive' :
-                                            'text-muted-foreground'
-                                            )}>
-                                                {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(1)}
-                                            </p> 
+                                            <StreamerModeText>
+                                                <p className={cn(
+                                                "font-bold text-xs",
+                                                data.pnl > 0 ? 'text-success' :
+                                                data.pnl < 0 ? 'text-destructive' :
+                                                'text-muted-foreground'
+                                                )}>
+                                                    {data.pnl >= 0 ? '+$' : '-$'}{Math.abs(data.pnl).toFixed(1)}
+                                                </p> 
+                                            </StreamerModeText>
                                             <p className={cn(
                                             "font-semibold text-[10px]",
                                             data.netR > 0 ? 'text-success/80' :
@@ -208,7 +211,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                                 <span className="font-semibold">P&L:</span>
                                                 <span className={cn(data.pnl > 0 ? 'text-success' : data.pnl < 0 ? 'text-destructive' : '')}>
-                                                    {data.pnl.toFixed(2)}
+                                                   <StreamerModeText>{data.pnl.toFixed(2)}</StreamerModeText>
                                                 </span>
                                                 <span className="font-semibold">Net R:</span>
                                                 <span>{data.netR.toFixed(2)}</span>
@@ -231,12 +234,14 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                         {showWeeklyPnl && (
                             <div className="p-1.5 flex flex-col justify-center items-center text-center border-r border-b h-full bg-muted/20">
                                 <p className="text-[10px] text-muted-foreground font-semibold">Total</p>
-                                <p className={cn(
-                                    "font-bold text-sm",
-                                    pnl > 0 ? 'text-success' : pnl < 0 ? 'text-destructive' : 'text-muted-foreground'
-                                )}>
-                                    {pnl >= 0 ? '+$' : '-$'}{Math.abs(pnl).toFixed(1)}
-                                </p>
+                                <StreamerModeText>
+                                    <p className={cn(
+                                        "font-bold text-sm",
+                                        pnl > 0 ? 'text-success' : pnl < 0 ? 'text-destructive' : 'text-muted-foreground'
+                                    )}>
+                                        {pnl >= 0 ? '+$' : '-$'}{Math.abs(pnl).toFixed(1)}
+                                    </p>
+                                </StreamerModeText>
                                 <p className={cn(
                                     "font-semibold text-xs",
                                     netR > 0 ? 'text-success/80' : netR < 0 ? 'text-destructive/80' : 'text-muted-foreground'

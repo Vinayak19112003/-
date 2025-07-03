@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { PlusCircle, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { PlusCircle, LogOut, Settings, Sun, Moon, Video } from "lucide-react";
 import { useTrades } from "@/hooks/use-trades";
 import { type Trade } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { PatternAnalysis } from "@/components/dashboard/pattern-analysis";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,9 @@ import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { PerformanceRadarChart } from "@/components/dashboard/performance-radar-chart";
 import { SharePerformance } from "@/components/dashboard/share-performance";
+import { useStreamerMode } from "@/contexts/streamer-mode-context";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
@@ -46,6 +49,7 @@ function Dashboard() {
   const { toast } = useToast();
   const router = useRouter();
   const { setTheme } = useTheme();
+  const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -175,6 +179,19 @@ function Dashboard() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Settings</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                  <div className="flex items-center justify-between w-full">
+                    <Label htmlFor="streamer-mode" className="flex items-center gap-2 cursor-pointer font-normal">
+                      <Video className="h-4 w-4" />
+                      <span>Streamer Mode</span>
+                    </Label>
+                    <Switch
+                      id="streamer-mode"
+                      checked={isStreamerMode}
+                      onCheckedChange={toggleStreamerMode}
+                    />
+                  </div>
+                </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <div className="relative h-4 w-4">
@@ -213,11 +230,11 @@ function Dashboard() {
         </div>
         <StatsCards trades={filteredTrades} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-            <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
+            <div className="lg:col-span-4">
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-3">
                 <Card>
                     <Tabs defaultValue="mistakes" className="w-full">
                         <CardHeader>
