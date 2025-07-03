@@ -32,7 +32,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +39,12 @@ import { Input } from "@/components/ui/input";
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { MoreHorizontal, ArrowUpDown, ImageIcon, Trash2, Edit } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, ImageIcon, Trash2, Edit, Eye } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StreamerModeText } from "@/components/streamer-mode-text";
+import { TradeDetailsDialog } from "./trade-details-dialog";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -68,6 +68,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
+  const [viewingTrade, setViewingTrade] = useState<Trade | null>(null);
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
 
@@ -75,6 +76,9 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     setMounted(true);
   }, []);
 
+  const handleViewTrade = (trade: Trade) => {
+    setViewingTrade(trade);
+  };
 
   const handleConfirmDelete = () => {
     if (tradeToDelete) {
@@ -213,37 +217,28 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                                 </>
                             )}
                             
-                            <div className="col-span-2 mt-4 flex gap-2">
-                                {trade.screenshotURL && (
-                                    <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm" className="flex-1">
-                                            <ImageIcon className="mr-2 h-4 w-4" />
-                                            View Chart
+                            <div className="col-span-2 mt-4 flex justify-between items-center">
+                                <Button variant="secondary" size="sm" onClick={() => handleViewTrade(trade)}>
+                                    View Details
+                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-5 w-5" />
+                                            <span className="sr-only">More options</span>
                                         </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-md w-[90vw]">
-                                        <DialogHeader>
-                                            <DialogTitle>Trade Screenshot</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="relative h-[60vh]">
-                                            <Image
-                                                src={trade.screenshotURL}
-                                                alt={`Screenshot for trade on ${trade.asset}`}
-                                                fill
-                                                style={{objectFit: 'contain'}}
-                                                sizes="90vw"
-                                            />
-                                        </div>
-                                    </DialogContent>
-                                    </Dialog>
-                                )}
-                                <Button variant="secondary" size="sm" className="flex-1" onClick={() => onEdit(trade)}>
-                                    <Edit className="mr-2 h-4 w-4" /> Edit
-                                </Button>
-                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setTradeToDelete(trade)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onSelect={() => onEdit(trade)}>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            <span>Edit</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            <span>Delete</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </CardContent>
                     </Card>
@@ -373,8 +368,18 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => onEdit(trade)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">Delete</DropdownMenuItem>
+                           <DropdownMenuItem onSelect={() => handleViewTrade(trade)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                <span>View</span>
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onSelect={() => onEdit(trade)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                           </DropdownMenuItem>
+                           <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -391,6 +396,16 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
           </TableBody>
         </Table>
       </div>
+
+        <TradeDetailsDialog 
+            isOpen={!!viewingTrade}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setViewingTrade(null);
+                }
+            }}
+            trade={viewingTrade}
+        />
 
       <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
         <AlertDialogContent>
