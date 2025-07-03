@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, Fragment, useEffect } from 'react';
@@ -108,7 +109,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
   }
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <h3 className="text-lg sm:text-xl font-semibold font-headline">{format(currentDate, 'MMMM yyyy')}</h3>
         <div className="flex items-center gap-2">
@@ -120,11 +121,11 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
             </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-2 flex-1">
+      <CardContent className="p-2">
         <TooltipProvider>
-        <div className={cn("grid border-t border-l h-full", gridColsClass)}>
-            {weekdays.map((day) => (
-                <div key={day} className="p-1 text-center font-semibold text-muted-foreground text-xs sm:text-sm border-r border-b">
+        <div className={cn("grid border-t border-l", gridColsClass)}>
+            {weekdays.map((day, i) => (
+                <div key={`${day}-${i}`} className="p-1 text-center font-semibold text-muted-foreground text-xs sm:text-sm border-r border-b">
                     {day}
                 </div>
             ))}
@@ -165,7 +166,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             const DayCell = (
                                 <div
                                     className={cn(
-                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b h-full min-h-[85px]",
+                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b min-h-[80px]",
                                         bgColorClass,
                                     )}
                                     onClick={() => onDateSelect(day)}
@@ -231,7 +232,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             );
                         })}
                         {showWeeklyPnl && (
-                            <div className="p-1.5 flex flex-col justify-center items-center text-center border-r border-b h-full bg-muted/20">
+                            <div className="p-1.5 flex flex-col justify-center items-center text-center border-r border-b bg-muted/20">
                                 <p className="text-xs text-muted-foreground font-semibold">Total</p>
                                 <StreamerModeText>
                                     <p className={cn(
