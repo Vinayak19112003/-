@@ -155,19 +155,15 @@ function Dashboard() {
                 <Skeleton className="h-28" />
                 <Skeleton className="h-28" />
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-              <div className="lg:col-span-4 flex flex-col gap-4 md:gap-8">
-                <Skeleton className="h-[480px]" />
-                <Skeleton className="h-[300px]" />
+            <div className="grid grid-cols-1 gap-4 md:gap-8">
+              <Skeleton className="h-[600px]" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                <Skeleton className="h-[328px]" />
+                <Skeleton className="h-[328px]" />
+                <Skeleton className="h-[328px]" />
+                <Skeleton className="h-[328px]" />
               </div>
-              <div className="lg:col-span-3 flex flex-col gap-4 md:gap-8">
-                <Skeleton className="h-[180px]" />
-                <Skeleton className="h-[180px]" />
-                <Skeleton className="h-[260px]" />
-              </div>
-              <div className="lg:col-span-7">
-                <Skeleton className="h-[400px]" />
-              </div>
+              <Skeleton className="h-[420px]" />
             </div>
             <div>
                 <Skeleton className="h-[400px]" />
@@ -245,15 +241,11 @@ function Dashboard() {
         </div>
         <StatsCards trades={filteredTrades} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-            <div className="lg:col-span-7">
-                <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
-            </div>
+        <div className="grid grid-cols-1 gap-4 md:gap-8">
+            <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
 
-            <div className="lg:col-span-4 flex flex-col gap-4 md:gap-8">
-                 <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
-            </div>
-            <div className="lg:col-span-3 flex flex-col gap-4 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
                 <Card>
                     <CardHeader>
                         <CardTitle>Performance Metrics</CardTitle>
@@ -261,7 +253,7 @@ function Dashboard() {
                             A radar view of your key performance indicators.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[180px]">
+                    <CardContent className="h-[260px]">
                         <PerformanceRadarChart trades={filteredTrades} tradingRules={tradingRules} />
                     </CardContent>
                 </Card>
@@ -272,7 +264,7 @@ function Dashboard() {
                             Breakdown of your most common trading errors.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[180px]">
+                    <CardContent className="h-[260px]">
                         <MistakeAnalysis trades={filteredTrades} />
                     </CardContent>
                 </Card>
@@ -288,10 +280,8 @@ function Dashboard() {
                     </CardContent>
                 </Card>
             </div>
-
-            <div className="lg:col-span-7">
-                <EquityCurveChart trades={filteredTrades} />
-            </div>
+            
+            <EquityCurveChart trades={filteredTrades} />
         </div>
 
         <Card>
