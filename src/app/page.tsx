@@ -40,6 +40,7 @@ import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { SetTargetsDialog } from "@/components/dashboard/set-targets-dialog";
+import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-analysis";
 
 function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
@@ -166,6 +167,7 @@ function Dashboard() {
             <div>
                 <Skeleton className="h-[400px]" />
             </div>
+            <Skeleton className="h-[350px]" />
             <Skeleton className="h-[400px]" />
         </main>
       </div>
@@ -177,7 +179,7 @@ function Dashboard() {
        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
         <Logo />
         <div className="ml-auto flex items-center gap-2">
-            <SharePerformance trades={filteredTrades} />
+            <SharePerformance trades={filteredTrades} tradingRules={tradingRules} />
             <PatternAnalysis trades={filteredTrades} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -288,6 +290,8 @@ function Dashboard() {
         </div>
 
         <EquityCurveChart trades={filteredTrades} />
+        
+        <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
 
         <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-2">
