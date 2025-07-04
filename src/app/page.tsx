@@ -143,7 +143,11 @@ function Dashboard() {
         <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <Skeleton className="h-8 w-36" />
-                <Skeleton className="h-10 w-full max-w-lg" />
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-10 w-[160px]" />
+                    <Skeleton className="h-10 w-[300px]" />
+                    <Skeleton className="h-10 w-28" />
+                </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Skeleton className="h-28" />
@@ -158,10 +162,10 @@ function Dashboard() {
             <div className="grid grid-cols-1 gap-4 md:gap-8">
               <Skeleton className="h-[600px]" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                <Skeleton className="h-[328px]" />
-                <Skeleton className="h-[328px]" />
-                <Skeleton className="h-[328px]" />
-                <Skeleton className="h-[328px]" />
+                <Skeleton className="h-[260px]" />
+                <Skeleton className="h-[260px]" />
+                <Skeleton className="h-[260px]" />
+                <Skeleton className="h-[260px]" />
               </div>
               <Skeleton className="h-[420px]" />
             </div>
@@ -237,7 +241,15 @@ function Dashboard() {
        <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <h2 className="text-2xl font-bold tracking-tight font-headline">Dashboard</h2>
-            <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
+            <div className="flex items-center gap-2">
+                <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
+                <Button className="gap-1" onClick={() => handleOpenForm()}>
+                    <PlusCircle className="h-3.5 w-3.5" />
+                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        Add Trade
+                    </span>
+                </Button>
+            </div>
         </div>
         <StatsCards trades={filteredTrades} />
         
@@ -292,12 +304,6 @@ function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                    <ExportTrades trades={filteredTrades}/>
-                   <Button size="sm" className="gap-1" onClick={() => handleOpenForm()}>
-                        <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-rap">
-                            Add Trade
-                        </span>
-                    </Button>
                 </div>
             </CardHeader>
             <CardContent>
