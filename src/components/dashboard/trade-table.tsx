@@ -72,10 +72,16 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [viewingTrade, setViewingTrade] = useState<Trade | null>(null);
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 7;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, trades]);
 
   const handleViewTrade = (trade: Trade) => {
     setViewingTrade(trade);
@@ -118,7 +124,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
         if (sortConfig.key === 'date') {
             const dateA = new Date(aVal as string | number | Date).getTime();
             const dateB = new Date(bVal as string | number | Date).getTime();
-            return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+            return sortConfig.direction === 'asc' ? dateA - dateB : dateB - aA;
         }
         
         if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -133,6 +139,15 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
     return filtered;
   }, [trades, filter, sortConfig]);
+
+  const paginatedTrades = useMemo(() => {
+    return sortedAndFilteredTrades.slice(
+      (currentPage - 1) * rowsPerPage,
+      currentPage * rowsPerPage
+    );
+  }, [sortedAndFilteredTrades, currentPage]);
+
+  const totalPages = Math.ceil(sortedAndFilteredTrades.length / rowsPerPage);
 
   const requestSort = (key: SortKey) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -156,6 +171,70 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     );
   }
 
+  const PaginationControls = () => {
+    if (totalPages <= 1) return null;
+    
+    const pageNumbers = [];
+    const maxPagesToShow = 3;
+
+    if (totalPages <= maxPagesToShow + 2) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      if (currentPage > 2) {
+        pageNumbers.push('...');
+      }
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pageNumbers.push(i);
+      }
+      if (currentPage < totalPages - 1) {
+        pageNumbers.push('...');
+      }
+      pageNumbers.push(totalPages);
+    }
+    
+    const uniquePageNumbers = [...new Set(pageNumbers)];
+
+    return (
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+        {uniquePageNumbers.map((page, index) =>
+          typeof page === 'number' ? (
+            <Button
+              key={index}
+              onClick={() => setCurrentPage(page)}
+              size="icon"
+              className="h-8 w-8"
+              variant={currentPage === page ? 'default' : 'outline'}
+            >
+              {page}
+            </Button>
+          ) : (
+            <span key={index} className="px-1 text-sm">...</span>
+          )
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </Button>
+      </div>
+    );
+  };
+
+
   if (isMobile) {
     return (
         <div className="w-full space-y-4">
@@ -166,8 +245,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                 className="w-full"
             />
             <div className="space-y-4">
-            {sortedAndFilteredTrades.length > 0 ? (
-              sortedAndFilteredTrades.map((trade) => {
+            {paginatedTrades.length > 0 ? (
+              paginatedTrades.map((trade) => {
                 const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
                 return (
                     <Card key={trade.id} className="w-full">
@@ -251,6 +330,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
                 </div>
             )}
             </div>
+            <PaginationControls />
             <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
                 <AlertDialogContent>
                 <AlertDialogHeader>
@@ -301,8 +381,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedAndFilteredTrades.length > 0 ? (
-              sortedAndFilteredTrades.map((trade) => {
+            {paginatedTrades.length > 0 ? (
+              paginatedTrades.map((trade) => {
                 const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
                 
                 return (
@@ -397,6 +477,8 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <PaginationControls />
 
         <TradeDetailsDialog 
             isOpen={!!viewingTrade}
