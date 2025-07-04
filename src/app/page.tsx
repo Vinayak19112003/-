@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -39,6 +40,7 @@ import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-analysis";
+import { TimeAnalysis } from "@/components/dashboard/time-analysis";
 
 function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
@@ -166,6 +168,7 @@ function Dashboard() {
                 <Skeleton className="h-[260px]" />
                 <Skeleton className="h-[260px]" />
               </div>
+              <Skeleton className="h-[380px]" />
               <Skeleton className="h-[420px]" />
             </div>
             <div>
@@ -292,6 +295,8 @@ function Dashboard() {
                     </CardContent>
                 </Card>
             </div>
+
+            <TimeAnalysis trades={filteredTrades} />
             
             <EquityCurveChart trades={filteredTrades} />
         </div>
