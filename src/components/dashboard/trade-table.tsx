@@ -124,7 +124,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
         if (sortConfig.key === 'date') {
             const dateA = new Date(aVal as string | number | Date).getTime();
             const dateB = new Date(bVal as string | number | Date).getTime();
-            return sortConfig.direction === 'asc' ? dateA - dateB : dateB - aA;
+            return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
         }
         
         if (typeof aVal === 'number' && typeof bVal === 'number') {
