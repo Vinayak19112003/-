@@ -72,9 +72,9 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
       </CardHeader>
       <CardContent>
         {!mounted ? (
-          <Skeleton className="h-[400px] w-full" />
+          <Skeleton className="h-[350px] w-full" />
         ) : data.length > 1 ? (
-          <div className="h-[400px]">
+          <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <defs>
@@ -100,7 +100,7 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground p-4 text-center">
+          <div className="h-[350px] flex items-center justify-center text-muted-foreground p-4 text-center">
             No trade data in the selected date range to display chart.
           </div>
         )}

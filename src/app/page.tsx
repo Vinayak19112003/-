@@ -164,11 +164,13 @@ function Dashboard() {
                   <Skeleton className="h-[180px]" />
                 </div>
             </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-8">
+                <Skeleton className="h-[400px]" />
+                <Skeleton className="h-[400px]" />
+            </div>
             <div>
                 <Skeleton className="h-[400px]" />
             </div>
-            <Skeleton className="h-[350px]" />
-            <Skeleton className="h-[400px]" />
         </main>
       </div>
     );
@@ -226,12 +228,12 @@ function Dashboard() {
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
-                <SetTargetsDialog>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Target className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Target className="mr-2 h-4 w-4" />
+                  <SetTargetsDialog>
                     <span>Set Targets</span>
-                  </DropdownMenuItem>
-                </SetTargetsDialog>
+                  </SetTargetsDialog>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
@@ -289,9 +291,10 @@ function Dashboard() {
             </div>
         </div>
 
-        <EquityCurveChart trades={filteredTrades} />
-        
-        <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-8">
+            <EquityCurveChart trades={filteredTrades} />
+            <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
+        </div>
 
         <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-2">
