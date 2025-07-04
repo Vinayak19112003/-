@@ -25,3 +25,12 @@ export const DEFAULT_STRATEGIES = [
   "9.30 15M MODEL", 
   "ASIAN MODEL"
 ] as const;
+
+export const DEFAULT_TRADING_RULES = [
+  "Waited for liquidity sweep",
+  "Confirmed SMT / CISD",
+  "Used entry model criteria",
+  "Entered only in valid time window",
+  "Used proper stop loss and risk-to-reward",
+  "Took partials or followed exit plan",
+] as const;

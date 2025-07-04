@@ -41,12 +41,14 @@ import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
 import { useAssets } from "@/hooks/use-assets";
 import { AddAssetDialog } from "./add-asset-dialog";
 import { AddStrategyDialog } from "./add-strategy-dialog";
+import { AddTradingRuleDialog } from "./add-trading-rule-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { storage } from "@/lib/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from "next/image";
 import { Slider } from "@/components/ui/slider";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
+import { Separator } from "../ui/separator";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -59,9 +61,22 @@ type TradeFormProps = {
   strategies: string[];
   addStrategy: (newStrategy: string) => Promise<boolean>;
   deleteStrategy: (strategy: string) => Promise<void>;
+  tradingRules: string[];
+  addTradingRule: (newRule: string) => Promise<boolean>;
+  deleteTradingRule: (rule: string) => Promise<void>;
 };
 
-export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, deleteStrategy }: TradeFormProps) {
+export function TradeForm({ 
+    trade, 
+    onSave, 
+    setOpen, 
+    strategies, 
+    addStrategy, 
+    deleteStrategy,
+    tradingRules,
+    addTradingRule,
+    deleteTradingRule,
+}: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
@@ -80,6 +95,8 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           accountSize: trade.accountSize ?? 0,
           riskPercentage: trade.riskPercentage ?? 0,
           pnl: trade.pnl ?? 0,
+          mistakes: trade.mistakes ?? [],
+          rulesFollowed: trade.rulesFollowed ?? [],
         }
       : {
           date: new Date(),
@@ -94,6 +111,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
           result: "Win",
           confidence: 5,
           mistakes: [],
+          rulesFollowed: [],
           notes: "",
           screenshotURL: "",
           accountSize: 0,
@@ -195,7 +213,7 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -471,11 +489,74 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
                 </FormItem>
             )}
         />
+        
+        <Separator />
 
         <FormField
           control={form.control}
+          name="rulesFollowed"
+          render={() => (
+            <FormItem>
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
+                   <FormLabel className="text-base">Rules Followed</FormLabel>
+                   <AddTradingRuleDialog 
+                    tradingRules={tradingRules}
+                    addTradingRule={addTradingRule}
+                    deleteTradingRule={deleteTradingRule}
+                   />
+                </div>
+                <FormDescription>
+                  Check all the rules you followed for this trade.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {tradingRules.map((item) => (
+                  <FormField
+                    key={item}
+                    control={form.control}
+                    name="rulesFollowed"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={item}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(item)}
+                              onCheckedChange={(checked) => {
+                                const currentValues = field.value || [];
+                                return checked
+                                  ? field.onChange([...currentValues, item])
+                                  : field.onChange(
+                                      currentValues.filter(
+                                        (value) => value !== item
+                                      )
+                                    );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {item}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Separator />
+        
+        <FormField
+          control={form.control}
           name="mistakes"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <div className="mb-4">
                 <div className="flex items-center gap-2">
@@ -492,29 +573,38 @@ export function TradeForm({ trade, onSave, setOpen, strategies, addStrategy, del
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {mistakeTags.map((item) => (
-                  <FormItem
+                  <FormField
                     key={item}
-                    className="flex flex-row items-start space-x-3 space-y-0"
-                  >
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value?.includes(item)}
-                        onCheckedChange={(checked) => {
-                          const currentValues = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentValues, item]);
-                          } else {
-                            field.onChange(
-                              currentValues.filter((value) => value !== item)
-                            );
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      {item}
-                    </FormLabel>
-                  </FormItem>
+                    control={form.control}
+                    name="mistakes"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={item}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(item)}
+                              onCheckedChange={(checked) => {
+                                const currentValues = field.value || [];
+                                return checked
+                                  ? field.onChange([...currentValues, item])
+                                  : field.onChange(
+                                      currentValues.filter(
+                                        (value) => value !== item
+                                      )
+                                    );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {item}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
                 ))}
               </div>
               <FormMessage />

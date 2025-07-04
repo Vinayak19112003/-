@@ -15,6 +15,7 @@ export const TradeSchema = z.object({
   result: z.enum(["Win", "Loss", "BE", "Missed"]),
   confidence: z.coerce.number().min(1).max(10).default(5),
   mistakes: z.array(z.string()).optional().default([]),
+  rulesFollowed: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
   screenshotURL: z.string().optional().default(""),
   accountSize: z.coerce.number().optional().default(0),

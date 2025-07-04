@@ -29,6 +29,7 @@ import { ExportTrades } from "@/components/dashboard/export-trades";
 import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { useStrategies } from "@/hooks/use-strategies";
+import { useTradingRules } from "@/hooks/use-trading-rules";
 import AuthGuard from "@/components/auth/auth-guard";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
@@ -43,6 +44,7 @@ import { SetTargetsDialog } from "@/components/dashboard/set-targets-dialog";
 function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
   const { strategies, addStrategy, deleteStrategy } = useStrategies();
+  const { tradingRules, addTradingRule, deleteTradingRule } = useTradingRules();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
@@ -154,7 +156,7 @@ function Dashboard() {
                 <Skeleton className="h-28" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-                <div className="lg:col-span-4"><Skeleton className="h-[350px]" /></div>
+                <div className="lg:col-span-4"><Skeleton className="h-[450px]" /></div>
                 <div className="lg:col-span-3 space-y-4 md:space-y-8">
                   <Skeleton className="h-[180px]" />
                   <Skeleton className="h-[180px]" />
@@ -257,7 +259,7 @@ function Dashboard() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="h-[180px]">
-                        <PerformanceRadarChart trades={filteredTrades} />
+                        <PerformanceRadarChart trades={filteredTrades} tradingRules={tradingRules} />
                     </CardContent>
                 </Card>
                 <Card>
@@ -331,6 +333,9 @@ function Dashboard() {
                       strategies={strategies}
                       addStrategy={addStrategy}
                       deleteStrategy={deleteStrategy}
+                      tradingRules={tradingRules}
+                      addTradingRule={addTradingRule}
+                      deleteTradingRule={deleteTradingRule}
                     />
                 </div>
             </FormContentComponent>

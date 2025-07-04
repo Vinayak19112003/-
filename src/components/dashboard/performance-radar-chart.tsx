@@ -10,9 +10,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type PerformanceRadarChartProps = {
   trades: Trade[];
+  tradingRules: string[];
 };
 
-export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
+export function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -22,7 +23,6 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
 
   const metrics = useMemo(() => {
     const totalTrades = trades.length;
-    // Don't show chart if there isn't enough data
     if (totalTrades < 3) {
       return null;
     }
@@ -73,10 +73,15 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
     const maxDrawdownPercent = peakR > 0 ? (maxDrawdownR / peakR) * 100 : 0;
     const recoveryFactor = maxDrawdownR > 0 ? netProfit / maxDrawdownR : netProfit > 0 ? Infinity : 0;
 
-    // --- Consistency Stats ---
-    const tradingDays = Object.values(dailyNetR);
-    const greenDays = tradingDays.filter((netR) => netR > 0).length;
-    const consistency = tradingDays.length > 0 ? (greenDays / tradingDays.length) * 100 : 0;
+    // --- Discipline/Adherence ---
+    const totalRules = tradingRules.length;
+    const totalAdherenceScore = trades.reduce((acc, t) => {
+        if (!t.rulesFollowed) return acc;
+        const adherence = totalRules > 0 ? (t.rulesFollowed.length / totalRules) * 100 : 100;
+        return acc + adherence;
+    }, 0);
+    const discipline = totalTrades > 0 ? totalAdherenceScore / totalTrades : 0;
+
 
     // --- Normalization for Radar Chart ---
     const normalize = (value: number, max: number) => Math.min(Math.max((value / max) * 100, 0), 100);
@@ -87,10 +92,10 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
       profitFactor: { raw: profitFactor, normalized: normalize(profitFactor, 5) },
       recoveryFactor: { raw: recoveryFactor, normalized: normalize(recoveryFactor, 10) },
       expectancy: { raw: expectancy, normalized: normalize(expectancy, 1) },
+      discipline: { raw: discipline, normalized: discipline },
       maxDrawdown: { raw: maxDrawdownPercent, normalized: normalizeInverted(maxDrawdownPercent, 50) },
-      consistency: { raw: consistency, normalized: consistency }, // Already 0-100
     };
-  }, [trades]);
+  }, [trades, tradingRules]);
 
   if (!mounted) {
     return <Skeleton className="h-[180px] w-full" />;
@@ -106,10 +111,10 @@ export function PerformanceRadarChart({ trades }: PerformanceRadarChartProps) {
 
   const data = [
     { subject: 'Win Rate', value: metrics.winRate.normalized, raw: `${metrics.winRate.raw.toFixed(1)}%` },
-    { subject: 'Consistency', value: metrics.consistency.normalized, raw: `${metrics.consistency.raw.toFixed(1)}%` },
+    { subject: 'Discipline', value: metrics.discipline.normalized, raw: `${metrics.discipline.raw.toFixed(1)}%` },
     { subject: 'Max Drawdown', value: metrics.maxDrawdown.normalized, raw: `${metrics.maxDrawdown.raw.toFixed(1)}%` },
-    { subject: 'Expectancy (R)', value: metrics.expectancy.normalized, raw: metrics.expectancy.raw.toFixed(2) },
-    { subject: 'Recovery Factor', value: metrics.recoveryFactor.normalized, raw: isFinite(metrics.recoveryFactor.raw) ? metrics.recoveryFactor.raw.toFixed(2) : '∞' },
+    { subject: 'Expectancy', value: metrics.expectancy.normalized, raw: metrics.expectancy.raw.toFixed(2) },
+    { subject: 'Recovery', value: metrics.recoveryFactor.normalized, raw: isFinite(metrics.recoveryFactor.raw) ? metrics.recoveryFactor.raw.toFixed(2) : '∞' },
     { subject: 'Profit Factor', value: metrics.profitFactor.normalized, raw: isFinite(metrics.profitFactor.raw) ? metrics.profitFactor.raw.toFixed(2) : '∞' },
   ].map(d => ({ ...d, fullMark: 100 }));
 

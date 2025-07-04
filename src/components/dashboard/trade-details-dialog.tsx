@@ -24,7 +24,7 @@ type TradeDetailsDialogProps = {
 const DetailItem = ({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) => (
   <div className="flex flex-col gap-1">
     <p className="text-sm text-muted-foreground">{label}</p>
-    <p className={cn("text-base font-semibold", className)}>{value}</p>
+    <div className={cn("text-base font-semibold", className)}>{value}</div>
   </div>
 );
 
@@ -112,6 +112,17 @@ export function TradeDetailsDialog({ trade, isOpen, onOpenChange }: TradeDetails
                 )}
             </div>
         </div>
+        
+        {trade.rulesFollowed && trade.rulesFollowed.length > 0 && (
+            <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Rules Followed</p>
+                <div className="flex flex-wrap gap-2">
+                    {trade.rulesFollowed.map(rule => (
+                        <Badge key={rule} variant="secondary">{rule}</Badge>
+                    ))}
+                </div>
+            </div>
+        )}
 
         {trade.mistakes && trade.mistakes.length > 0 && (
             <div className="space-y-2">
