@@ -24,4 +24,3 @@ export const TradeSchema = z.object({
 });
 
 export type Trade = z.infer<typeof TradeSchema>;
-export type MistakeTag = string;

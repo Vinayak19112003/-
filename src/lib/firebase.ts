@@ -20,9 +20,3 @@ const db: Firestore = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
 
 export { app, db, auth, storage };
-
-// NOTE: If you are still experiencing timeout errors (storage/retry-limit-exceeded),
-// it is highly likely that your Firebase project needs to be on the "Blaze" (pay-as-you-go) plan.
-// The free "Spark" plan has networking limitations that can cause this specific error.
-// The Blaze plan has a generous free tier, so you are unlikely to incur costs for this project.
-// To upgrade, go to your Firebase project settings and click "Upgrade" next to the plan name.
