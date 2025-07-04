@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { PlusCircle, LogOut, Settings, Sun, Moon, Video, Target } from "lucide-react";
+import { PlusCircle, LogOut, Settings, Sun, Moon, Video } from "lucide-react";
 import { useTrades } from "@/hooks/use-trades";
 import { type Trade } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,6 @@ import { SharePerformance } from "@/components/dashboard/share-performance";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { SetTargetsDialog } from "@/components/dashboard/set-targets-dialog";
 import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-analysis";
 
 function Dashboard() {
@@ -230,14 +229,6 @@ function Dashboard() {
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <SetTargetsDialog>
-                    <div className="flex items-center w-full">
-                      <Target className="mr-2 h-4 w-4" />
-                      <span>Set Targets</span>
-                    </div>
-                  </SetTargetsDialog>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
@@ -285,7 +276,7 @@ function Dashboard() {
                         <MistakeAnalysis trades={filteredTrades} />
                     </CardContent>
                 </Card>
-                <Card className="h-full">
+                <Card>
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>

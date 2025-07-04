@@ -57,7 +57,7 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
     }, [trades, tradingRules]);
 
     return (
-        <Card className="h-full">
+        <Card>
             <CardHeader>
                 <CardTitle>Rule Adherence vs. Outcome</CardTitle>
                 <CardDescription>
