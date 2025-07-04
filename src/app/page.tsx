@@ -164,9 +164,9 @@ function Dashboard() {
                   <Skeleton className="h-[180px]" />
                 </div>
             </div>
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-8">
-                <Skeleton className="h-[400px]" />
-                <Skeleton className="h-[400px]" />
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
+                <div className="lg:col-span-4"><Skeleton className="h-[400px]" /></div>
+                <div className="lg:col-span-3"><Skeleton className="h-[400px]" /></div>
             </div>
             <div>
                 <Skeleton className="h-[400px]" />
@@ -291,9 +291,13 @@ function Dashboard() {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-8">
-            <EquityCurveChart trades={filteredTrades} />
-            <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
+            <div className="lg:col-span-4">
+              <EquityCurveChart trades={filteredTrades} />
+            </div>
+            <div className="lg:col-span-3">
+              <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
+            </div>
         </div>
 
         <Card>
