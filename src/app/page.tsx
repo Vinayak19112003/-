@@ -157,16 +157,16 @@ function Dashboard() {
                 <Skeleton className="h-28" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-                <div className="lg:col-span-4"><Skeleton className="h-[450px]" /></div>
-                <div className="lg:col-span-3 space-y-4 md:space-y-8">
-                  <Skeleton className="h-[180px]" />
-                  <Skeleton className="h-[180px]" />
-                  <Skeleton className="h-[180px]" />
-                </div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-                <div className="lg:col-span-4"><Skeleton className="h-[400px]" /></div>
-                <div className="lg:col-span-3"><Skeleton className="h-[400px]" /></div>
+              <div className="lg:col-span-4 flex flex-col gap-4 md:gap-8">
+                <Skeleton className="h-[520px]" />
+                <Skeleton className="h-[420px]" />
+              </div>
+              <div className="lg:col-span-3 flex flex-col gap-4 md:gap-8">
+                <Skeleton className="h-[260px]" />
+                <Skeleton className="h-[260px]" />
+                <Skeleton className="h-[260px]" />
+                <Skeleton className="h-[420px]" />
+              </div>
             </div>
             <div>
                 <Skeleton className="h-[400px]" />
@@ -229,9 +229,11 @@ function Dashboard() {
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <Target className="mr-2 h-4 w-4" />
                   <SetTargetsDialog>
-                    <span>Set Targets</span>
+                    <div className="flex items-center w-full">
+                      <Target className="mr-2 h-4 w-4" />
+                      <span>Set Targets</span>
+                    </div>
                   </SetTargetsDialog>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -251,8 +253,9 @@ function Dashboard() {
         <StatsCards trades={filteredTrades} />
         
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 flex flex-col gap-4 md:gap-8">
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
+                <EquityCurveChart trades={filteredTrades} />
             </div>
             <div className="lg:col-span-3 flex flex-col gap-4 md:gap-8">
                 <Card>
@@ -277,26 +280,18 @@ function Dashboard() {
                         <MistakeAnalysis trades={filteredTrades} />
                     </CardContent>
                 </Card>
-                <Card className="flex flex-col">
+                <Card>
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>
                             Performance breakdown by trading strategy.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 h-[180px]">
+                    <CardContent className="h-[180px]">
                         <StrategyAnalytics trades={filteredTrades} />
                     </CardContent>
                 </Card>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-            <div className="lg:col-span-4">
-              <EquityCurveChart trades={filteredTrades} />
-            </div>
-            <div className="lg:col-span-3">
-              <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
+                <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
             </div>
         </div>
 
