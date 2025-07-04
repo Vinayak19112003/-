@@ -255,8 +255,11 @@ function Dashboard() {
         <StatsCards trades={filteredTrades} />
         
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 md:gap-8">
-            <div className="lg:col-span-4 flex flex-col gap-4 md:gap-8">
+            <div className="lg:col-span-7">
                 <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
+            </div>
+
+            <div className="lg:col-span-4 flex flex-col gap-4 md:gap-8">
                  <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
             </div>
             <div className="lg:col-span-3 flex flex-col gap-4 md:gap-8">
@@ -282,7 +285,7 @@ function Dashboard() {
                         <MistakeAnalysis trades={filteredTrades} />
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="h-full">
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>
