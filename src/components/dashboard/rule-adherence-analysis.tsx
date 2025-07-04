@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo } from 'react';
@@ -56,11 +55,6 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
 
     }, [trades, tradingRules]);
     
-    const maxAbsNetR = useMemo(() => {
-        if (!analytics || analytics.length === 0) return 0;
-        return Math.max(...analytics.map(a => Math.abs(a.netR)));
-    }, [analytics]);
-
     return (
         <Card>
             <CardHeader>
@@ -83,21 +77,8 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {analytics.map(stat => {
-                                        const performance = maxAbsNetR > 0 ? stat.netR / maxAbsNetR : 0;
-                                        const hue = stat.netR > 0 ? '140' : '0'; // success hsl vs destructive hsl
-                                        const saturation = stat.netR === 0 ? '0' : '70';
-                                        const lightness = '50';
-                                        const alpha = Math.abs(performance) * 0.15; // Max 15% opacity
-
-                                        return (
-                                        <TableRow 
-                                            key={stat.rule}
-                                            style={{
-                                                backgroundColor: `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`,
-                                                transition: 'background-color 0.2s ease-in-out',
-                                            }}
-                                        >
+                                    {analytics.map(stat => (
+                                        <TableRow key={stat.rule}>
                                             <TableCell className="font-medium truncate p-2 max-w-xs">{stat.rule}</TableCell>
                                             <TableCell className="text-center p-2">{stat.adherenceCount}</TableCell>
                                             <TableCell className="p-2">
@@ -125,7 +106,7 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
                                                 {stat.netR.toFixed(2)}R
                                             </TableCell>
                                         </TableRow>
-                                    )})}
+                                    ))}
                                 </TableBody>
                             </Table>
                         </TooltipProvider>
