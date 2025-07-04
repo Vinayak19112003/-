@@ -40,6 +40,7 @@ import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-analysis";
+import { SummaryBanner } from "@/components/dashboard/summary-banner";
 
 function Dashboard() {
   const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
@@ -149,6 +150,7 @@ function Dashboard() {
                     <Skeleton className="h-10 w-28" />
                 </div>
             </div>
+            <Skeleton className="h-24 w-full" />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Skeleton className="h-28" />
                 <Skeleton className="h-28" />
@@ -251,6 +253,9 @@ function Dashboard() {
                 </Button>
             </div>
         </div>
+        
+        <SummaryBanner trades={trades} />
+
         <StatsCards trades={filteredTrades} />
         
         <div className="grid grid-cols-1 gap-4 md:gap-8">

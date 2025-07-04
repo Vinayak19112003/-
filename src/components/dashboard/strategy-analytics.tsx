@@ -47,6 +47,11 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
 
     }, [trades]);
 
+    const maxAbsNetR = useMemo(() => {
+        if (!analytics || analytics.length === 0) return 0;
+        return Math.max(...analytics.map(a => Math.abs(a.netR)));
+    }, [analytics]);
+
     return (
         <ScrollArea className="h-full">
             {analytics.length > 0 ? (
@@ -61,8 +66,21 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {analytics.map(stat => (
-                                <TableRow key={stat.strategy}>
+                            {analytics.map(stat => {
+                                const performance = maxAbsNetR > 0 ? stat.netR / maxAbsNetR : 0;
+                                const hue = stat.netR > 0 ? '140' : '0'; // success hsl vs destructive hsl
+                                const saturation = stat.netR === 0 ? '0' : '70';
+                                const lightness = '50';
+                                const alpha = Math.abs(performance) * 0.15; // Max 15% opacity
+
+                                return (
+                                <TableRow 
+                                    key={stat.strategy}
+                                    style={{
+                                        backgroundColor: `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`,
+                                        transition: 'background-color 0.2s ease-in-out',
+                                    }}
+                                >
                                     <TableCell className="font-medium truncate p-2">{stat.strategy}</TableCell>
                                     <TableCell className="p-2">
                                         <Tooltip delayDuration={150}>
@@ -86,7 +104,7 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
                                         {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )})}
                         </TableBody>
                     </Table>
                 </TooltipProvider>
