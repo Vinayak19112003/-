@@ -65,7 +65,7 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-[260px]">
+                <ScrollArea className="h-[240px]">
                     {analytics.length > 0 ? (
                         <TooltipProvider>
                             <Table>

@@ -289,7 +289,7 @@ function Dashboard() {
                             Performance breakdown by trading strategy.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[260px]">
+                    <CardContent className="h-[240px]">
                         <StrategyAnalytics trades={filteredTrades} />
                     </CardContent>
                 </Card>
