@@ -57,15 +57,15 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
     }, [trades, tradingRules]);
 
     return (
-        <Card className="h-full flex flex-col">
+        <Card>
             <CardHeader>
                 <CardTitle>Rule Adherence vs. Outcome</CardTitle>
                 <CardDescription>
                     Analyze the impact of following your rules on trade performance.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 pt-0 overflow-hidden">
-                <ScrollArea className="h-full">
+            <CardContent>
+                <ScrollArea className="h-[260px]">
                     {analytics.length > 0 ? (
                         <TooltipProvider>
                             <Table>

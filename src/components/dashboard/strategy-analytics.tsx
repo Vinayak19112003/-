@@ -48,7 +48,7 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     }, [trades]);
 
     return (
-        <ScrollArea className="h-[180px]">
+        <ScrollArea className="h-full">
             {analytics.length > 0 ? (
                 <TooltipProvider>
                     <Table>
