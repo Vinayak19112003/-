@@ -102,7 +102,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                 </div>
             </CardHeader>
             <CardContent className="p-2">
-                <Skeleton className="h-[450px] w-full" />
+                <Skeleton className="h-[600px] w-full" />
             </CardContent>
         </Card>
     );
@@ -166,7 +166,7 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
                             const DayCell = (
                                 <div
                                     className={cn(
-                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b min-h-[80px]",
+                                        "p-2 flex flex-col justify-between cursor-pointer transition-colors border-r border-b min-h-[110px]",
                                         bgColorClass,
                                     )}
                                     onClick={() => onDateSelect(day)}
@@ -259,3 +259,5 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
     </Card>
   );
 }
+
+    
