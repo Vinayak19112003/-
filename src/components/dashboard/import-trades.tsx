@@ -41,7 +41,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
       toast({
         variant: "destructive",
         title: "No File Selected",
-        description: "Please select a CSV file to import.",
+        description: "Please select a file to import.",
       });
       return;
     }
@@ -50,9 +50,9 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
 
     const reader = new FileReader();
     reader.onload = async (e) => {
-        const csvData = e.target?.result as string;
+        const fileDataUri = e.target?.result as string;
 
-        if (!csvData) {
+        if (!fileDataUri) {
             toast({
                 variant: 'destructive',
                 title: 'File Error',
@@ -64,7 +64,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
 
         try {
             // Call the AI flow
-            const result = await importTrades({ csvData });
+            const result = await importTrades({ fileDataUri });
             const tradesFromAI = result.trades;
 
             if (!tradesFromAI || tradesFromAI.length === 0) {
@@ -113,7 +113,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
         setIsImporting(false);
     };
 
-    reader.readAsText(file);
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -131,12 +131,12 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
             AI-Powered Trade Import
             </DialogTitle>
           <DialogDescription>
-            Upload a CSV file and our AI will automatically parse your trades. No specific format required, but ensure column headers are clear.
+            Upload a CSV, PDF, or image file and our AI will automatically parse your trades. No specific format required.
           </DialogDescription>
         </DialogHeader>
         <div className="grid w-full max-w-sm items-center gap-1.5 py-4">
-            <Label htmlFor="csv-file">CSV File</Label>
-            <Input id="csv-file" type="file" accept=".csv" onChange={handleFileChange} />
+            <Label htmlFor="import-file">Import File</Label>
+            <Input id="import-file" type="file" accept=".csv,.png,.jpg,.jpeg,.pdf" onChange={handleFileChange} />
         </div>
         <DialogFooter>
           <DialogClose asChild>

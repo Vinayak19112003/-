@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview An AI agent for parsing trade data from a CSV file.
+ * @fileOverview An AI agent for parsing trade data from various file types (CSV, PDF, Image).
  *
  * - importTrades - A function that handles the trade import process.
  * - ImportTradesInput - The input type for the importTrades function.
@@ -20,7 +20,7 @@ const AITradeSchema = TradeSchema.omit({id: true}).extend({
 });
 
 const ImportTradesInputSchema = z.object({
-  csvData: z.string().describe('The full content of a CSV file containing trade data.'),
+  fileDataUri: z.string().describe("A file containing trade data, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'. The file can be a CSV, PDF, or an image of trades."),
 });
 export type ImportTradesInput = z.infer<typeof ImportTradesInputSchema>;
 
@@ -39,16 +39,16 @@ const prompt = ai.definePrompt({
   input: {schema: ImportTradesInputSchema},
   output: {schema: ImportTradesOutputSchema},
   prompt: `You are an expert data parsing agent specializing in trading journals.
-Your task is to analyze the provided CSV data and convert it into a structured JSON array of trade objects.
+Your task is to analyze the provided file content (which could be CSV, a broker statement in PDF, or a screenshot of trades) and convert it into a structured JSON array of trade objects.
 
-You must intelligently map the CSV columns to the required trade fields. The column names might not be exact matches. Use your understanding of trading terminology to make logical mappings. For example, 'symbol' or 'instrument' should map to 'asset', 'p/l' or 'profit' should map to 'pnl'.
+You must intelligently map the columns or text to the required trade fields. The column names or labels might not be exact matches. Use your understanding of trading terminology to make logical mappings. For example, 'symbol' or 'instrument' should map to 'asset', 'p/l' or 'profit' should map to 'pnl'.
 
 For each trade, you must provide values for all the fields in the output schema.
 
 **Handling Missing Data:**
-- **strategy**: If a strategy is not specified in the CSV, you MUST default to the string 'Imported'.
+- **strategy**: If a strategy is not specified, you MUST default to the string 'Imported'.
 - **confidence**: If confidence is not specified, you MUST default to the number 5.
-- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided in the CSV, you MUST calculate it using the entry, stop loss, and exit prices. The formula is exactly: \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
+- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided, you MUST calculate it using the entry, stop loss, and exit prices. The formula is exactly: \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
 - **pnl**: The profit or loss in currency amount. **Pay close attention to the units.** If a value is in cents (e.g., '100 USC' or a column header indicates cents), you MUST convert it to dollars by dividing by 100. So, a value of 100 in a 'profit_usc' column becomes a PNL of 1.
 - **result**: Must be 'Win', 'Loss', or 'BE'. Infer this from the profit/loss value (pnl). A positive pnl is a 'Win', a negative pnl is a 'Loss', and a zero pnl is 'BE'.
 - **direction**: Must be 'Buy' or 'Sell'. Infer from columns like 'type' or 'side'.
@@ -65,8 +65,8 @@ For each trade, you must provide values for all the fields in the output schema.
 - **accountSize**: Default to 0 if not present.
 - **riskPercentage**: Default to 0 if not present.
 
-Analyze this CSV data and provide the output in the specified JSON format:
-{{{csvData}}}
+Analyze this file and provide the output in the specified JSON format:
+{{media url=fileDataUri}}
 `,
 });
 
