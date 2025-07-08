@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent for parsing trade data from a CSV file.
@@ -42,28 +43,29 @@ Your task is to analyze the provided CSV data and convert it into a structured J
 
 You must intelligently map the CSV columns to the required trade fields. The column names might not be exact matches. Use your understanding of trading terminology to make logical mappings. For example, 'symbol' or 'instrument' should map to 'asset', 'p/l' or 'profit' should map to 'pnl'.
 
-For each trade, you must provide values for the following fields based on the CSV data:
-- date: The date and time of the trade. Convert it to a valid ISO 8601 date string.
-- entryTime: The time of entry, in HH:MM format.
-- asset: The traded instrument/symbol.
-- strategy: If a strategy is not present, use 'Imported'.
-- direction: Must be 'Buy' or 'Sell'. Infer from columns like 'type' or 'side'.
-- result: Must be 'Win', 'Loss', or 'BE'. Infer from the profit/loss value.
-- entryPrice: The price at which the trade was entered.
-- sl: The stop loss price.
-- exitPrice: The price at which the trade was exited.
-- rr: The risk-to-reward ratio. If not present, calculate it from the entry, stop loss, and exit prices. The formula is: abs(exitPrice - entryPrice) / abs(entryPrice - sl).
-- pnl: The profit or loss in currency amount.
-- confidence: If not present, default to 5.
-- mistakes: Default to an empty array if not present.
-- rulesFollowed: Default to an empty array if not present.
-- notes: Default to 'Imported via AI' if not present.
-- screenshotURL: Default to an empty string if not present.
-- accountSize: Default to 0 if not present.
-- riskPercentage: Default to 0 if not present.
+For each trade, you must provide values for all the fields in the output schema.
 
+**Handling Missing Data:**
+- **strategy**: If a strategy is not specified in the CSV, you MUST default to the string 'Imported'.
+- **confidence**: If confidence is not specified, you MUST default to the number 5.
+- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided in the CSV, you MUST calculate it using the entry, stop loss, and exit prices. The formula is exactly: \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
+- **pnl**: The profit or loss in currency amount.
+- **result**: Must be 'Win', 'Loss', or 'BE'. Infer this from the profit/loss value (pnl). A positive pnl is a 'Win', a negative pnl is a 'Loss', and a zero pnl is 'BE'.
+- **direction**: Must be 'Buy' or 'Sell'. Infer from columns like 'type' or 'side'.
+- **date**: The date and time of the trade. Convert it to a valid ISO 8601 date string.
+- **entryTime**: The time of entry, in HH:MM format.
+- **asset**: The traded instrument/symbol.
+- **entryPrice**: The price at which the trade was entered.
+- **sl**: The stop loss price.
+- **exitPrice**: The price at which the trade was exited.
+- **mistakes**: Default to an empty array \`[]\` if not present.
+- **rulesFollowed**: Default to an empty array \`[]\` if not present.
+- **notes**: Default to 'Imported via AI' if not present.
+- **screenshotURL**: Default to an empty string \`""\` if not present.
+- **accountSize**: Default to 0 if not present.
+- **riskPercentage**: Default to 0 if not present.
 
-Analyze this CSV data:
+Analyze this CSV data and provide the output in the specified JSON format:
 {{{csvData}}}
 `,
 });
