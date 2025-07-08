@@ -1,5 +1,6 @@
 
 import type {Config} from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
   darkMode: ['class'],
@@ -18,8 +19,8 @@ export default {
         "2xl": "1400px",
       },
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['"Space Grotesk"', 'sans-serif'],
+        body: ['var(--font-body)', ...defaultTheme.fontFamily.sans],
+        headline: ['var(--font-headline)', ...defaultTheme.fontFamily.sans],
         code: ['monospace'],
       },
       colors: {
