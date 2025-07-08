@@ -62,8 +62,8 @@ export default function DashboardPage() {
             <Skeleton className="h-28" />
             <Skeleton className="h-28" />
         </div>
-        <Skeleton className="h-[420px]" />
         <Skeleton className="h-[600px]" />
+        <Skeleton className="h-[420px]" />
       </div>
     );
   }
@@ -78,8 +78,8 @@ export default function DashboardPage() {
       <StatsCards trades={filteredTrades} />
       
       <div className="grid grid-cols-1 gap-4 md:gap-8">
-          <EquityCurveChart trades={filteredTrades} />
           <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
+          <EquityCurveChart trades={filteredTrades} />
       </div>
     </>
   );
