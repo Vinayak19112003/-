@@ -33,7 +33,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/");
+      router.push("/dashboard");
     }
   }, [user, authLoading, router]);
 
@@ -49,7 +49,7 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, data.email, data.password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (error: any) {
         toast({
             variant: "destructive",
