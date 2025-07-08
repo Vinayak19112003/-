@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { 
   collection, 
@@ -13,7 +13,6 @@ import {
   doc,
   Timestamp,
   DocumentData,
-  onSnapshot,
   writeBatch,
   getDocs
 } from "firebase/firestore";
@@ -39,58 +38,53 @@ export function useTrades() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!db) {
-      toast({
-        variant: 'destructive',
-        title: 'Database Connection Error',
-        description: 'Could not connect to Firestore. Please check your Firebase setup.',
-      });
-      setIsLoaded(true);
-      return;
-    }
-    
-    if (!user) {
-      setTrades([]);
-      setIsLoaded(true); // If no user, there are no trades to load
-      return;
-    }
+  const getTradesCollectionRef = useCallback(() => {
+    if (!user || !db) return null;
+    return collection(db, 'users', user.uid, TRADES_COLLECTION);
+  }, [user]);
 
-    const tradesCollection = collection(db, 'users', user.uid, TRADES_COLLECTION);
-    const q = query(tradesCollection, orderBy("date", "desc"));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+  // Fetch initial data once
+  useEffect(() => {
+    const fetchTrades = async () => {
+      const tradesCollection = getTradesCollectionRef();
+      if (!tradesCollection) {
+        setIsLoaded(true);
+        return;
+      }
+
+      setIsLoaded(false);
       try {
+        const q = query(tradesCollection, orderBy("date", "desc"));
+        const querySnapshot = await getDocs(q);
         const tradesData = querySnapshot.docs.map(convertDocToTrade);
         setTrades(tradesData);
-      } catch(error) {
-        console.error("Error parsing trades:", error);
+      } catch (error) {
+        console.error("Error fetching trades:", error);
         toast({
           variant: "destructive",
           title: "Data Error",
-          description: "Some trades could not be loaded due to invalid data.",
+          description: "Could not load trades.",
         });
       } finally {
         setIsLoaded(true);
       }
-    }, (error) => {
-      console.error("Error with trade snapshot listener:", error);
-      toast({
-        variant: "destructive",
-        title: "Sync Error",
-        description: "Could not sync trades from the database. Please refresh.",
-      });
-      setIsLoaded(true);
-    });
+    };
 
-    return () => unsubscribe();
-  }, [toast, user]);
+    if (user) {
+      fetchTrades();
+    } else {
+      setTrades([]);
+      setIsLoaded(true);
+    }
+  }, [user, getTradesCollectionRef, toast]);
   
   const addTrade = async (trade: Trade) => {
-    if (!db || !user) {
+    const tradesCollection = getTradesCollectionRef();
+    if (!tradesCollection) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to add a trade.' });
-      return;
+      throw new Error("User not authenticated");
     }
+
     try {
       const newTrade = TradeSchema.parse(trade);
       const tradeData = {
@@ -99,20 +93,25 @@ export function useTrades() {
       };
       const { id, ...tradeDataWithoutId } = tradeData;
 
-      await addDoc(collection(db, 'users', user.uid, TRADES_COLLECTION), tradeDataWithoutId);
+      const docRef = await addDoc(tradesCollection, tradeDataWithoutId);
+      
+      const tradeWithId = { ...newTrade, id: docRef.id };
+      setTrades(prevTrades => [tradeWithId, ...prevTrades].sort((a, b) => b.date.getTime() - a.date.getTime()));
+
     } catch (error) {
        console.error("Error adding trade:", error);
        toast({
         variant: "destructive",
         title: "Error Saving Trade",
-        description: "Could not save the trade. Check permissions or network.",
+        description: "Could not save the trade.",
       });
       throw error;
     }
   };
 
   const addMultipleTrades = async (tradesToImport: Trade[]) => {
-    if (!db || !user) {
+    const tradesCollection = getTradesCollectionRef();
+    if (!tradesCollection) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to import trades.' });
       throw new Error("User not authenticated");
     }
@@ -122,20 +121,25 @@ export function useTrades() {
     }
 
     const batch = writeBatch(db);
-    const tradesCollectionRef = collection(db, 'users', user.uid, TRADES_COLLECTION);
+    const locallyAddedTrades: Trade[] = [];
     
     tradesToImport.forEach(trade => {
-        const docRef = doc(tradesCollectionRef); // Firestore will generate an ID
+        const docRef = doc(tradesCollection);
         const tradeData = {
             ...trade,
+            id: docRef.id,
             date: Timestamp.fromDate(new Date(trade.date)),
         };
-        const { id, ...tradeDataWithoutId } = tradeData;
-        batch.set(docRef, tradeDataWithoutId);
+        
+        const validatedTrade = TradeSchema.parse(tradeData);
+        locallyAddedTrades.push(validatedTrade);
+        const { id, ...tradeDataWithoutId } = validatedTrade;
+        batch.set(docRef, { ...tradeDataWithoutId, date: tradeData.date });
     });
 
     try {
         await batch.commit();
+        setTrades(prevTrades => [...locallyAddedTrades, ...prevTrades].sort((a,b) => b.date.getTime() - a.date.getTime()));
     } catch (error) {
         console.error("Error importing trades:", error);
         toast({
@@ -148,13 +152,15 @@ export function useTrades() {
   };
 
   const updateTrade = async (updatedTrade: Trade) => {
-    if (!db || !user) {
+    const tradesCollection = getTradesCollectionRef();
+     if (!tradesCollection) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to update a trade.' });
-      return;
+      throw new Error("User not authenticated");
     }
+    
     try {
       const newTrade = TradeSchema.parse(updatedTrade);
-      const tradeRef = doc(db, 'users', user.uid, TRADES_COLLECTION, newTrade.id);
+      const tradeRef = doc(db, 'users', user!.uid, TRADES_COLLECTION, newTrade.id);
       const tradeData = {
         ...newTrade,
         date: Timestamp.fromDate(newTrade.date),
@@ -162,25 +168,33 @@ export function useTrades() {
       const { id, ...tradeDataWithoutId } = tradeData;
       
       await updateDoc(tradeRef, tradeDataWithoutId);
+      
+      setTrades(prevTrades => prevTrades.map(t => t.id === newTrade.id ? newTrade : t).sort((a,b) => b.date.getTime() - a.date.getTime()));
+
     } catch (error) {
       console.error("Error updating trade:", error);
       toast({
         variant: "destructive",
         title: "Error Updating Trade",
-        description: "Could not update the trade. Check permissions or network.",
+        description: "Could not update the trade.",
       });
       throw error;
     }
   };
   
   const deleteTrade = async (id: string) => {
-    if (!db || !user) {
+     const tradesCollection = getTradesCollectionRef();
+     if (!tradesCollection) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to delete a trade.' });
-      return;
+      throw new Error("User not authenticated");
     }
+    
     try {
-        const tradeRef = doc(db, 'users', user.uid, TRADES_COLLECTION, id);
+        const tradeRef = doc(db, 'users', user!.uid, TRADES_COLLECTION, id);
         await deleteDoc(tradeRef);
+        
+        setTrades(prevTrades => prevTrades.filter(t => t.id !== id));
+
     } catch (error) {
         console.error("Error deleting trade:", error);
         toast({
@@ -192,13 +206,14 @@ export function useTrades() {
   };
 
   const deleteAllTrades = async () => {
-    if (!db || !user) {
+    const tradesCollection = getTradesCollectionRef();
+     if (!tradesCollection) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to delete trades.' });
       return;
     }
+
     try {
-      const tradesCollectionRef = collection(db, 'users', user.uid, TRADES_COLLECTION);
-      const q = query(tradesCollectionRef);
+      const q = query(tradesCollection);
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
@@ -211,6 +226,8 @@ export function useTrades() {
         batch.delete(doc.ref);
       });
       await batch.commit();
+      
+      setTrades([]);
 
       toast({
         title: "All Trades Deleted",
