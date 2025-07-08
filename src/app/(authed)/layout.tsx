@@ -12,6 +12,7 @@ import { TradeForm } from '@/components/dashboard/trade-form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TradeFormProvider } from '@/contexts/trade-form-context';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export default function AuthedLayout({
   children,
@@ -45,13 +46,15 @@ export default function AuthedLayout({
   return (
     <AuthGuard>
       <TradeFormProvider value={{ openForm: handleOpenForm }}>
-        <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-          <Sidebar />
-          <div className="flex flex-col">
-            <Header />
-            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/40 overflow-y-auto">
-                {children}
-            </main>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-muted/40">
+            <Sidebar />
+            <div className="flex flex-1 flex-col">
+              <Header />
+              <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-y-auto transition-all duration-300 ease-in-out">
+                  {children}
+              </main>
+            </div>
           </div>
           <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
               <FormContentComponent className={cn(isMobile ? "w-full" : "max-w-4xl")}>
@@ -70,7 +73,7 @@ export default function AuthedLayout({
                   </div>
               </FormContentComponent>
           </FormComponent>
-        </div>
+        </SidebarProvider>
       </TradeFormProvider>
     </AuthGuard>
   );
