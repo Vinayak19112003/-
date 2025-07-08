@@ -2,20 +2,22 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from 'next/dynamic';
 import { useTrades } from "@/hooks/use-trades";
 import { useTradingRules } from "@/hooks/use-trading-rules";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
 import { startOfMonth } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
-import { PatternAnalysis } from "@/components/dashboard/pattern-analysis";
-import { StrategyAnalytics } from "@/components/dashboard/strategy-analytics";
-import { MistakeAnalysis } from "@/components/dashboard/mistake-analysis";
-import { PerformanceRadarChart } from "@/components/dashboard/performance-radar-chart";
-import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-analysis";
-import { TimeAnalysis } from "@/components/dashboard/time-analysis";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SharePerformance } from "@/components/dashboard/share-performance";
+
+const PatternAnalysis = dynamic(() => import('@/components/dashboard/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
+const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
+const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
+const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart').then(mod => mod.PerformanceRadarChart), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
+const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
+const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 
 export default function AnalysisPage() {
     const { trades, isLoaded } = useTrades();

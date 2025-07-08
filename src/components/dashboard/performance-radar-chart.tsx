@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo } from 'react';
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { Trade } from '@/lib/types';
 import { useTheme } from 'next-themes';
@@ -13,7 +13,7 @@ type PerformanceRadarChartProps = {
   tradingRules: string[];
 };
 
-export function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
+export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -157,4 +157,4 @@ export function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadar
         </ResponsiveContainer>
       </div>
   );
-}
+});

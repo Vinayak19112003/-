@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo } from 'react';
 import type { Trade } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -12,7 +12,7 @@ type TimeAnalysisProps = {
   trades: Trade[];
 };
 
-export function TimeAnalysis({ trades }: TimeAnalysisProps) {
+export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisProps) {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
     
@@ -148,4 +148,4 @@ export function TimeAnalysis({ trades }: TimeAnalysisProps) {
             </CardContent>
         </Card>
     );
-}
+});

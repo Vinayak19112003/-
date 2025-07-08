@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, Fragment, useEffect } from 'react';
+import { useState, useMemo, Fragment, useEffect, memo } from 'react';
 import type { Trade } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -37,7 +37,7 @@ type DailyData = {
     losses: number;
 };
 
-export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
+export const MonthlyCalendar = memo(function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
@@ -258,6 +258,5 @@ export function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) 
       </CardContent>
     </Card>
   );
-}
-
+});
     

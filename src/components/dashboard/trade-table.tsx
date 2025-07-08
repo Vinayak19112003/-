@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, memo } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -66,7 +66,7 @@ const ResultBadge = ({ result }: { result: Trade["result"] }) => {
     return <Badge variant={variant}>{result}</Badge>;
 };
 
-export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
+export const TradeTable = memo(function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
   const debouncedFilter = useDebounce(filter, 300);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
@@ -513,4 +513,4 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
       </AlertDialog>
     </div>
   );
-}
+});

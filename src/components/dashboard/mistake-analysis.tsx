@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo } from 'react';
 import type { Trade } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -19,7 +19,7 @@ const COLORS = [
     "hsl(45, 95%, 50%)",
 ];
 
-export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
+export const MistakeAnalysis = memo(function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
     const [mounted, setMounted] = useState(false);
     const [hoveredData, setHoveredData] = useState<{ name: string; value: number; percent: number } | null>(null);
 
@@ -113,4 +113,4 @@ export function MistakeAnalysis({ trades }: MistakeAnalysisProps) {
             )}
         </div>
     );
-}
+});

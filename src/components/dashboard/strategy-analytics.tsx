@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import type { Trade } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
@@ -12,7 +13,7 @@ type StrategyAnalyticsProps = {
     trades: Trade[];
 };
 
-export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
+export const StrategyAnalytics = memo(function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     const analytics = useMemo(() => {
         const statsByStrategy: { [key: string]: { totalTrades: number, wins: number, losses: number, totalRr: number, netR: number } } = {};
 
@@ -96,4 +97,4 @@ export function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
             )}
         </ScrollArea>
     )
-}
+});

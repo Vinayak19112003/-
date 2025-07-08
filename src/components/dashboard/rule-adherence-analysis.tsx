@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import type { Trade } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,7 +15,7 @@ type RuleAdherenceAnalysisProps = {
     tradingRules: string[];
 };
 
-export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAnalysisProps) {
+export const RuleAdherenceAnalysis = memo(function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAnalysisProps) {
     const analytics = useMemo(() => {
         if (!tradingRules || tradingRules.length === 0) return [];
 
@@ -119,4 +120,4 @@ export function RuleAdherenceAnalysis({ trades, tradingRules }: RuleAdherenceAna
             </CardContent>
         </Card>
     );
-}
+});

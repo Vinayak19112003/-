@@ -40,7 +40,9 @@ import { useMistakeTags } from "@/hooks/use-mistake-tags";
 import { AddMistakeTagDialog } from "./add-mistake-tag-dialog";
 import { useAssets } from "@/hooks/use-assets";
 import { AddAssetDialog } from "./add-asset-dialog";
+import { useStrategies } from "@/hooks/use-strategies";
 import { AddStrategyDialog } from "./add-strategy-dialog";
+import { useTradingRules } from "@/hooks/use-trading-rules";
 import { AddTradingRuleDialog } from "./add-trading-rule-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { storage } from "@/lib/firebase";
@@ -49,6 +51,7 @@ import Image from "next/image";
 import { Slider } from "@/components/ui/slider";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Separator } from "../ui/separator";
+import { useTrades } from "@/hooks/use-trades";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -56,34 +59,25 @@ const FormSchema = TradeSchema.omit({ id: true }).extend({
 
 type TradeFormProps = {
   trade?: Trade;
-  onSave: (trade: Trade) => Promise<void>;
+  onSaveSuccess: () => void;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  strategies: string[];
-  addStrategy: (newStrategy: string) => Promise<boolean>;
-  deleteStrategy: (strategy: string) => Promise<void>;
-  tradingRules: string[];
-  addTradingRule: (newRule: string) => Promise<boolean>;
-  deleteTradingRule: (rule: string) => Promise<void>;
 };
 
 export function TradeForm({ 
     trade, 
-    onSave, 
+    onSaveSuccess, 
     setOpen, 
-    strategies, 
-    addStrategy, 
-    deleteStrategy,
-    tradingRules,
-    addTradingRule,
-    deleteTradingRule,
 }: TradeFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
-  const { assets, addAsset, deleteAsset } = useAssets();
   const { user } = useAuth();
   const { isStreamerMode } = useStreamerMode();
 
+  const { addTrade, updateTrade } = useTrades();
+  const { strategies, addStrategy, deleteStrategy } = useStrategies();
+  const { tradingRules, addTradingRule, deleteTradingRule } = useTradingRules();
+  const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
+  const { assets, addAsset, deleteAsset } = useAssets();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -191,12 +185,16 @@ export function TradeForm({
             screenshotURL: screenshotURL || "",
         };
         
-        // Remove the file from the object before validation and saving
         delete (tradeToSave as any).screenshotFile;
+        
+        if (trade) {
+            await updateTrade(tradeToSave);
+        } else {
+            await addTrade(tradeToSave);
+        }
 
-        await onSave(tradeToSave);
         toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
-        setOpen(false);
+        onSaveSuccess();
 
     } catch (error) {
         console.error("Trade save/upload failed:", error);

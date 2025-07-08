@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
 import { StreamerModeText } from "@/components/streamer-mode-text";
 
@@ -11,7 +11,7 @@ type StatsCardsProps = {
   trades: Trade[];
 };
 
-export function StatsCards({ trades }: StatsCardsProps) {
+export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) {
   const stats = useMemo(() => {
     const totalTrades = trades.length;
     if (totalTrades === 0) {
@@ -157,4 +157,4 @@ export function StatsCards({ trades }: StatsCardsProps) {
       />
     </div>
   );
-}
+});

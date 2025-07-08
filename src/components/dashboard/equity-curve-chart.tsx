@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, memo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
@@ -13,7 +13,7 @@ type EquityCurveChartProps = {
   trades: Trade[];
 };
 
-export function EquityCurveChart({ trades }: EquityCurveChartProps) {
+export const EquityCurveChart = memo(function EquityCurveChart({ trades }: EquityCurveChartProps) {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -107,4 +107,4 @@ export function EquityCurveChart({ trades }: EquityCurveChartProps) {
       </CardContent>
     </Card>
   );
-}
+});

@@ -2,14 +2,17 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from 'next/dynamic';
 import { useTrades } from "@/hooks/use-trades";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
 import { startOfMonth, isSameDay } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
-import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
-import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
+
+const EquityCurveChart = dynamic(() => import('@/components/dashboard/equity-curve-chart').then(mod => mod.EquityCurveChart), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
+const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-calendar').then(mod => mod.MonthlyCalendar), { ssr: false, loading: () => <Skeleton className="h-[600px]" /> });
+
 
 export default function DashboardPage() {
   const { trades, isLoaded } = useTrades();
