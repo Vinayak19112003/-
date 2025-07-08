@@ -13,7 +13,8 @@ import {
   doc,
   Timestamp,
   DocumentData,
-  onSnapshot
+  onSnapshot,
+  writeBatch
 } from "firebase/firestore";
 import { Trade, TradeSchema } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -109,6 +110,42 @@ export function useTrades() {
     }
   };
 
+  const addMultipleTrades = async (tradesToImport: Trade[]) => {
+    if (!db || !user) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to import trades.' });
+      throw new Error("User not authenticated");
+    }
+    if (tradesToImport.length > 499) {
+        toast({ variant: 'destructive', title: 'Import Limit Exceeded', description: 'You can import a maximum of 499 trades at a time.' });
+        throw new Error("Import limit exceeded");
+    }
+
+    const batch = writeBatch(db);
+    const tradesCollectionRef = collection(db, 'users', user.uid, TRADES_COLLECTION);
+    
+    tradesToImport.forEach(trade => {
+        const docRef = doc(tradesCollectionRef); // Firestore will generate an ID
+        const tradeData = {
+            ...trade,
+            date: Timestamp.fromDate(new Date(trade.date)),
+        };
+        const { id, ...tradeDataWithoutId } = tradeData;
+        batch.set(docRef, tradeDataWithoutId);
+    });
+
+    try {
+        await batch.commit();
+    } catch (error) {
+        console.error("Error importing trades:", error);
+        toast({
+            variant: "destructive",
+            title: "Error Importing Trades",
+            description: "Could not save the imported trades.",
+        });
+        throw error;
+    }
+  };
+
   const updateTrade = async (updatedTrade: Trade) => {
     if (!db || !user) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to update a trade.' });
@@ -153,5 +190,5 @@ export function useTrades() {
     }
   };
 
-  return { trades, addTrade, updateTrade, deleteTrade, isLoaded };
+  return { trades, addTrade, updateTrade, addMultipleTrades, deleteTrade, isLoaded };
 }

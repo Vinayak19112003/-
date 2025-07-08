@@ -26,6 +26,7 @@ import { EquityCurveChart } from "@/components/dashboard/equity-curve-chart";
 import { StrategyAnalytics } from "@/components/dashboard/strategy-analytics";
 import { MistakeAnalysis } from "@/components/dashboard/mistake-analysis";
 import { ExportTrades } from "@/components/dashboard/export-trades";
+import { ImportTrades } from "@/components/dashboard/import-trades";
 import { MonthlyCalendar } from "@/components/dashboard/monthly-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { useStrategies } from "@/hooks/use-strategies";
@@ -43,7 +44,7 @@ import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-ana
 import { TimeAnalysis } from "@/components/dashboard/time-analysis";
 
 function Dashboard() {
-  const { trades, addTrade, updateTrade, deleteTrade, isLoaded } = useTrades();
+  const { trades, addTrade, updateTrade, deleteTrade, addMultipleTrades, isLoaded } = useTrades();
   const { strategies, addStrategy, deleteStrategy } = useStrategies();
   const { tradingRules, addTradingRule, deleteTradingRule } = useTradingRules();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -308,6 +309,7 @@ function Dashboard() {
                     <CardDescription>Your filtered history of trades.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
+                   <ImportTrades onImport={addMultipleTrades} />
                    <ExportTrades trades={filteredTrades}/>
                 </div>
             </CardHeader>
