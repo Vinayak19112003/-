@@ -46,6 +46,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { StreamerModeText } from "@/components/streamer-mode-text";
 import { TradeDetailsDialog } from "./trade-details-dialog";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type TradeTableProps = {
   trades: Trade[];
@@ -67,6 +68,7 @@ const ResultBadge = ({ result }: { result: Trade["result"] }) => {
 
 export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter, 300);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
   const [viewingTrade, setViewingTrade] = useState<Trade | null>(null);
@@ -81,7 +83,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter, trades]);
+  }, [debouncedFilter, trades]);
 
   const handleViewTrade = (trade: Trade) => {
     setViewingTrade(trade);
@@ -96,10 +98,10 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
 
   const sortedAndFilteredTrades = useMemo(() => {
     let filtered = trades.filter(trade =>
-      (trade.asset.toLowerCase().includes(filter.toLowerCase()) ||
-       trade.strategy.toLowerCase().includes(filter.toLowerCase()) ||
-       trade.notes?.toLowerCase().includes(filter.toLowerCase()) ||
-       trade.mistakes?.some(m => m.toLowerCase().includes(filter.toLowerCase())))
+      (trade.asset.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+       trade.strategy.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+       trade.notes?.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
+       trade.mistakes?.some(m => m.toLowerCase().includes(debouncedFilter.toLowerCase())))
     );
 
     if (sortConfig !== null) {
@@ -138,7 +140,7 @@ export function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
     }
 
     return filtered;
-  }, [trades, filter, sortConfig]);
+  }, [trades, debouncedFilter, sortConfig]);
 
   const paginatedTrades = useMemo(() => {
     return sortedAndFilteredTrades.slice(
