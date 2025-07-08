@@ -106,7 +106,13 @@ export function TradeDetailsDialog({ trade, isOpen, onOpenChange }: TradeDetails
                     <div>
                         <p className="text-sm text-muted-foreground mb-2">Screenshot</p>
                         <div className="relative aspect-video rounded-md overflow-hidden border">
-                            <Image src={trade.screenshotURL} alt="Trade screenshot" layout="fill" objectFit="cover" />
+                            <Image 
+                                src={trade.screenshotURL} 
+                                alt="Trade screenshot" 
+                                fill
+                                style={{objectFit: 'cover'}}
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                            />
                         </div>
                     </div>
                 )}

@@ -57,67 +57,57 @@ export const RuleAdherenceAnalysis = memo(function RuleAdherenceAnalysis({ trade
     }, [trades, tradingRules]);
     
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Rule Adherence vs. Outcome</CardTitle>
-                <CardDescription>
-                    Analyze the impact of following your rules on trade performance.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[260px]">
-                <ScrollArea className="h-full">
-                    {analytics.length > 0 ? (
-                        <TooltipProvider>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="p-2">Rule</TableHead>
-                                        <TableHead className="p-2 text-center">Adherence</TableHead>
-                                        <TableHead className="p-2">Win Rate</TableHead>
-                                        <TableHead className="text-right p-2">Net R</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {analytics.map(stat => (
-                                        <TableRow key={stat.rule}>
-                                            <TableCell className="font-medium truncate p-2 max-w-xs">{stat.rule}</TableCell>
-                                            <TableCell className="text-center p-2">{stat.adherenceCount}</TableCell>
-                                            <TableCell className="p-2">
-                                                {stat.adherenceCount > 0 ? (
-                                                    <Tooltip delayDuration={150}>
-                                                        <TooltipTrigger asChild>
-                                                            <div className="flex items-center gap-2">
-                                                                <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
-                                                                <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>{stat.wins} Wins / {stat.losses} Losses</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground">N/A</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className={cn(
-                                                "text-right font-semibold p-2",
-                                                stat.netR > 0 && "text-success",
-                                                stat.netR < 0 && "text-destructive"
-                                            )}>
-                                                {stat.netR.toFixed(2)}R
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TooltipProvider>
-                    ) : (
-                        <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
-                            <p>No trading rules defined or followed yet.</p>
-                        </div>
-                    )}
-                </ScrollArea>
-            </CardContent>
-        </Card>
+        <ScrollArea className="h-full">
+            {analytics.length > 0 ? (
+                <TooltipProvider>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="p-2">Rule</TableHead>
+                                <TableHead className="p-2 text-center">Adherence</TableHead>
+                                <TableHead className="p-2">Win Rate</TableHead>
+                                <TableHead className="text-right p-2">Net R</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {analytics.map(stat => (
+                                <TableRow key={stat.rule}>
+                                    <TableCell className="font-medium truncate p-2 max-w-xs">{stat.rule}</TableCell>
+                                    <TableCell className="text-center p-2">{stat.adherenceCount}</TableCell>
+                                    <TableCell className="p-2">
+                                        {stat.adherenceCount > 0 ? (
+                                            <Tooltip delayDuration={150}>
+                                                <TooltipTrigger asChild>
+                                                    <div className="flex items-center gap-2">
+                                                        <Progress value={stat.winRate} className="h-2 w-16" indicatorClassName={stat.winRate >= 50 ? 'bg-success' : 'bg-destructive'}/>
+                                                        <span className="text-xs text-muted-foreground w-10 text-right">{stat.winRate.toFixed(0)}%</span>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{stat.wins} Wins / {stat.losses} Losses</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">N/A</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className={cn(
+                                        "text-right font-semibold p-2",
+                                        stat.netR > 0 && "text-success",
+                                        stat.netR < 0 && "text-destructive"
+                                    )}>
+                                        {stat.netR.toFixed(2)}R
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TooltipProvider>
+            ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
+                    <p>No trading rules defined or followed yet.</p>
+                </div>
+            )}
+        </ScrollArea>
     );
 });
