@@ -49,7 +49,7 @@ For each trade, you must provide values for all the fields in the output schema.
 - **strategy**: If a strategy is not specified in the CSV, you MUST default to the string 'Imported'.
 - **confidence**: If confidence is not specified, you MUST default to the number 5.
 - **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided in the CSV, you MUST calculate it using the entry, stop loss, and exit prices. The formula is exactly: \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
-- **pnl**: The profit or loss in currency amount.
+- **pnl**: The profit or loss in currency amount. **Pay close attention to the units.** If a value is in cents (e.g., '100 USC' or a column header indicates cents), you MUST convert it to dollars by dividing by 100. So, a value of 100 in a 'profit_usc' column becomes a PNL of 1.
 - **result**: Must be 'Win', 'Loss', or 'BE'. Infer this from the profit/loss value (pnl). A positive pnl is a 'Win', a negative pnl is a 'Loss', and a zero pnl is 'BE'.
 - **direction**: Must be 'Buy' or 'Sell'. Infer from columns like 'type' or 'side'.
 - **date**: The date and time of the trade. Convert it to a valid ISO 8601 date string.
