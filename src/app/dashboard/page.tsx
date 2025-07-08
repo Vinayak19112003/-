@@ -42,9 +42,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RuleAdherenceAnalysis } from "@/components/dashboard/rule-adherence-analysis";
 import { TimeAnalysis } from "@/components/dashboard/time-analysis";
+import { ClearAllTrades } from "@/components/dashboard/clear-all-trades";
 
 function Dashboard() {
-  const { trades, addTrade, updateTrade, deleteTrade, addMultipleTrades, isLoaded } = useTrades();
+  const { trades, addTrade, updateTrade, deleteTrade, addMultipleTrades, deleteAllTrades, isLoaded } = useTrades();
   const { strategies, addStrategy, deleteStrategy } = useStrategies();
   const { tradingRules, addTradingRule, deleteTradingRule } = useTradingRules();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -311,6 +312,7 @@ function Dashboard() {
                 <div className="flex items-center gap-2">
                    <ImportTrades onImport={addMultipleTrades} />
                    <ExportTrades trades={filteredTrades}/>
+                   <ClearAllTrades onClear={deleteAllTrades} disabled={trades.length === 0} />
                 </div>
             </CardHeader>
             <CardContent>

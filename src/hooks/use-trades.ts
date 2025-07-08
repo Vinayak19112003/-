@@ -14,7 +14,8 @@ import {
   Timestamp,
   DocumentData,
   onSnapshot,
-  writeBatch
+  writeBatch,
+  getDocs
 } from "firebase/firestore";
 import { Trade, TradeSchema } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -190,5 +191,40 @@ export function useTrades() {
     }
   };
 
-  return { trades, addTrade, updateTrade, addMultipleTrades, deleteTrade, isLoaded };
+  const deleteAllTrades = async () => {
+    if (!db || !user) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to delete trades.' });
+      return;
+    }
+    try {
+      const tradesCollectionRef = collection(db, 'users', user.uid, TRADES_COLLECTION);
+      const q = query(tradesCollectionRef);
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        toast({ title: 'No Trades to Delete', description: 'Your trade log is already empty.' });
+        return;
+      }
+
+      const batch = writeBatch(db);
+      querySnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
+      toast({
+        title: "All Trades Deleted",
+        description: "Your trade log has been cleared.",
+      });
+    } catch (error) {
+      console.error("Error deleting all trades:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Deleting Trades",
+        description: "Could not clear the trade log.",
+      });
+    }
+  };
+
+  return { trades, addTrade, updateTrade, addMultipleTrades, deleteTrade, deleteAllTrades, isLoaded };
 }
