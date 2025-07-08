@@ -22,10 +22,6 @@ import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { TradeSchema } from '@/lib/types';
 
-type ImportTradesProps = {
-  onImport: (trades: Trade[]) => Promise<void>;
-};
-
 // A lenient schema to parse external CSV data.
 const ExternalTradeSchema = z.object({
   opening_time: z.string().optional(),
@@ -65,6 +61,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
     Papa.parse<any>(file, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: header => header.trim().toLowerCase().replace(/\s+/g, '_'),
       complete: async (results) => {
         const { data, errors } = results;
 
