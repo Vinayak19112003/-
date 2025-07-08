@@ -88,7 +88,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
           const currentItems = data[key];
 
           if (Array.isArray(currentItems)) {
-            setItems(currentItems.length > 0 ? currentItems : [...defaultValues]);
+            setItems(currentItems);
           } else {
             setItems([...defaultValues]);
           }
