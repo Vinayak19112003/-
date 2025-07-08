@@ -14,7 +14,8 @@ import {
   Timestamp,
   DocumentData,
   writeBatch,
-  getDocs
+  getDocs,
+  limit
 } from "firebase/firestore";
 import { Trade, TradeSchema } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -54,7 +55,7 @@ export function useTrades() {
 
       setIsLoaded(false);
       try {
-        const q = query(tradesCollection, orderBy("date", "desc"));
+        const q = query(tradesCollection, orderBy("date", "desc"), limit(100));
         const querySnapshot = await getDocs(q);
         const tradesData = querySnapshot.docs.map(convertDocToTrade);
         setTrades(tradesData);

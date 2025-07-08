@@ -10,6 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -477,6 +478,7 @@ export const TradeTable = memo(function TradeTable({ trades, onEdit, onDelete }:
               </TableRow>
             )}
           </TableBody>
+          <TableCaption>Showing the last 100 trades. For performance, not all trades may be loaded.</TableCaption>
         </Table>
       </div>
 
