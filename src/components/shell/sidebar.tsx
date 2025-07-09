@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -49,10 +50,10 @@ export function Sidebar() {
 
 
   return (
-    <SidebarPrimitive collapsible="icon" variant="floating">
+    <SidebarPrimitive collapsible="icon">
       <SidebarContent className="flex flex-col">
         <SidebarHeader>
-          {state === 'expanded' && <Logo />}
+          <Logo />
         </SidebarHeader>
         
         <SidebarMenu className="flex-1">

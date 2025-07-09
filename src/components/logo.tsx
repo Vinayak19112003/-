@@ -1,4 +1,6 @@
 
+import { cn } from "@/lib/utils";
+
 export function Logo() {
   return (
     <div className="flex items-center gap-2">
@@ -18,7 +20,7 @@ export function Logo() {
         <path d="M10 10.5a2 2 0 1 0 4 0" />
         <circle cx="12" cy="14.5" r="1.5" fill="currentColor" strokeWidth="0" />
       </svg>
-      <h1 className="font-headline text-xl font-semibold tracking-tight">
+      <h1 className="font-headline text-xl font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
         Anony Trading
       </h1>
     </div>
