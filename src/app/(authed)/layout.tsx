@@ -2,17 +2,27 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import type { Trade } from '@/lib/types';
 import { Sidebar } from '@/components/shell/sidebar';
 import { Header } from '@/components/shell/header';
 import AuthGuard from '@/components/auth/auth-guard';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
-import { TradeForm } from '@/components/dashboard/trade-form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TradeFormProvider } from '@/contexts/trade-form-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { Loader2 } from 'lucide-react';
+
+const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), { 
+    ssr: false, 
+    loading: () => (
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    )
+});
 
 export default function AuthedLayout({
   children,
