@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -59,15 +60,16 @@ export function Sidebar() {
         <SidebarMenu className="flex-1">
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} prefetch={false} passHref asChild>
-                <SidebarMenuButton
-                  isActive={isActive(item.href)}
-                  tooltip={{ children: item.tooltip, side: 'right' }}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(item.href)}
+                tooltip={{ children: item.tooltip, side: 'right' }}
+              >
+                <Link href={item.href} prefetch={false}>
                   <item.icon />
                   <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
           <SidebarMenuItem>
