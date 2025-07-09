@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -19,7 +18,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -54,22 +52,22 @@ export function Sidebar() {
     <SidebarPrimitive collapsible="icon" variant="floating">
       <SidebarContent className="flex flex-col">
         <SidebarHeader>
-          {state === 'expanded' ? <Logo /> : <SidebarTrigger className="size-7" />}
+          {state === 'expanded' && <Logo />}
         </SidebarHeader>
         
         <SidebarMenu className="flex-1">
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive(item.href)}
-                tooltip={{ children: item.tooltip, side: 'right' }}
-              >
-                <Link href={item.href} prefetch={false}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
+                <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.href)}
+                    tooltip={{ children: item.tooltip, side: 'right' }}
+                >
+                    <Link href={item.href} prefetch={false}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                    </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
           <SidebarMenuItem>

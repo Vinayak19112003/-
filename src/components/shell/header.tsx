@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -9,7 +8,7 @@ export function Header() {
     
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger />
             <div className="w-full flex-1">
                 <h1 className="font-semibold text-lg capitalize">{pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}</h1>
             </div>
