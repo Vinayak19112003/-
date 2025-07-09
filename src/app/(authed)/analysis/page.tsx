@@ -18,6 +18,9 @@ const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-ana
 const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart').then(mod => mod.PerformanceRadarChart), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
 const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
 const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
+const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[485px]" /> });
+const MonthlyPerformance = dynamic(() => import('@/components/dashboard/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[485px]" /> });
+
 
 export default function AnalysisPage() {
     const { trades, isLoaded } = useTrades();
@@ -54,6 +57,10 @@ export default function AnalysisPage() {
                     <Skeleton className="h-[360px]" />
                 </div>
                 <Skeleton className="h-[420px]" />
+                <div className="space-y-4 md:space-y-8">
+                    <Skeleton className="h-[485px]" />
+                    <Skeleton className="h-[485px]" />
+                </div>
             </div>
         );
     }
@@ -108,6 +115,10 @@ export default function AnalysisPage() {
                 </Card>
             </div>
             <TimeAnalysis trades={filteredTrades} />
+            <div className="space-y-4 md:space-y-8 mt-4 md:mt-8">
+              <DailyPerformance trades={filteredTrades} />
+              <MonthlyPerformance trades={filteredTrades} />
+            </div>
         </>
     );
 }
