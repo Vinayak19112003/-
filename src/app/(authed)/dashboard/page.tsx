@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import dynamic from 'next/dynamic';
 import { useTrades } from "@/contexts/trades-context";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
-import { startOfMonth, isSameDay } from "date-fns";
+import { startOfMonth, isWithinInterval, isSameDay } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 
 const EquityCurveChart = dynamic(() => import('@/components/dashboard/equity-curve-chart').then(mod => mod.EquityCurveChart), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
@@ -15,31 +15,34 @@ const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-cal
 
 
 export default function DashboardPage() {
-  const { trades, fetchTrades, isLoaded } = useTrades();
+  const { trades, isLoaded } = useTrades();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
     to: new Date(),
   });
+  
+  const filteredTrades = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) {
+        return trades;
+    }
+    const toDate = new Date(dateRange.to);
+    toDate.setHours(23, 59, 59, 999);
+    return trades.filter(trade => 
+      isWithinInterval(new Date(trade.date), { start: dateRange.from!, end: toDate })
+    );
+  }, [trades, dateRange]);
 
-  useEffect(() => {
-    fetchTrades({ dateRange, newQuery: true });
-  }, [dateRange, fetchTrades]);
 
   const handleCalendarDateSelect = (date: Date) => {
     const from = dateRange?.from;
     const to = dateRange?.to;
     if (from && isSameDay(date, from) && to && isSameDay(date, to)) {
-        // If the same single day is clicked again, reset to default range
         setDateRange({ from: startOfMonth(new Date()), to: new Date() });
     } else {
-        // Select the single day
         setDateRange({ from: date, to: date });
     }
   };
-
-  // Memoization is still useful for child components that receive `trades`.
-  const filteredTrades = useMemo(() => trades, [trades]);
 
   if (!isLoaded) {
     return (

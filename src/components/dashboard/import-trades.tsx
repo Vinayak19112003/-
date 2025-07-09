@@ -21,7 +21,7 @@ import { importTrades } from '@/ai/flows/import-trades-flow';
 import { useTrades } from '@/contexts/trades-context';
 
 type ImportTradesProps = {
-  onImport: () => void;
+  onImport: (addedCount: number, skippedCount: number) => void;
 };
 
 export function ImportTrades({ onImport }: ImportTradesProps) {
@@ -29,7 +29,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
-  const { addTrade } = useTrades();
+  const { trades: existingTrades, addMultipleTrades } = useTrades();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -77,14 +77,19 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
                 return;
             }
 
-            // Sequentially add trades to avoid Firestore throttling on large imports.
-            for (const trade of tradesFromAI) {
-                // The `id` is part of the Zod transform, but addTrade expects it to be omitted.
-                const { id, ...tradeData } = trade as any;
-                await addTrade(tradeData);
-            }
+            // Deduplication logic
+            const existingTicketIds = new Set(existingTrades.map(t => t.ticket).filter(Boolean));
+            const newTrades = tradesFromAI.filter(trade => !trade.ticket || !existingTicketIds.has(trade.ticket));
+            const skippedCount = tradesFromAI.length - newTrades.length;
 
-            onImport(); // This will trigger a refetch and toast in the parent.
+            if (newTrades.length > 0) {
+                const { success, addedCount } = await addMultipleTrades(newTrades);
+                if (success) {
+                    onImport(addedCount, skippedCount);
+                }
+            } else {
+                onImport(0, skippedCount);
+            }
             
             setIsOpen(false);
             setFile(null);
@@ -127,7 +132,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
             AI-Powered Trade Import
             </DialogTitle>
           <DialogDescription>
-            Upload a CSV, PDF, or image file and our AI will automatically parse your trades. No specific format required.
+            Upload a CSV, PDF, or image file and our AI will automatically parse your trades. It will skip duplicates based on Ticket/Order ID.
           </DialogDescription>
         </DialogHeader>
         <div className="grid w-full max-w-sm items-center gap-1.5 py-4">

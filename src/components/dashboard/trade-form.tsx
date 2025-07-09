@@ -612,6 +612,23 @@ export function TradeForm({
             </FormItem>
           )}
         />
+        
+        <FormField
+            control={form.control}
+            name="ticket"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Ticket / Order ID</FormLabel>
+                <FormControl>
+                    <Input placeholder="Optional: e.g., #12345678" {...field} />
+                </FormControl>
+                <FormDescription>
+                    Provide a unique ticket or order ID to prevent duplicates during import.
+                </FormDescription>
+                <FormMessage />
+                </FormItem>
+            )}
+        />
 
         <FormField
           control={form.control}

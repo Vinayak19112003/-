@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useState, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useState, useCallback, useContext, useMemo, useEffect, type ReactNode } from 'react';
 import { db } from '@/lib/firebase';
 import { 
   collection, 
@@ -15,18 +15,12 @@ import {
   DocumentData,
   writeBatch,
   getDocs,
-  limit,
-  where,
-  startAfter,
-  QueryDocumentSnapshot,
 } from "firebase/firestore";
-import type { DateRange } from "react-day-picker";
 import { Trade, TradeSchema } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
 const TRADES_COLLECTION = 'trades';
-const PAGE_SIZE = 20;
 
 const convertDocToTrade = (doc: DocumentData): Trade => {
   const data = doc.data();
@@ -38,24 +32,16 @@ const convertDocToTrade = (doc: DocumentData): Trade => {
   return TradeSchema.parse(trade);
 };
 
-type FetchOptions = {
-    dateRange?: DateRange;
-    sortBy?: keyof Trade;
-    sortDirection?: 'desc' | 'asc';
-    newQuery?: boolean;
-};
-
 interface TradesContextType {
     trades: Trade[];
     isLoading: boolean;
-    hasMore: boolean;
-    fetchTrades: (options?: FetchOptions) => Promise<void>;
-    loadMoreTrades: () => Promise<void>;
+    isLoaded: boolean;
+    refetchTrades: () => Promise<void>;
     addTrade: (trade: Omit<Trade, 'id'>) => Promise<boolean>;
+    addMultipleTrades: (newTrades: Omit<Trade, 'id'>[]) => Promise<{success: boolean, addedCount: number}>;
     updateTrade: (trade: Trade) => Promise<boolean>;
     deleteTrade: (id: string) => Promise<boolean>;
     deleteAllTrades: () => Promise<boolean>;
-    isLoaded: boolean;
 }
 
 const TradesContext = createContext<TradesContextType | undefined>(undefined);
@@ -67,16 +53,13 @@ export function TradesProvider({ children }: { children: ReactNode }) {
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-    const [lastQueryOptions, setLastQueryOptions] = useState<FetchOptions>({});
 
     const getTradesCollectionRef = useCallback(() => {
         if (!user || !db) return null;
         return collection(db, 'users', user.uid, TRADES_COLLECTION);
     }, [user]);
 
-    const fetchTrades = useCallback(async (options: FetchOptions = {}) => {
+    const refetchTrades = useCallback(async () => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection) {
             setIsLoaded(true);
@@ -84,41 +67,11 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         }
 
         setIsLoading(true);
-        if (options.newQuery) {
-            setLastVisible(null);
-            setTrades([]);
-        }
-        setLastQueryOptions(options); // Save options for loadMore
-
         try {
-            const constraints = [];
-            
-            // Filtering
-            if (options.dateRange?.from) {
-                constraints.push(where("date", ">=", Timestamp.fromDate(options.dateRange.from)));
-            }
-            if (options.dateRange?.to) {
-                const toDate = new Date(options.dateRange.to);
-                toDate.setHours(23, 59, 59, 999);
-                constraints.push(where("date", "<=", Timestamp.fromDate(toDate)));
-            }
-
-            // Sorting
-            constraints.push(orderBy(options.sortBy || 'date', options.sortDirection || 'desc'));
-            
-            // Pagination
-            constraints.push(limit(PAGE_SIZE));
-
-            const q = query(tradesCollection, ...constraints);
+            const q = query(tradesCollection, orderBy('date', 'desc'));
             const querySnapshot = await getDocs(q);
-            
             const fetchedTrades = querySnapshot.docs.map(convertDocToTrade);
             setTrades(fetchedTrades);
-
-            const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-            setLastVisible(lastDoc || null);
-            setHasMore(querySnapshot.docs.length === PAGE_SIZE);
-
         } catch (error) {
             console.error("Error fetching trades:", error);
             toast({ variant: "destructive", title: "Data Error", description: "Could not load trades." });
@@ -128,57 +81,59 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         }
     }, [getTradesCollectionRef, toast]);
 
-    const loadMoreTrades = useCallback(async () => {
-        const tradesCollection = getTradesCollectionRef();
-        if (!tradesCollection || !lastVisible || !hasMore || isLoading) return;
-        
-        setIsLoading(true);
-        
-        try {
-            const constraints = [];
-            if (lastQueryOptions.dateRange?.from) constraints.push(where("date", ">=", Timestamp.fromDate(lastQueryOptions.dateRange.from)));
-            if (lastQueryOptions.dateRange?.to) {
-                const toDate = new Date(lastQueryOptions.dateRange.to);
-                toDate.setHours(23, 59, 59, 999);
-                constraints.push(where("date", "<=", Timestamp.fromDate(toDate)));
-            }
-            constraints.push(orderBy(lastQueryOptions.sortBy || 'date', lastQueryOptions.sortDirection || 'desc'));
-            constraints.push(startAfter(lastVisible));
-            constraints.push(limit(PAGE_SIZE));
-
-            const q = query(tradesCollection, ...constraints);
-            const querySnapshot = await getDocs(q);
-
-            const newTrades = querySnapshot.docs.map(convertDocToTrade);
-            setTrades(prev => [...prev, ...newTrades]);
-
-            const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-            setLastVisible(lastDoc || null);
-            setHasMore(querySnapshot.docs.length === PAGE_SIZE);
-
-        } catch (error) {
-            console.error("Error loading more trades:", error);
-            toast({ variant: "destructive", title: "Load More Error", description: "Could not load more trades." });
-        } finally {
-            setIsLoading(false);
+    useEffect(() => {
+        if (user && !isLoaded) {
+            refetchTrades();
+        } else if (!user) {
+            setTrades([]);
+            setIsLoaded(true);
         }
-    }, [getTradesCollectionRef, lastVisible, hasMore, lastQueryOptions, toast, isLoading]);
-    
+    }, [user, isLoaded, refetchTrades]);
+
     const addTrade = async (trade: Omit<Trade, 'id'>) => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection) return false;
 
         try {
+            const newDocRef = doc(tradesCollection);
+            const newTrade = { ...trade, id: newDocRef.id };
             await addDoc(tradesCollection, {
                 ...trade,
                 date: Timestamp.fromDate(trade.date),
             });
-            // Don't refetch automatically, let parent component decide
+            // Add to local state
+            setTrades(prev => [newTrade, ...prev].sort((a,b) => b.date.getTime() - a.date.getTime()));
             return true;
         } catch (error) {
             console.error("Error adding trade:", error);
             toast({ variant: "destructive", title: "Error Saving Trade", description: "Could not save the trade." });
             return false;
+        }
+    };
+
+    const addMultipleTrades = async (newTrades: Omit<Trade, 'id'>[]) => {
+        const tradesCollection = getTradesCollectionRef();
+        if (!tradesCollection || newTrades.length === 0) return { success: false, addedCount: 0 };
+    
+        try {
+            const batch = writeBatch(db);
+            const tradesToAddLocally: Trade[] = [];
+
+            newTrades.forEach(trade => {
+                const docRef = doc(tradesCollection);
+                batch.set(docRef, { ...trade, date: Timestamp.fromDate(trade.date) });
+                tradesToAddLocally.push({ ...trade, id: docRef.id });
+            });
+    
+            await batch.commit();
+
+            setTrades(prev => [...tradesToAddLocally, ...prev].sort((a, b) => b.date.getTime() - a.date.getTime()));
+            
+            return { success: true, addedCount: newTrades.length };
+        } catch (error) {
+            console.error("Error batch adding trades:", error);
+            toast({ variant: "destructive", title: "Import Error", description: "Could not save the imported trades." });
+            return { success: false, addedCount: 0 };
         }
     };
     
@@ -193,7 +148,8 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 ...tradeData,
                 date: Timestamp.fromDate(trade.date),
             });
-            // Don't refetch automatically
+            // Update local state
+            setTrades(prev => prev.map(t => t.id === id ? trade : t).sort((a,b) => b.date.getTime() - a.date.getTime()));
             return true;
         } catch (error) {
             console.error("Error updating trade:", error);
@@ -208,7 +164,6 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
         try {
             await deleteDoc(doc(tradesCollection, id));
-            // Instead of refetching, just remove from local state
             setTrades(prev => prev.filter(t => t.id !== id));
             return true;
         } catch (error) {
@@ -228,9 +183,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             const batch = writeBatch(db);
             querySnapshot.forEach(doc => batch.delete(doc.ref));
             await batch.commit();
-            setTrades([]); // Clear local state
-            setHasMore(false);
-            setLastVisible(null);
+            setTrades([]);
             return true;
         } catch (error) {
             console.error("Error deleting all trades:", error);
@@ -242,15 +195,14 @@ export function TradesProvider({ children }: { children: ReactNode }) {
     const value = useMemo(() => ({
         trades,
         isLoading,
-        hasMore,
-        fetchTrades,
-        loadMoreTrades,
+        isLoaded,
+        refetchTrades,
         addTrade,
+        addMultipleTrades,
         updateTrade,
         deleteTrade,
         deleteAllTrades,
-        isLoaded,
-    }), [trades, isLoading, hasMore, fetchTrades, loadMoreTrades, addTrade, updateTrade, deleteTrade, deleteAllTrades, isLoaded]);
+    }), [trades, isLoading, isLoaded, refetchTrades, addTrade, addMultipleTrades, updateTrade, deleteTrade, deleteAllTrades]);
 
     return <TradesContext.Provider value={value}>{children}</TradesContext.Provider>;
 }

@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import dynamic from 'next/dynamic';
 import { useTrades } from "@/contexts/trades-context";
 import { useTradingRules } from "@/hooks/use-trading-rules";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
-import { startOfMonth } from "date-fns";
+import { startOfMonth, isWithinInterval } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SharePerformance } from "@/components/dashboard/share-performance";
@@ -20,7 +20,7 @@ const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-
 const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 
 export default function AnalysisPage() {
-    const { trades, fetchTrades, isLoaded } = useTrades();
+    const { trades, isLoaded } = useTrades();
     const { tradingRules } = useTradingRules();
 
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -28,12 +28,17 @@ export default function AnalysisPage() {
         to: new Date(),
     });
 
-    useEffect(() => {
-        fetchTrades({ dateRange, newQuery: true });
-    }, [dateRange, fetchTrades]);
-    
-    // Filtering is now done server-side, but memoization is still useful for child components.
-    const filteredTrades = useMemo(() => trades, [trades]);
+    const filteredTrades = useMemo(() => {
+        if (!dateRange?.from || !dateRange?.to) {
+            return trades;
+        }
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        return trades.filter(trade => 
+          isWithinInterval(new Date(trade.date), { start: dateRange.from!, end: toDate })
+        );
+      }, [trades, dateRange]);
+
 
     if (!isLoaded) {
         return (

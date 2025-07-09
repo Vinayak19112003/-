@@ -1,34 +1,41 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useTrades } from "@/contexts/trades-context";
 import { TradeTable } from "@/components/dashboard/trade-table";
 import { useToast } from "@/hooks/use-toast";
 import { useTradeForm } from "@/contexts/trade-form-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
 import { ImportTrades } from "@/components/dashboard/import-trades";
 import { ExportTrades } from "@/components/dashboard/export-trades";
 import { ClearAllTrades } from "@/components/dashboard/clear-all-trades";
+import { Skeleton } from '@/components/ui/skeleton';
+
+const TRADES_PER_PAGE = 20;
 
 export default function TradesPage() {
     const { 
         trades, 
         deleteTrade, 
         deleteAllTrades,
-        fetchTrades,
-        loadMoreTrades,
-        hasMore,
-        isLoading,
+        refetchTrades,
         isLoaded
     } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
+    const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
-        // Initial fetch for this page, with no date constraints
-        fetchTrades({ newQuery: true });
-    }, [fetchTrades]);
+    const paginatedTrades = useMemo(() => {
+        const startIndex = (currentPage - 1) * TRADES_PER_PAGE;
+        const endIndex = startIndex + TRADES_PER_PAGE;
+        return trades.slice(startIndex, endIndex);
+    }, [trades, currentPage]);
+
+    const totalPages = useMemo(() => {
+        return Math.ceil(trades.length / TRADES_PER_PAGE);
+    }, [trades]);
 
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);
@@ -50,13 +57,26 @@ export default function TradesPage() {
         }
     }
 
-    const handleImport = async () => {
-       // After import, refetch the data from the start.
-       fetchTrades({ newQuery: true });
+    const handleImport = async (addedCount: number, skippedCount: number) => {
+       // The context handles adding the trades to the local state, so no refetch is needed.
        toast({
-            title: "Import Successful",
-            description: `Trades were imported and the log has been refreshed.`,
+            title: "Import Complete",
+            description: `${addedCount} trades were imported. ${skippedCount} duplicates were skipped.`,
         });
+    }
+
+    if (!isLoaded) {
+        return (
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-36" />
+                    <Skeleton className="h-4 w-48" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-96 w-full" />
+                </CardContent>
+            </Card>
+        );
     }
 
     return (
@@ -74,14 +94,31 @@ export default function TradesPage() {
             </CardHeader>
             <CardContent>
                <TradeTable 
-                    trades={trades} 
+                    trades={paginatedTrades} 
                     onEdit={openForm} 
                     onDelete={handleDeleteTrade}
-                    onLoadMore={loadMoreTrades}
-                    hasMore={hasMore}
-                    isLoading={isLoading}
-                    isLoaded={isLoaded}
                 />
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center space-x-4 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm font-medium">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

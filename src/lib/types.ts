@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export const TradeSchema = z.object({
@@ -21,6 +20,7 @@ export const TradeSchema = z.object({
   accountSize: z.coerce.number().optional().default(0),
   riskPercentage: z.coerce.number().optional().default(0),
   pnl: z.coerce.number().optional().default(0),
+  ticket: z.string().optional(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;

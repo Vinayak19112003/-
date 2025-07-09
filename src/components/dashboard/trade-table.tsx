@@ -50,10 +50,6 @@ type TradeTableProps = {
   trades: Trade[];
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
-  onLoadMore: () => void;
-  hasMore: boolean;
-  isLoading: boolean;
-  isLoaded: boolean;
 };
 
 const ResultBadge = ({ result }: { result: Trade["result"] }) => {
@@ -71,10 +67,6 @@ export const TradeTable = memo(function TradeTable({
     trades, 
     onEdit, 
     onDelete,
-    onLoadMore,
-    hasMore,
-    isLoading,
-    isLoaded
 }: TradeTableProps) {
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
   const [viewingTrade, setViewingTrade] = useState<Trade | null>(null);
@@ -90,19 +82,6 @@ export const TradeTable = memo(function TradeTable({
       setTradeToDelete(null);
     }
   };
-  
-  if (!isLoaded) {
-    return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-            </div>
-            <Skeleton className="h-96 w-full" />
-        </div>
-    );
-  }
 
   const tradeListContent = trades.length > 0 ? (
     trades.map((trade) => {
@@ -184,8 +163,8 @@ export const TradeTable = memo(function TradeTable({
       )
     })
   ) : (
-      <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
-          No trades found.
+      <div className="h-24 text-center flex items-center justify-center text-muted-foreground col-span-full">
+          No trades to display.
       </div>
   );
 
@@ -193,14 +172,6 @@ export const TradeTable = memo(function TradeTable({
     return (
         <div className="w-full space-y-4">
             <div className="space-y-4">{tradeListContent}</div>
-            {hasMore && (
-                <div className="flex justify-center">
-                    <Button onClick={onLoadMore} disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Load More
-                    </Button>
-                </div>
-            )}
             <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
                 <AlertDialogContent>
                 <AlertDialogHeader>
@@ -339,22 +310,13 @@ export const TradeTable = memo(function TradeTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={12} className="h-24 text-center">
-                  No trades found.
+                  No trades to display.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-
-        {hasMore && (
-            <div className="flex justify-center py-4">
-                <Button onClick={onLoadMore} disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Load More
-                </Button>
-            </div>
-        )}
 
         <TradeDetailsDialog 
             isOpen={!!viewingTrade}

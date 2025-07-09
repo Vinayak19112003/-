@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { TradeFormProvider } from '@/contexts/trade-form-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loader2 } from 'lucide-react';
-import { TradesProvider, useTrades } from '@/contexts/trades-context';
+import { TradesProvider } from '@/contexts/trades-context';
 
 const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), { 
     ssr: false, 
@@ -29,8 +29,7 @@ function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
-  const { fetchTrades } = useTrades();
-
+  
   const handleOpenForm = (trade?: Trade) => {
     setEditingTrade(trade);
     setIsFormOpen(true);
@@ -42,10 +41,8 @@ function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
   };
   
   const handleSaveSuccess = () => {
+    // The context will handle updating the local state, so we just need to close the form.
     handleCloseForm();
-    // Refreshes the data using the last used query options after a save.
-    // The `newQuery: true` ensures it starts from the beginning.
-    fetchTrades({ newQuery: true });
   }
 
   const FormComponent = isMobile ? Sheet : Dialog;
