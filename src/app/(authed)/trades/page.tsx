@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTrades } from "@/contexts/trades-context";
 import { TradeTable } from "@/components/dashboard/trade-table";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,7 @@ export default function TradesPage() {
     const { openForm } = useTradeForm();
 
     useEffect(() => {
-        // Initial fetch for this page
+        // Initial fetch for this page, with no date constraints
         fetchTrades({ newQuery: true });
     }, [fetchTrades]);
 
@@ -51,8 +51,8 @@ export default function TradesPage() {
     }
 
     const handleImport = async () => {
-       // After import, the context automatically refetches.
-       // We just need to show a toast.
+       // After import, refetch the data from the start.
+       fetchTrades({ newQuery: true });
        toast({
             title: "Import Successful",
             description: `Trades were imported and the log has been refreshed.`,

@@ -43,7 +43,9 @@ function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
   
   const handleSaveSuccess = () => {
     handleCloseForm();
-    fetchTrades({ newQuery: true }); // Refreshes the data after a save
+    // Refreshes the data using the last used query options after a save.
+    // The `newQuery: true` ensures it starts from the beginning.
+    fetchTrades({ newQuery: true });
   }
 
   const FormComponent = isMobile ? Sheet : Dialog;

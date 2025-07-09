@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Trade } from '@/lib/types';
 import { Loader2, Upload, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importTrades } from '@/ai/flows/import-trades-flow';
@@ -80,11 +79,12 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
 
             // Sequentially add trades to avoid Firestore throttling on large imports.
             for (const trade of tradesFromAI) {
-                const { id, ...tradeData } = trade;
+                // The `id` is part of the Zod transform, but addTrade expects it to be omitted.
+                const { id, ...tradeData } = trade as any;
                 await addTrade(tradeData);
             }
 
-            onImport(); // This will trigger a toast in the parent.
+            onImport(); // This will trigger a refetch and toast in the parent.
             
             setIsOpen(false);
             setFile(null);

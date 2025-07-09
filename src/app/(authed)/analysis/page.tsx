@@ -29,7 +29,7 @@ export default function AnalysisPage() {
     });
 
     useEffect(() => {
-        fetchTrades({ dateRange });
+        fetchTrades({ dateRange, newQuery: true });
     }, [dateRange, fetchTrades]);
     
     // Filtering is now done server-side, but memoization is still useful for child components.

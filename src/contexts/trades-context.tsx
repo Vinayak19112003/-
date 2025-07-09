@@ -19,7 +19,6 @@ import {
   where,
   startAfter,
   QueryDocumentSnapshot,
-  DocumentSnapshot,
 } from "firebase/firestore";
 import type { DateRange } from "react-day-picker";
 import { Trade, TradeSchema } from '@/lib/types';
@@ -42,7 +41,7 @@ const convertDocToTrade = (doc: DocumentData): Trade => {
 type FetchOptions = {
     dateRange?: DateRange;
     sortBy?: keyof Trade;
-    sortDirection?: 'asc' | 'desc';
+    sortDirection?: 'desc' | 'asc';
     newQuery?: boolean;
 };
 
@@ -85,6 +84,10 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         }
 
         setIsLoading(true);
+        if (options.newQuery) {
+            setLastVisible(null);
+            setTrades([]);
+        }
         setLastQueryOptions(options); // Save options for loadMore
 
         try {
@@ -127,7 +130,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
     const loadMoreTrades = useCallback(async () => {
         const tradesCollection = getTradesCollectionRef();
-        if (!tradesCollection || !lastVisible || !hasMore) return;
+        if (!tradesCollection || !lastVisible || !hasMore || isLoading) return;
         
         setIsLoading(true);
         
@@ -159,7 +162,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         } finally {
             setIsLoading(false);
         }
-    }, [getTradesCollectionRef, lastVisible, hasMore, lastQueryOptions, toast]);
+    }, [getTradesCollectionRef, lastVisible, hasMore, lastQueryOptions, toast, isLoading]);
     
     const addTrade = async (trade: Omit<Trade, 'id'>) => {
         const tradesCollection = getTradesCollectionRef();
@@ -170,7 +173,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 ...trade,
                 date: Timestamp.fromDate(trade.date),
             });
-            await fetchTrades(lastQueryOptions); // Refetch to show the new trade
+            // Don't refetch automatically, let parent component decide
             return true;
         } catch (error) {
             console.error("Error adding trade:", error);
@@ -190,7 +193,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 ...tradeData,
                 date: Timestamp.fromDate(trade.date),
             });
-            await fetchTrades(lastQueryOptions); // Refetch to show updates
+            // Don't refetch automatically
             return true;
         } catch (error) {
             console.error("Error updating trade:", error);
@@ -205,7 +208,8 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
         try {
             await deleteDoc(doc(tradesCollection, id));
-            await fetchTrades(lastQueryOptions); // Refetch
+            // Instead of refetching, just remove from local state
+            setTrades(prev => prev.filter(t => t.id !== id));
             return true;
         } catch (error) {
             console.error("Error deleting trade:", error);
@@ -246,7 +250,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         deleteTrade,
         deleteAllTrades,
         isLoaded,
-    }), [trades, isLoading, hasMore, fetchTrades, loadMoreTrades, isLoaded]);
+    }), [trades, isLoading, hasMore, fetchTrades, loadMoreTrades, addTrade, updateTrade, deleteTrade, deleteAllTrades, isLoaded]);
 
     return <TradesContext.Provider value={value}>{children}</TradesContext.Provider>;
 }

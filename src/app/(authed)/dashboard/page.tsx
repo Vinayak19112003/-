@@ -23,33 +23,23 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    fetchTrades({ dateRange });
+    fetchTrades({ dateRange, newQuery: true });
   }, [dateRange, fetchTrades]);
 
   const handleCalendarDateSelect = (date: Date) => {
-    if (dateRange?.from && isSameDay(date, dateRange.from) && dateRange.to && isSameDay(date, dateRange.to)) {
+    const from = dateRange?.from;
+    const to = dateRange?.to;
+    if (from && isSameDay(date, from) && to && isSameDay(date, to)) {
+        // If the same single day is clicked again, reset to default range
         setDateRange({ from: startOfMonth(new Date()), to: new Date() });
     } else {
+        // Select the single day
         setDateRange({ from: date, to: date });
     }
   };
 
-  const filteredTrades = useMemo(() => {
-    // Filtering is now done server-side, but we keep this for components that might need it.
-    if (!dateRange?.from) return trades;
-    return trades.filter(trade => {
-        const tradeDate = new Date(trade.date);
-        const fromDate = new Date(dateRange.from!);
-        fromDate.setHours(0, 0, 0, 0);
-
-        if (dateRange.to) {
-            const toDate = new Date(dateRange.to);
-            toDate.setHours(23, 59, 59, 999);
-            return tradeDate >= fromDate && tradeDate <= toDate;
-        }
-        return tradeDate >= fromDate;
-    });
-  }, [trades, dateRange]);
+  // Memoization is still useful for child components that receive `trades`.
+  const filteredTrades = useMemo(() => trades, [trades]);
 
   if (!isLoaded) {
     return (
@@ -64,8 +54,10 @@ export default function DashboardPage() {
             <Skeleton className="h-28" />
             <Skeleton className="h-28" />
         </div>
-        <Skeleton className="h-[600px]" />
-        <Skeleton className="h-[420px]" />
+        <div className="grid grid-cols-1 gap-4 md:gap-8">
+            <Skeleton className="h-[600px]" />
+            <Skeleton className="h-[420px]" />
+        </div>
       </div>
     );
   }
