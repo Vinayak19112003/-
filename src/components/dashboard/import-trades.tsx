@@ -19,9 +19,10 @@ import type { Trade } from '@/lib/types';
 import { Loader2, Upload, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importTrades } from '@/ai/flows/import-trades-flow';
+import { useTrades } from '@/contexts/trades-context';
 
 type ImportTradesProps = {
-  onImport: (trades: Trade[]) => Promise<void>;
+  onImport: () => void;
 };
 
 export function ImportTrades({ onImport }: ImportTradesProps) {
@@ -29,6 +30,7 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { addTrade } = useTrades();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -63,7 +65,6 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
         }
 
         try {
-            // Call the AI flow
             const result = await importTrades({ fileDataUri });
             const tradesFromAI = result.trades;
 
@@ -71,25 +72,20 @@ export function ImportTrades({ onImport }: ImportTradesProps) {
                 toast({
                     variant: 'destructive',
                     title: 'AI Parsing Failed',
-                    description: 'The AI could not extract any trades from your file. Please check the file format.',
+                    description: 'The AI could not extract any trades from your file.',
                 });
                 setIsImporting(false);
                 return;
             }
 
-            // The AI returns trades that almost match our schema.
-            // We just need to add a client-side UUID.
-            const validTrades: Trade[] = tradesFromAI.map(trade => ({
-                ...trade,
-                id: crypto.randomUUID(),
-            }));
+            // Sequentially add trades to avoid Firestore throttling on large imports.
+            for (const trade of tradesFromAI) {
+                const { id, ...tradeData } = trade;
+                await addTrade(tradeData);
+            }
 
-            await onImport(validTrades);
-
-            toast({
-                title: "Import Successful",
-                description: `AI successfully imported ${validTrades.length} trades.`,
-            });
+            onImport(); // This will trigger a toast in the parent.
+            
             setIsOpen(false);
             setFile(null);
         } catch (error) {

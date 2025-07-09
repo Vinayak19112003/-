@@ -51,7 +51,7 @@ import Image from "next/image";
 import { Slider } from "@/components/ui/slider";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Separator } from "../ui/separator";
-import { useTrades } from "@/hooks/use-trades";
+import { useTrades } from "@/contexts/trades-context";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -179,22 +179,25 @@ export function TradeForm({
             screenshotURL = await getDownloadURL(fileRef);
         }
 
-        const tradeToSave: Trade = {
+        const tradeData = {
             ...data,
-            id: tradeId,
             screenshotURL: screenshotURL || "",
         };
+        delete (tradeData as any).screenshotFile;
         
-        delete (tradeToSave as any).screenshotFile;
-        
+        let success = false;
         if (trade) {
-            await updateTrade(tradeToSave);
+            success = await updateTrade({ ...tradeData, id: trade.id });
         } else {
-            await addTrade(tradeToSave);
+            success = await addTrade(tradeData);
         }
-
-        toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
-        onSaveSuccess();
+        
+        if (success) {
+            toast({ title: "Trade Saved!", description: "Your trade has been successfully logged." });
+            onSaveSuccess();
+        } else {
+            throw new Error("Failed to save trade to the database.");
+        }
 
     } catch (error) {
         console.error("Trade save/upload failed:", error);

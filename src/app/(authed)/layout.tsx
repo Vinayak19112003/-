@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { TradeFormProvider } from '@/contexts/trade-form-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loader2 } from 'lucide-react';
+import { TradesProvider, useTrades } from '@/contexts/trades-context';
 
 const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), { 
     ssr: false, 
@@ -24,14 +25,11 @@ const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then
     )
 });
 
-export default function AuthedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
+  const { fetchTrades } = useTrades();
 
   const handleOpenForm = (trade?: Trade) => {
     setEditingTrade(trade);
@@ -45,6 +43,7 @@ export default function AuthedLayout({
   
   const handleSaveSuccess = () => {
     handleCloseForm();
+    fetchTrades({ newQuery: true }); // Refreshes the data after a save
   }
 
   const FormComponent = isMobile ? Sheet : Dialog;
@@ -87,4 +86,17 @@ export default function AuthedLayout({
       </TradeFormProvider>
     </AuthGuard>
   );
+}
+
+
+export default function AuthedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <TradesProvider>
+      <AuthedLayoutContent>{children}</AuthedLayoutContent>
+    </TradesProvider>
+  )
 }

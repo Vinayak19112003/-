@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, memo } from "react";
+import { useState, memo } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -10,7 +10,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableCaption,
 } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -37,25 +36,25 @@ import {
 } from "@/components/ui/dialog"
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { MoreHorizontal, ArrowUpDown, ImageIcon, Trash2, Edit, Eye } from "lucide-react";
+import { MoreHorizontal, ImageIcon, Trash2, Edit, Eye, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StreamerModeText } from "@/components/streamer-mode-text";
 import { TradeDetailsDialog } from "./trade-details-dialog";
-import { useDebounce } from "@/hooks/use-debounce";
 
 type TradeTableProps = {
   trades: Trade[];
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
+  onLoadMore: () => void;
+  hasMore: boolean;
+  isLoading: boolean;
+  isLoaded: boolean;
 };
-
-type SortKey = keyof Trade | "returnPercentage";
 
 const ResultBadge = ({ result }: { result: Trade["result"] }) => {
     const variant = {
@@ -67,24 +66,19 @@ const ResultBadge = ({ result }: { result: Trade["result"] }) => {
     return <Badge variant={variant}>{result}</Badge>;
 };
 
-export const TradeTable = memo(function TradeTable({ trades, onEdit, onDelete }: TradeTableProps) {
-  const [filter, setFilter] = useState("");
-  const debouncedFilter = useDebounce(filter, 300);
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: "asc" | "desc" } | null>({ key: 'date', direction: 'desc' });
+
+export const TradeTable = memo(function TradeTable({ 
+    trades, 
+    onEdit, 
+    onDelete,
+    onLoadMore,
+    hasMore,
+    isLoading,
+    isLoaded
+}: TradeTableProps) {
   const [tradeToDelete, setTradeToDelete] = useState<Trade | null>(null);
   const [viewingTrade, setViewingTrade] = useState<Trade | null>(null);
   const isMobile = useIsMobile();
-  const [mounted, setMounted] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 7;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedFilter, trades]);
 
   const handleViewTrade = (trade: Trade) => {
     setViewingTrade(trade);
@@ -96,244 +90,117 @@ export const TradeTable = memo(function TradeTable({ trades, onEdit, onDelete }:
       setTradeToDelete(null);
     }
   };
-
-  const sortedAndFilteredTrades = useMemo(() => {
-    let filtered = trades.filter(trade =>
-      (trade.asset.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
-       trade.strategy.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
-       trade.notes?.toLowerCase().includes(debouncedFilter.toLowerCase()) ||
-       trade.mistakes?.some(m => m.toLowerCase().includes(debouncedFilter.toLowerCase())))
-    );
-
-    if (sortConfig !== null) {
-      filtered.sort((a, b) => {
-        if (sortConfig.key === 'returnPercentage') {
-            const returnA = a.accountSize && a.accountSize > 0 && a.pnl != null ? (a.pnl / a.accountSize) * 100 : 0;
-            const returnB = b.accountSize && b.accountSize > 0 && b.pnl != null ? (b.pnl / b.accountSize) * 100 : 0;
-
-            if (sortConfig.direction === 'asc') {
-                return returnA - returnB;
-            } else {
-                return returnB - returnA;
-            }
-        }
-        
-        const aVal = a[sortConfig.key as keyof Trade];
-        const bVal = b[sortConfig.key as keyof Trade];
-        
-        if (aVal === undefined || aVal === null) return 1;
-        if (bVal === undefined || bVal === null) return -1;
-
-        if (sortConfig.key === 'date') {
-            const dateA = new Date(aVal as string | number | Date).getTime();
-            const dateB = new Date(bVal as string | number | Date).getTime();
-            return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-        }
-        
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-        }
-
-        if (String(aVal) < String(bVal)) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (String(aVal) > String(bVal)) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [trades, debouncedFilter, sortConfig]);
-
-  const paginatedTrades = useMemo(() => {
-    return sortedAndFilteredTrades.slice(
-      (currentPage - 1) * rowsPerPage,
-      currentPage * rowsPerPage
-    );
-  }, [sortedAndFilteredTrades, currentPage]);
-
-  const totalPages = Math.ceil(sortedAndFilteredTrades.length / rowsPerPage);
-
-  const requestSort = (key: SortKey) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const getSortIndicator = (key: SortKey) => {
-    if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-30" />;
-    return sortConfig.direction === 'desc' ? '🔽' : '🔼';
-  };
   
-  if (!mounted) {
+  if (!isLoaded) {
     return (
-        <div className="space-y-2">
-            <Skeleton className="h-10 w-full max-w-sm" />
-            <Skeleton className="h-72 w-full" />
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-96 w-full" />
         </div>
     );
   }
 
-  const PaginationControls = () => {
-    if (totalPages <= 1) return null;
-    
-    const pageNumbers = [];
-    const maxPagesToShow = 3;
+  const tradeListContent = trades.length > 0 ? (
+    trades.map((trade) => {
+      const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
+      return (
+        <Card key={trade.id} className="w-full">
+            <CardHeader className="p-4">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle className="text-base">{trade.asset}</CardTitle>
+                        <CardDescription>{format(trade.date, "PPP")}</CardDescription>
+                    </div>
+                    <ResultBadge result={trade.result} />
+                </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div className="font-medium text-muted-foreground">Direction</div>
+                <div className={cn("font-semibold", trade.direction === 'Buy' ? 'text-success' : 'text-destructive')}>{trade.direction}</div>
+                
+                <div className="font-medium text-muted-foreground">PNL ($)</div>
+                <div>
+                    <StreamerModeText className={cn("font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
+                        {trade.pnl != null ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'N/A'}
+                    </StreamerModeText>
+                </div>
 
-    if (totalPages <= maxPagesToShow + 2) {
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      pageNumbers.push(1);
-      if (currentPage > 2) {
-        pageNumbers.push('...');
-      }
-      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-        pageNumbers.push(i);
-      }
-      if (currentPage < totalPages - 1) {
-        pageNumbers.push('...');
-      }
-      pageNumbers.push(totalPages);
-    }
-    
-    const uniquePageNumbers = [...new Set(pageNumbers)];
+                <div className="font-medium text-muted-foreground">Return %</div>
+                <div>
+                    <StreamerModeText className={cn("font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
+                        {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
+                    </StreamerModeText>
+                </div>
+                
+                <div className="font-medium text-muted-foreground">RR</div>
+                <div>{trade.rr?.toFixed(2) ?? 'N/A'}</div>
+                
+                <div className="font-medium text-muted-foreground">Strategy</div>
+                <div className="truncate">{trade.strategy}</div>
+                
+                <div className="font-medium text-muted-foreground">Confidence</div>
+                <div>{trade.confidence} / 10</div>
 
-    return (
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </Button>
-        {uniquePageNumbers.map((page, index) =>
-          typeof page === 'number' ? (
-            <Button
-              key={index}
-              onClick={() => setCurrentPage(page)}
-              size="icon"
-              className="h-8 w-8"
-              variant={currentPage === page ? 'default' : 'outline'}
-            >
-              {page}
-            </Button>
-          ) : (
-            <span key={index} className="px-1 text-sm">...</span>
-          )
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
+                {trade.mistakes && trade.mistakes.length > 0 && (
+                    <>
+                        <div className="font-medium text-muted-foreground col-span-2 mt-2">Mistakes</div>
+                        <div className="col-span-2 flex flex-wrap gap-1">
+                        {trade.mistakes.map(mistake => (
+                            <Badge key={mistake} variant="outline">{mistake}</Badge>
+                        ))}
+                        </div>
+                    </>
+                )}
+                
+                <div className="col-span-2 mt-4 flex justify-between items-center">
+                    <Button variant="secondary" size="sm" onClick={() => handleViewTrade(trade)}>
+                        View Details
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-5 w-5" />
+                                <span className="sr-only">More options</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => onEdit(trade)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </CardContent>
+        </Card>
+      )
+    })
+  ) : (
+      <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+          No trades found.
       </div>
-    );
-  };
-
+  );
 
   if (isMobile) {
     return (
         <div className="w-full space-y-4">
-            <Input
-                placeholder="Filter trades..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full"
-            />
-            <div className="space-y-4">
-            {paginatedTrades.length > 0 ? (
-              paginatedTrades.map((trade) => {
-                const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
-                return (
-                    <Card key={trade.id} className="w-full">
-                        <CardHeader className="p-4">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <CardTitle className="text-base">{trade.asset}</CardTitle>
-                                    <CardDescription>{format(trade.date, "PPP")}</CardDescription>
-                                </div>
-                                <ResultBadge result={trade.result} />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                            <div className="font-medium text-muted-foreground">Direction</div>
-                            <div className={cn("font-semibold", trade.direction === 'Buy' ? 'text-success' : 'text-destructive')}>{trade.direction}</div>
-                            
-                            <div className="font-medium text-muted-foreground">PNL ($)</div>
-                            <div>
-                                <StreamerModeText className={cn("font-medium", trade.pnl != null && trade.pnl > 0 ? 'text-success' : trade.pnl != null && trade.pnl < 0 ? 'text-destructive' : '')}>
-                                    {trade.pnl != null ? `${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : 'N/A'}
-                                </StreamerModeText>
-                            </div>
-
-                            <div className="font-medium text-muted-foreground">Return %</div>
-                            <div>
-                                <StreamerModeText className={cn("font-medium", returnPercentage > 0 ? 'text-success' : returnPercentage < 0 ? 'text-destructive' : '')}>
-                                    {trade.accountSize && trade.accountSize > 0 ? `${returnPercentage.toFixed(2)}%` : 'N/A'}
-                                </StreamerModeText>
-                            </div>
-                            
-                            <div className="font-medium text-muted-foreground">RR</div>
-                            <div>{trade.rr?.toFixed(2) ?? 'N/A'}</div>
-                            
-                            <div className="font-medium text-muted-foreground">Strategy</div>
-                            <div className="truncate">{trade.strategy}</div>
-                            
-                            <div className="font-medium text-muted-foreground">Confidence</div>
-                            <div>{trade.confidence} / 10</div>
-
-                            {trade.mistakes && trade.mistakes.length > 0 && (
-                                <>
-                                    <div className="font-medium text-muted-foreground col-span-2 mt-2">Mistakes</div>
-                                    <div className="col-span-2 flex flex-wrap gap-1">
-                                    {trade.mistakes.map(mistake => (
-                                        <Badge key={mistake} variant="outline">{mistake}</Badge>
-                                    ))}
-                                    </div>
-                                </>
-                            )}
-                            
-                            <div className="col-span-2 mt-4 flex justify-between items-center">
-                                <Button variant="secondary" size="sm" onClick={() => handleViewTrade(trade)}>
-                                    View Details
-                                </Button>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <MoreHorizontal className="h-5 w-5" />
-                                            <span className="sr-only">More options</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={() => onEdit(trade)}>
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            <span>Edit</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => setTradeToDelete(trade)} className="text-destructive">
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            <span>Delete</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )
-              })
-            ) : (
-                <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
-                    No trades found.
+            <div className="space-y-4">{tradeListContent}</div>
+            {hasMore && (
+                <div className="flex justify-center">
+                    <Button onClick={onLoadMore} disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Load More
+                    </Button>
                 </div>
             )}
-            </div>
-            <PaginationControls />
             <AlertDialog open={!!tradeToDelete} onOpenChange={(open) => !open && setTradeToDelete(null)}>
                 <AlertDialogContent>
                 <AlertDialogHeader>
@@ -345,47 +212,46 @@ export const TradeTable = memo(function TradeTable({ trades, onEdit, onDelete }:
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction 
-                    onClick={handleConfirmDelete} 
-                    className={cn(buttonVariants({ variant: "destructive" }))}
+                        onClick={handleConfirmDelete} 
+                        className={cn(buttonVariants({ variant: "destructive" }))}
                     >
                         Delete
                     </AlertDialogAction>
                 </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            <TradeDetailsDialog 
+                isOpen={!!viewingTrade}
+                onOpenChange={(open) => !open && setViewingTrade(null)}
+                trade={viewingTrade}
+            />
         </div>
     )
   }
 
   return (
     <div className="w-full space-y-4">
-        <Input
-          placeholder="Filter by asset, strategy, notes, mistakes..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="max-w-sm"
-        />
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead onClick={() => requestSort("date")} className="cursor-pointer">Date {getSortIndicator("date")}</TableHead>
-              <TableHead onClick={() => requestSort("asset")} className="cursor-pointer">Asset {getSortIndicator("asset")}</TableHead>
-              <TableHead onClick={() => requestSort("strategy")} className="cursor-pointer">Strategy {getSortIndicator("strategy")}</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Asset</TableHead>
+              <TableHead>Strategy</TableHead>
               <TableHead>Direction</TableHead>
-              <TableHead onClick={() => requestSort("rr")} className="cursor-pointer text-center">RR {getSortIndicator("rr")}</TableHead>
-              <TableHead onClick={() => requestSort("pnl")} className="cursor-pointer text-right">PNL ($) {getSortIndicator("pnl")}</TableHead>
-              <TableHead onClick={() => requestSort("returnPercentage")} className="cursor-pointer text-right">Return % {getSortIndicator("returnPercentage")}</TableHead>
-              <TableHead onClick={() => requestSort("confidence")} className="cursor-pointer text-center">Confidence {getSortIndicator("confidence")}</TableHead>
-              <TableHead onClick={() => requestSort("result")} className="cursor-pointer">Result {getSortIndicator("result")}</TableHead>
+              <TableHead className="text-center">RR</TableHead>
+              <TableHead className="text-right">PNL ($)</TableHead>
+              <TableHead className="text-right">Return %</TableHead>
+              <TableHead className="text-center">Confidence</TableHead>
+              <TableHead>Result</TableHead>
               <TableHead>Mistakes</TableHead>
               <TableHead className="text-center">Screenshot</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedTrades.length > 0 ? (
-              paginatedTrades.map((trade) => {
+            {trades.length > 0 ? (
+              trades.map((trade) => {
                 const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
                 
                 return (
@@ -478,11 +344,17 @@ export const TradeTable = memo(function TradeTable({ trades, onEdit, onDelete }:
               </TableRow>
             )}
           </TableBody>
-          <TableCaption>Showing the last 100 trades. For performance, not all trades may be loaded.</TableCaption>
         </Table>
       </div>
 
-      <PaginationControls />
+        {hasMore && (
+            <div className="flex justify-center py-4">
+                <Button onClick={onLoadMore} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Load More
+                </Button>
+            </div>
+        )}
 
         <TradeDetailsDialog 
             isOpen={!!viewingTrade}

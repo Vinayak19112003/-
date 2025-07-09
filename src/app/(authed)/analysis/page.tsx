@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import dynamic from 'next/dynamic';
-import { useTrades } from "@/hooks/use-trades";
+import { useTrades } from "@/contexts/trades-context";
 import { useTradingRules } from "@/hooks/use-trading-rules";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
@@ -20,7 +20,7 @@ const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-
 const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 
 export default function AnalysisPage() {
-    const { trades, isLoaded } = useTrades();
+    const { trades, fetchTrades, isLoaded } = useTrades();
     const { tradingRules } = useTradingRules();
 
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -28,26 +28,14 @@ export default function AnalysisPage() {
         to: new Date(),
     });
 
-    const filteredTrades = useMemo(() => {
-        if (!dateRange?.from) return trades;
-        return trades.filter(trade => {
-            const tradeDate = new Date(trade.date);
-            const fromDate = new Date(dateRange.from!);
-            fromDate.setHours(0, 0, 0, 0);
+    useEffect(() => {
+        fetchTrades({ dateRange });
+    }, [dateRange, fetchTrades]);
+    
+    // Filtering is now done server-side, but memoization is still useful for child components.
+    const filteredTrades = useMemo(() => trades, [trades]);
 
-            if (dateRange.to) {
-                const toDate = new Date(dateRange.to);
-                toDate.setHours(23, 59, 59, 999);
-                return tradeDate >= fromDate && tradeDate <= toDate;
-            }
-            return tradeDate >= fromDate;
-        });
-    }, [trades, dateRange]);
-
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
-
-    if (!mounted || !isLoaded) {
+    if (!isLoaded) {
         return (
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">

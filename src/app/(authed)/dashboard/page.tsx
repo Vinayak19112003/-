@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import dynamic from 'next/dynamic';
-import { useTrades } from "@/hooks/use-trades";
+import { useTrades } from "@/contexts/trades-context";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
@@ -15,12 +15,16 @@ const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-cal
 
 
 export default function DashboardPage() {
-  const { trades, isLoaded } = useTrades();
+  const { trades, fetchTrades, isLoaded } = useTrades();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
     to: new Date(),
   });
+
+  useEffect(() => {
+    fetchTrades({ dateRange });
+  }, [dateRange, fetchTrades]);
 
   const handleCalendarDateSelect = (date: Date) => {
     if (dateRange?.from && isSameDay(date, dateRange.from) && dateRange.to && isSameDay(date, dateRange.to)) {
@@ -31,6 +35,7 @@ export default function DashboardPage() {
   };
 
   const filteredTrades = useMemo(() => {
+    // Filtering is now done server-side, but we keep this for components that might need it.
     if (!dateRange?.from) return trades;
     return trades.filter(trade => {
         const tradeDate = new Date(trade.date);
@@ -46,10 +51,7 @@ export default function DashboardPage() {
     });
   }, [trades, dateRange]);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted || !isLoaded) {
+  if (!isLoaded) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
