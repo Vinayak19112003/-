@@ -64,7 +64,7 @@ export function Sidebar() {
                 isActive={isActive(item.href)}
                 tooltip={{ children: item.tooltip, side: 'right' }}
               >
-                <Link href={item.href}>
+                <Link href={item.href} prefetch={false}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
