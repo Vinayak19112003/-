@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useTrades } from "@/contexts/trades-context";
 
 const SummaryBanner = dynamic(() => import('@/components/dashboard/summary-banner').then(mod => mod.SummaryBanner), { ssr: false, loading: () => <Skeleton className="h-28" /> });
 const EquityCurveChart = dynamic(() => import('@/components/dashboard/equity-curve-chart').then(mod => mod.EquityCurveChart), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
@@ -21,6 +22,7 @@ const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-cal
 export default function DashboardPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { refreshKey } = useTrades();
   
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
   const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
@@ -53,7 +55,7 @@ export default function DashboardPage() {
         }
     };
     fetchAllTrades();
-  }, [user, toast]);
+  }, [user, toast, refreshKey]);
   
   // Effect to filter trades based on date range
   useEffect(() => {
@@ -126,4 +128,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

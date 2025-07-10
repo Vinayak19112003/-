@@ -29,7 +29,7 @@ const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-tr
 
 const TradesPageContent = React.memo(function TradesPageContent() {
     const { user } = useAuth();
-    const { deleteTrade, deleteAllTrades, addMultipleTrades } = useTrades();
+    const { deleteTrade, deleteAllTrades, addMultipleTrades, refreshKey } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
     
@@ -94,7 +94,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         if (user) {
             fetchTrades(true);
         }
-    }, [user, fetchTrades]);
+    }, [user, fetchTrades, refreshKey]);
 
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);

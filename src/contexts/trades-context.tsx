@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, type ReactNode, useState } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -26,6 +26,7 @@ interface TradesContextType {
     updateTrade: (trade: Trade) => Promise<boolean>;
     deleteTrade: (id: string) => Promise<boolean>;
     deleteAllTrades: () => Promise<boolean>;
+    refreshKey: number;
 }
 
 const TradesContext = createContext<TradesContextType | undefined>(undefined);
@@ -33,6 +34,9 @@ const TradesContext = createContext<TradesContextType | undefined>(undefined);
 export function TradesProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const { toast } = useToast();
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const triggerRefresh = () => setRefreshKey(prev => prev + 1);
 
     const getTradesCollectionRef = useCallback(() => {
         if (!user || !db) return null;
@@ -48,6 +52,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 ...trade,
                 date: Timestamp.fromDate(trade.date),
             });
+            triggerRefresh();
             return true;
         } catch (error) {
             console.error("Error adding trade:", error);
@@ -69,6 +74,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             });
 
             await batch.commit();
+            triggerRefresh();
 
             return { success: true, addedCount: newTrades.length };
         } catch (error) {
@@ -89,6 +95,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 ...tradeData,
                 date: Timestamp.fromDate(trade.date),
             });
+            triggerRefresh();
             return true;
         } catch (error) {
             console.error("Error updating trade:", error);
@@ -103,6 +110,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
         try {
             await deleteDoc(doc(tradesCollection, id));
+            triggerRefresh();
             return true;
         } catch (error) {
             console.error("Error deleting trade:", error);
@@ -121,6 +129,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             const batch = writeBatch(db);
             querySnapshot.forEach(doc => batch.delete(doc.ref));
             await batch.commit();
+            triggerRefresh();
             return true;
         } catch (error) {
             console.error("Error deleting all trades:", error);
@@ -135,7 +144,8 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         updateTrade,
         deleteTrade,
         deleteAllTrades,
-    }), [addTrade, addMultipleTrades, updateTrade, deleteTrade, deleteAllTrades]);
+        refreshKey
+    }), [addTrade, addMultipleTrades, updateTrade, deleteTrade, deleteAllTrades, refreshKey]);
 
     return <TradesContext.Provider value={value}>{children}</TradesContext.Provider>;
 }
@@ -147,5 +157,3 @@ export const useTrades = (): TradesContextType => {
     }
     return context;
 };
-
-    

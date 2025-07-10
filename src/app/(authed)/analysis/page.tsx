@@ -14,6 +14,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
 import { useTradingRules } from "@/hooks/use-trading-rules";
 import { useToast } from "@/hooks/use-toast";
+import { useTrades } from "@/contexts/trades-context";
 
 const PatternAnalysis = dynamic(() => import('@/components/dashboard/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
 const SharePerformance = dynamic(() => import('@/components/dashboard/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
@@ -31,6 +32,7 @@ export default function AnalysisPage() {
     const { user } = useAuth();
     const { toast } = useToast();
     const { tradingRules } = useTradingRules();
+    const { refreshKey } = useTrades();
     
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +83,7 @@ export default function AnalysisPage() {
         };
 
         fetchTradesForRange();
-    }, [user, dateRange, toast]);
+    }, [user, dateRange, toast, refreshKey]);
 
 
     if (isLoading) {
@@ -162,5 +164,3 @@ export default function AnalysisPage() {
         </div>
     );
 }
-
-    
