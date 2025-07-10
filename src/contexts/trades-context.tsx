@@ -1,15 +1,14 @@
-
 'use client';
 
 import { createContext, useState, useCallback, useContext, useMemo, useEffect, type ReactNode } from 'react';
 import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  collection,
+  query,
+  orderBy,
+  addDoc,
+  updateDoc,
+  deleteDoc,
   doc,
   Timestamp,
   DocumentData,
@@ -49,7 +48,7 @@ const TradesContext = createContext<TradesContextType | undefined>(undefined);
 export function TradesProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const { toast } = useToast();
-    
+
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -90,7 +89,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         }
     }, [user, isLoaded, refetchTrades]);
 
-    const addTrade = async (trade: Omit<Trade, 'id'>) => {
+    const addTrade = useCallback(async (trade: Omit<Trade, 'id'>) => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection) return false;
 
@@ -109,12 +108,12 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error Saving Trade", description: "Could not save the trade." });
             return false;
         }
-    };
+    }, [getTradesCollectionRef, toast]);
 
-    const addMultipleTrades = async (newTrades: Omit<Trade, 'id'>[]) => {
+    const addMultipleTrades = useCallback(async (newTrades: Omit<Trade, 'id'>[]) => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection || newTrades.length === 0) return { success: false, addedCount: 0 };
-    
+
         try {
             const batch = writeBatch(db);
             const tradesToAddLocally: Trade[] = [];
@@ -124,20 +123,20 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 batch.set(docRef, { ...trade, date: Timestamp.fromDate(trade.date) });
                 tradesToAddLocally.push({ ...trade, id: docRef.id });
             });
-    
+
             await batch.commit();
 
             setTrades(prev => [...tradesToAddLocally, ...prev].sort((a, b) => b.date.getTime() - a.date.getTime()));
-            
+
             return { success: true, addedCount: newTrades.length };
         } catch (error) {
             console.error("Error batch adding trades:", error);
             toast({ variant: "destructive", title: "Import Error", description: "Could not save the imported trades." });
             return { success: false, addedCount: 0 };
         }
-    };
-    
-    const updateTrade = async (trade: Trade) => {
+    }, [getTradesCollectionRef, toast]);
+
+    const updateTrade = useCallback(async (trade: Trade) => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection) return false;
 
@@ -156,9 +155,9 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error Updating Trade", description: "Could not update the trade." });
             return false;
         }
-    };
+    }, [getTradesCollectionRef, toast]);
 
-    const deleteTrade = async (id: string) => {
+    const deleteTrade = useCallback(async (id: string) => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection) return false;
 
@@ -171,12 +170,12 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error Deleting Trade", description: "Could not delete the trade." });
             return false;
         }
-    };
+    }, [getTradesCollectionRef, toast]);
 
-    const deleteAllTrades = async () => {
+    const deleteAllTrades = useCallback(async () => {
         const tradesCollection = getTradesCollectionRef();
         if (!tradesCollection) return false;
-        
+
         try {
             const q = query(tradesCollection);
             const querySnapshot = await getDocs(q);
@@ -190,7 +189,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error", description: "Could not clear trade log." });
             return false;
         }
-    };
+    }, [getTradesCollectionRef, toast]);
 
     const value = useMemo(() => ({
         trades,

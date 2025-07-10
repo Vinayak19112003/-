@@ -52,10 +52,13 @@ import { Slider } from "@/components/ui/slider";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Separator } from "../ui/separator";
 import { useTrades } from "@/contexts/trades-context";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
 });
+
+const emotionalStates = ["Focused", "Anxious", "FOMO", "Greedy", "Confident", "Tired", "Neutral", "Other"];
 
 type TradeFormProps = {
   trade?: Trade;
@@ -467,6 +470,117 @@ export function TradeForm({
             />
         </div>
         
+        <Separator />
+        
+        <h3 className="text-lg font-semibold font-headline">Psychological Analysis</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="preTradeEmotion"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Pre-Trade Emotion</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select emotional state" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {emotionalStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="postTradeEmotion"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Post-Trade Emotion</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select emotional state" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {emotionalStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="journal-prompts">
+                <AccordionTrigger>Structured Journal Prompts (Optional)</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="marketContext"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>What was the market context leading up to this trade?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., High-impact news event coming up, consolidating market..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="entryReason"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>What was my primary reason (the "A+ setup") for entry?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., Perfect break and retest of key level..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="tradeFeelings"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>How did I feel when the trade moved against me?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., Confident in my stop, anxious and wanted to close..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="lossAnalysis"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>If this was a losing trade, was the loss a result of a bad process or bad luck?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., Bad process, I didn't follow my rules. Or, good setup that just failed..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+        
+        <Separator />
+
+        <h3 className="text-lg font-semibold font-headline">Execution & Review</h3>
+        
         <FormField
             control={form.control}
             name="confidence"
@@ -491,8 +605,6 @@ export function TradeForm({
             )}
         />
         
-        <Separator />
-
         <FormField
           control={form.control}
           name="rulesFollowed"
@@ -635,10 +747,10 @@ export function TradeForm({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>General Notes</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="What was your thesis? How was your execution?"
+                  placeholder="Any other observations or thoughts about this trade."
                   className="resize-y"
                   {...field}
                 />

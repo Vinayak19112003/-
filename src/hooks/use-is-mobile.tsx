@@ -1,34 +1,38 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useDebounce } from './use-debounce';
+import { useState, useEffect, useMemo } from 'react';
 
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [width, setWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : MOBILE_BREAKPOINT);
-  const debouncedWidth = useDebounce(width, 250);
+  const [isMobile, setIsMobile] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+
+  const mql = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+  }, []);
 
   useEffect(() => {
     setHasMounted(true);
-    
-    const handleResize = () => {
-      setWidth(window.innerWidth);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Call handler right away so state gets updated with initial window size
-    handleResize();
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
-  const isMobile = debouncedWidth < MOBILE_BREAKPOINT;
+    if (!mql) {
+      return;
+    }
+
+    const checkDevice = () => {
+      setIsMobile(mql.matches);
+    };
+
+    checkDevice();
+    mql.addEventListener('change', checkDevice);
+
+    return () => {
+      mql.removeEventListener('change', checkDevice);
+    };
+  }, [mql]);
 
   return hasMounted ? isMobile : false;
 }

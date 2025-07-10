@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const EmotionalStateSchema = z.enum([
+  "Focused", "Anxious", "FOMO", "Greedy", "Confident", "Tired", "Neutral", "Other"
+]).optional();
+
 export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
   date: z.coerce.date(),
@@ -21,6 +25,13 @@ export const TradeSchema = z.object({
   riskPercentage: z.coerce.number().optional().default(0),
   pnl: z.coerce.number().optional().default(0),
   ticket: z.string().optional(),
+  // New psychological fields
+  preTradeEmotion: EmotionalStateSchema,
+  postTradeEmotion: EmotionalStateSchema,
+  marketContext: z.string().optional(),
+  entryReason: z.string().optional(),
+  tradeFeelings: z.string().optional(),
+  lossAnalysis: z.string().optional(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;

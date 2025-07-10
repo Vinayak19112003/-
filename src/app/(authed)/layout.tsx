@@ -1,3 +1,4 @@
+// src/app/(authed)/layout.tsx
 
 'use client';
 
@@ -16,8 +17,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loader2 } from 'lucide-react';
 import { TradesProvider } from '@/contexts/trades-context';
 
-const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), { 
-    ssr: false, 
+const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), {
+    ssr: false,
     loading: () => (
         <div className="flex items-center justify-center h-full min-h-[400px]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -29,7 +30,7 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
-  
+
   const handleOpenForm = (trade?: Trade) => {
     setEditingTrade(trade);
     setIsFormOpen(true);
@@ -39,9 +40,8 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
     setEditingTrade(undefined);
     setIsFormOpen(false);
   };
-  
+
   const handleSaveSuccess = () => {
-    // The context will handle updating the local state, so we just need to close the form.
     handleCloseForm();
   }
 
@@ -73,8 +73,8 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
                   </FormDescriptionComponent>
                   </FormHeaderComponent>
                   <div className={cn("p-4 overflow-y-auto max-h-[80vh]")}>
-                      <TradeForm 
-                        trade={editingTrade} 
+                      <TradeForm
+                        trade={editingTrade}
                         onSaveSuccess={handleSaveSuccess}
                         setOpen={setIsFormOpen}
                       />
@@ -86,7 +86,6 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
     </AuthGuard>
   );
 });
-
 
 export default function AuthedLayout({
   children,
