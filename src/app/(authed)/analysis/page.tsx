@@ -19,7 +19,7 @@ const PatternAnalysis = dynamic(() => import('@/components/dashboard/pattern-ana
 const SharePerformance = dynamic(() => import('@/components/dashboard/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
 const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
 const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
-const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart').then(mod => mod.PerformanceRadarChart), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart'), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
 const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
 const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
