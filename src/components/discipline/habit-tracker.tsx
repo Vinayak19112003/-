@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useHabits } from '@/hooks/use-habits';
 import { useDailyHabitLog } from '@/hooks/use-daily-habit-log';
 import { Button } from '@/components/ui/button';
@@ -11,21 +11,74 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ManageHabitsDialog } from './manage-habits-dialog';
 import { DisciplineCalendar } from './discipline-calendar';
 import { Separator } from '../ui/separator';
+import { useAuth } from '@/hooks/use-auth';
+import { collection, query, where, onSnapshot, Timestamp, startOfMonth, endOfMonth } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { DailyLog } from '@/hooks/use-daily-habit-log';
+import { format } from 'date-fns';
+
+const HABIT_LOGS_COLLECTION = 'habitLogs';
 
 export function HabitTracker() {
+    const { user } = useAuth();
     const { habits, addHabit, deleteHabit, isLoaded: habitsLoaded } = useHabits();
     const { dailyLog, toggleHabit, isLoaded: logLoaded } = useDailyHabitLog();
+    const [monthlyLogs, setMonthlyLogs] = useState<DailyLog[]>([]);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [monthlyLogsLoaded, setMonthlyLogsLoaded] = useState(false);
 
     const completedHabits = dailyLog?.habits || [];
 
+    // Effect to fetch logs for the calendar
+    useEffect(() => {
+        if (!user || !habitsLoaded) return;
+
+        setMonthlyLogsLoaded(false);
+        const firstDay = startOfMonth(currentMonth);
+        const lastDay = endOfMonth(currentMonth);
+
+        const q = query(
+            collection(db, 'users', user.uid, HABIT_LOGS_COLLECTION),
+            where('date', '>=', firstDay),
+            where('date', '<=', lastDay)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const logs = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    date: (data.date as Timestamp).toDate(),
+                    habits: data.habits || [],
+                };
+            });
+            setMonthlyLogs(logs);
+            setMonthlyLogsLoaded(true);
+        }, (error) => {
+            console.error("Error fetching monthly logs: ", error);
+            setMonthlyLogsLoaded(true);
+        });
+
+        return () => unsubscribe();
+    }, [user, currentMonth, habitsLoaded]);
+
     const handleToggle = (habit: string) => {
-        // The toggleHabit function from the hook handles both UI and DB updates.
         toggleHabit(habit);
     };
 
     if (!habitsLoaded) {
         return <Skeleton className="h-48 w-full" />;
     }
+    
+    // Combine today's log with the monthly logs for the calendar
+    // This ensures the calendar updates instantly when a checkbox is toggled
+    const calendarLogs = useMemo(() => {
+        const logsMap = new Map(monthlyLogs.map(log => [format(log.date, 'yyyy-MM-dd'), log]));
+        if (dailyLog) {
+            logsMap.set(format(dailyLog.date, 'yyyy-MM-dd'), dailyLog);
+        }
+        return Array.from(logsMap.values());
+    }, [monthlyLogs, dailyLog]);
 
     return (
         <div className="space-y-8">
@@ -76,7 +129,13 @@ export function HabitTracker() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DisciplineCalendar />
+                    <DisciplineCalendar 
+                        logs={calendarLogs}
+                        definedHabits={habits}
+                        currentMonth={currentMonth}
+                        setCurrentMonth={setCurrentMonth}
+                        isLoaded={monthlyLogsLoaded}
+                    />
                 </CardContent>
             </Card>
         </div>

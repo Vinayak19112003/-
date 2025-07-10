@@ -3,16 +3,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/hooks/use-auth';
-import { useHabits } from '@/hooks/use-habits';
-import {
   format,
   startOfMonth,
   endOfMonth,
@@ -22,20 +12,15 @@ import {
   isSameMonth,
   startOfWeek,
   endOfWeek,
-  isToday,
-  startOfDay,
-  endOfDay
+  isToday
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DailyLog } from '@/hooks/use-daily-habit-log';
 
-type DailyLogData = {
-    date: Date;
-    habits: string[];
-};
 
 type CalendarData = {
     completionRate: number; // 0 to 1
@@ -43,48 +28,21 @@ type CalendarData = {
     total: number;
 };
 
-const HABIT_LOGS_COLLECTION = 'habitLogs';
+interface DisciplineCalendarProps {
+    logs: DailyLog[];
+    definedHabits: string[];
+    currentMonth: Date;
+    setCurrentMonth: (date: Date) => void;
+    isLoaded: boolean;
+}
 
-export function DisciplineCalendar() {
-    const { user } = useAuth();
-    const { habits: definedHabits, isLoaded: habitsLoaded } = useHabits();
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [logs, setLogs] = useState<DailyLogData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (!user || !habitsLoaded) {
-            setIsLoading(!habitsLoaded);
-            return;
-        };
-
-        setIsLoading(true);
-        const firstDayOfMonth = startOfMonth(currentDate);
-        const lastDayOfMonth = endOfMonth(currentDate);
-
-        const q = query(
-            collection(db, 'users', user.uid, HABIT_LOGS_COLLECTION),
-            where('date', '>=', startOfDay(firstDayOfMonth)),
-            where('date', '<=', endOfDay(lastDayOfMonth))
-        );
-
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const fetchedLogs = querySnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    date: (data.date as Timestamp).toDate(),
-                    habits: data.habits || [],
-                };
-            });
-            setLogs(fetchedLogs);
-            setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching habit logs: ", error);
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [user, currentDate, habitsLoaded]);
+export function DisciplineCalendar({ 
+    logs, 
+    definedHabits, 
+    currentMonth, 
+    setCurrentMonth,
+    isLoaded
+}: DisciplineCalendarProps) {
 
     const calendarData = useMemo(() => {
         const dataMap = new Map<string, CalendarData>();
@@ -103,8 +61,8 @@ export function DisciplineCalendar() {
         return dataMap;
     }, [logs, definedHabits]);
     
-    const firstDayOfMonth = startOfMonth(currentDate);
-    const lastDayOfMonth = endOfMonth(currentDate);
+    const firstDayOfMonth = startOfMonth(currentMonth);
+    const lastDayOfMonth = endOfMonth(currentMonth);
     const firstDayOfGrid = startOfWeek(firstDayOfMonth);
     const lastDayOfGrid = endOfWeek(lastDayOfMonth);
     const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
@@ -118,19 +76,19 @@ export function DisciplineCalendar() {
         return 'bg-destructive/40 hover:bg-destructive/50';
     };
 
-    if (isLoading) {
+    if (!isLoaded) {
         return <Skeleton className="w-full h-[400px]" />;
     }
 
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h4 className="font-semibold">{format(currentDate, 'MMMM yyyy')}</h4>
+                <h4 className="font-semibold">{format(currentMonth, 'MMMM yyyy')}</h4>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))} className="h-8 w-8">
+                    <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="h-8 w-8">
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="h-8 w-8">
+                    <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="h-8 w-8">
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
@@ -145,7 +103,7 @@ export function DisciplineCalendar() {
                     {calendarDays.map(day => {
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const data = calendarData.get(dateKey);
-                        const isCurrentMonth = isSameMonth(day, currentDate);
+                        const isCurrentMonth = isSameMonth(day, currentMonth);
                         const bgColor = data ? getCellBgColor(data.completionRate) : 'bg-card hover:bg-muted/50';
                         const Cell = (
                             <div className={cn(

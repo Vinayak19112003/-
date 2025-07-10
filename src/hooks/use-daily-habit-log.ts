@@ -3,15 +3,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove, getDoc, Timestamp, DocumentData } from 'firebase/firestore';
 import { useAuth } from './use-auth';
-import { format } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 import { useToast } from './use-toast';
 
 const HABIT_LOGS_COLLECTION = 'habitLogs';
 
-type DailyLog = {
-    date: Timestamp;
+export type DailyLog = {
+    id: string;
+    date: Date;
     habits: string[];
 };
 
@@ -37,7 +38,12 @@ export function useDailyHabitLog(date: Date = new Date()) {
 
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
-                setDailyLog(docSnap.data() as DailyLog);
+                const data = docSnap.data() as DocumentData;
+                setDailyLog({
+                    id: docSnap.id,
+                    date: (data.date as Timestamp).toDate(),
+                    habits: data.habits || [],
+                });
             } else {
                 setDailyLog(null); // No log for this day yet
             }
@@ -69,7 +75,7 @@ export function useDailyHabitLog(date: Date = new Date()) {
             } else {
                 // If document doesn't exist, create it
                 await setDoc(docRef, {
-                    date: Timestamp.fromDate(date),
+                    date: Timestamp.fromDate(startOfDay(date)),
                     habits: [habit]
                 });
             }
