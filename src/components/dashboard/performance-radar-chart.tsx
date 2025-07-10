@@ -27,68 +27,62 @@ export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trade
       return null;
     }
 
-    // --- Basic Stats ---
-    const wins = trades.filter((t) => t.result === 'Win');
-    const losses = trades.filter((t) => t.result === 'Loss');
-    const winCount = wins.length;
-    const lossCount = losses.length;
-    const winRate = winCount + lossCount > 0 ? (winCount / (winCount + lossCount)) * 100 : 0;
-
-    const grossProfit = wins.reduce((acc, t) => acc + (t.rr || 0), 0);
-    const grossLoss = lossCount; // Each loss is -1R
-    const netProfit = grossProfit - grossLoss;
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
-
-    const avgWin = winCount > 0 ? grossProfit / winCount : 0;
-    const lossRate = 1 - winRate / 100;
-    const expectancy = (winRate / 100) * avgWin - lossRate * 1;
-
-    // --- Cumulative & Drawdown Stats ---
     const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    let winCount = 0;
+    let lossCount = 0;
+    let grossProfitR = 0;
+    let totalAdherenceScore = 0;
+    const totalRules = tradingRules.length;
+
     let cumulativeR = 0;
     let peakR = 0;
     let maxDrawdownR = 0;
-    const dailyNetR: { [date: string]: number } = {};
 
     for (const trade of sortedTrades) {
-      const dateKey = format(new Date(trade.date), 'yyyy-MM-dd');
-      dailyNetR[dateKey] = dailyNetR[dateKey] || 0;
+        let rValue = 0;
+        if (trade.result === 'Win') {
+            winCount++;
+            rValue = trade.rr || 0;
+            grossProfitR += rValue;
+        } else if (trade.result === 'Loss') {
+            lossCount++;
+            rValue = -1;
+        }
 
-      let rValue = 0;
-      if (trade.result === 'Win') rValue = trade.rr || 0;
-      else if (trade.result === 'Loss') rValue = -1;
-
-      cumulativeR += rValue;
-      dailyNetR[dateKey] += rValue;
-
-      if (cumulativeR > peakR) {
-        peakR = cumulativeR;
-      }
-      const drawdown = peakR - cumulativeR;
-      if (drawdown > maxDrawdownR) {
-        maxDrawdownR = drawdown;
-      }
+        if (totalRules > 0 && trade.rulesFollowed) {
+            totalAdherenceScore += (trade.rulesFollowed.length / totalRules) * 100;
+        } else if (totalRules === 0) {
+            totalAdherenceScore += 100;
+        }
+        
+        cumulativeR += rValue;
+        if (cumulativeR > peakR) {
+            peakR = cumulativeR;
+        }
+        const drawdown = peakR - cumulativeR;
+        if (drawdown > maxDrawdownR) {
+            maxDrawdownR = drawdown;
+        }
     }
-    
-    const maxDrawdownPercent = peakR > 0 ? (maxDrawdownR / peakR) * 100 : 0;
-    const recoveryFactor = maxDrawdownR > 0 ? netProfit / maxDrawdownR : netProfit > 0 ? Infinity : 0;
 
-    // --- Discipline/Adherence ---
-    const totalRules = tradingRules.length;
-    const totalAdherenceScore = trades.reduce((acc, t) => {
-        if (!t.rulesFollowed) return acc;
-        const adherence = totalRules > 0 ? (t.rulesFollowed.length / totalRules) * 100 : 100;
-        return acc + adherence;
-    }, 0);
+    const winRate = winCount + lossCount > 0 ? (winCount / (winCount + lossCount)) * 100 : 0;
+    const grossLossR = lossCount;
+    const netProfitR = grossProfitR - grossLossR;
+    const profitFactor = grossLossR > 0 ? grossProfitR / grossLossR : grossProfitR > 0 ? Infinity : 0;
+    
+    const avgWinR = winCount > 0 ? grossProfitR / winCount : 0;
+    const expectancy = (winRate / 100) * avgWinR - ((100 - winRate) / 100) * 1;
+    
+    const recoveryFactor = maxDrawdownR > 0 ? netProfitR / maxDrawdownR : netProfitR > 0 ? Infinity : 0;
+    const maxDrawdownPercent = peakR > 0 ? (maxDrawdownR / peakR) * 100 : 0;
     const discipline = totalTrades > 0 ? totalAdherenceScore / totalTrades : 0;
 
-
-    // --- Normalization for Radar Chart ---
     const normalize = (value: number, max: number) => Math.min(Math.max((value / max) * 100, 0), 100);
     const normalizeInverted = (value: number, max: number) => 100 - normalize(value, max);
 
     return {
-      winRate: { raw: winRate, normalized: winRate }, // Already 0-100
+      winRate: { raw: winRate, normalized: winRate },
       profitFactor: { raw: profitFactor, normalized: normalize(profitFactor, 5) },
       recoveryFactor: { raw: recoveryFactor, normalized: normalize(recoveryFactor, 10) },
       expectancy: { raw: expectancy, normalized: normalize(expectancy, 1) },
