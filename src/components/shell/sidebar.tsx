@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -11,6 +10,7 @@ import { useTheme } from 'next-themes';
 import { useStreamerMode } from '@/contexts/streamer-mode-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import * as React from 'react';
 import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
@@ -26,7 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/use-auth';
 
-export function Sidebar() {
+export const Sidebar = React.memo(function Sidebar() {
   const pathname = usePathname();
   const { openForm } = useTradeForm();
   const router = useRouter();
@@ -146,4 +146,4 @@ export function Sidebar() {
       </SidebarContent>
     </SidebarPrimitive>
   );
-}
+});

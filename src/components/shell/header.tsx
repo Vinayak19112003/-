@@ -2,8 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import * as React from 'react';
 
-export function Header() {
+export const Header = React.memo(function Header() {
     const pathname = usePathname();
     
     return (
@@ -14,4 +15,4 @@ export function Header() {
             </div>
         </header>
     );
-}
+});
