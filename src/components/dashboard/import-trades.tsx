@@ -19,18 +19,21 @@ import { Loader2, Upload, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importTrades } from '@/ai/flows/import-trades-flow';
 import type { Trade } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 type ImportTradesProps = {
   onImport: (addedCount: number, skippedCount: number) => void;
-  existingTrades: Trade[];
   addMultipleTrades: (newTrades: Omit<Trade, 'id'>[]) => Promise<{success: boolean, addedCount: number}>;
 };
 
-export function ImportTrades({ onImport, existingTrades, addMultipleTrades }: ImportTradesProps) {
+export default function ImportTrades({ onImport, addMultipleTrades }: ImportTradesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -39,11 +42,11 @@ export function ImportTrades({ onImport, existingTrades, addMultipleTrades }: Im
   };
 
   const handleImport = async () => {
-    if (!file) {
+    if (!file || !user) {
       toast({
         variant: "destructive",
-        title: "No File Selected",
-        description: "Please select a file to import.",
+        title: "Import Failed",
+        description: "Please select a file and ensure you are logged in.",
       });
       return;
     }
@@ -78,8 +81,19 @@ export function ImportTrades({ onImport, existingTrades, addMultipleTrades }: Im
                 return;
             }
 
-            // Deduplication logic
-            const existingTicketIds = new Set(existingTrades.map(t => t.ticket).filter(Boolean));
+            // Deduplication logic against Firestore
+            const newTicketIds = tradesFromAI.map(t => t.ticket).filter(Boolean);
+            let existingTicketIds = new Set<string>();
+
+            if (newTicketIds.length > 0) {
+                const tradesCollection = collection(db, 'users', user.uid, 'trades');
+                const q = query(tradesCollection, where('ticket', 'in', newTicketIds));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach(doc => {
+                    existingTicketIds.add(doc.data().ticket);
+                });
+            }
+            
             const newTrades = tradesFromAI.filter(trade => !trade.ticket || !existingTicketIds.has(trade.ticket));
             const skippedCount = tradesFromAI.length - newTrades.length;
 
@@ -153,3 +167,5 @@ export function ImportTrades({ onImport, existingTrades, addMultipleTrades }: Im
     </Dialog>
   );
 }
+
+    

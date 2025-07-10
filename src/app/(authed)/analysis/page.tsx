@@ -1,14 +1,13 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
 import { startOfMonth, endOfDay } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SharePerformance } from "@/components/dashboard/share-performance";
 import type { Trade } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
@@ -17,14 +16,15 @@ import { useTradingRules } from "@/hooks/use-trading-rules";
 import { useToast } from "@/hooks/use-toast";
 
 const PatternAnalysis = dynamic(() => import('@/components/dashboard/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
-const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
-const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
-const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart').then(mod => mod.PerformanceRadarChart), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
-const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
+const SharePerformance = dynamic(() => import('@/components/dashboard/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
+const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart').then(mod => mod.PerformanceRadarChart), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
 const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
-const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[300px]" /> });
-const MonthlyPerformance = dynamic(() => import('@/components/dashboard/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[300px]" /> });
-const DurationAnalysis = dynamic(() => import('@/components/dashboard/duration-analysis').then(mod => mod.DurationAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
+const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
+const MonthlyPerformance = dynamic(() => import('@/components/dashboard/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
+const DurationAnalysis = dynamic(() => import('@/components/dashboard/duration-analysis').then(mod => mod.DurationAnalysis), { ssr: false, loading: () => <Skeleton className="h-[340px]" /> });
 
 
 export default function AnalysisPage() {
@@ -42,17 +42,8 @@ export default function AnalysisPage() {
 
     useEffect(() => {
         const fetchTradesForRange = async () => {
-            if (!user || !dateRange?.from || !dateRange?.to) {
-                if (user && !dateRange) { // "All time" selected
-                    // Fetch all trades, but consider adding a limit for performance
-                    const tradesCollection = collection(db, 'users', user.uid, 'trades');
-                    const q = query(tradesCollection, orderBy('date', 'desc'));
-                    const querySnapshot = await getDocs(q);
-                    const fetchedTrades = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: doc.data().date.toDate()})) as Trade[];
-                    setTrades(fetchedTrades);
-                } else {
-                    setTrades([]);
-                }
+            if (!user) {
+                setTrades([]);
                 setIsLoading(false);
                 return;
             }
@@ -60,13 +51,19 @@ export default function AnalysisPage() {
             setIsLoading(true);
             try {
                 const tradesCollection = collection(db, 'users', user.uid, 'trades');
-                const q = query(
-                    tradesCollection, 
-                    where('date', '>=', Timestamp.fromDate(dateRange.from)),
-                    where('date', '<=', Timestamp.fromDate(endOfDay(dateRange.to))),
-                    orderBy('date', 'desc')
-                );
-
+                
+                let q;
+                if (dateRange?.from && dateRange?.to) {
+                     q = query(
+                        tradesCollection, 
+                        where('date', '>=', Timestamp.fromDate(dateRange.from)),
+                        where('date', '<=', Timestamp.fromDate(endOfDay(dateRange.to))),
+                        orderBy('date', 'desc')
+                    );
+                } else { // "All time" selected
+                    q = query(tradesCollection, orderBy('date', 'desc'));
+                }
+                
                 const querySnapshot = await getDocs(q);
                 const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() })) as Trade[];
                 setTrades(fetchedTrades);
@@ -102,15 +99,15 @@ export default function AnalysisPage() {
                 </div>
                 <Skeleton className="h-[420px]" />
                 <div className="space-y-4 md:space-y-8">
-                    <Skeleton className="h-[300px]" />
-                    <Skeleton className="h-[300px]" />
+                    <Skeleton className="h-[400px]" />
+                    <Skeleton className="h-[400px]" />
                 </div>
             </div>
         );
     }
     
     return (
-        <>
+        <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <h1 className="text-2xl font-bold tracking-tight font-headline">Analysis</h1>
                 <div className="flex items-center gap-2">
@@ -120,7 +117,7 @@ export default function AnalysisPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <Card>
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
@@ -160,10 +157,10 @@ export default function AnalysisPage() {
             </div>
             <TimeAnalysis trades={trades} />
             <DurationAnalysis trades={trades} />
-            <div className="space-y-4 md:space-y-8 mt-4 md:mt-8">
-              <DailyPerformance trades={trades} />
-              <MonthlyPerformance trades={trades} />
-            </div>
-        </>
+            <DailyPerformance trades={trades} />
+            <MonthlyPerformance trades={trades} />
+        </div>
     );
 }
+
+    

@@ -1,35 +1,24 @@
 
 'use client';
 
-import { createContext, useState, useCallback, useContext, useMemo, useEffect, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
-  query,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
   Timestamp,
-  DocumentData,
   writeBatch,
   getDocs,
+  query,
 } from "firebase/firestore";
-import { Trade, TradeSchema } from '@/lib/types';
+import { Trade } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
 const TRADES_COLLECTION = 'trades';
-
-const convertDocToTrade = (doc: DocumentData): Trade => {
-  const data = doc.data();
-  const trade: Trade = {
-    ...data,
-    id: doc.id,
-    date: (data.date as Timestamp).toDate(),
-  };
-  return TradeSchema.parse(trade);
-};
 
 interface TradesContextType {
     addTrade: (trade: Omit<Trade, 'id'>) => Promise<boolean>;
@@ -158,3 +147,5 @@ export const useTrades = (): TradesContextType => {
     }
     return context;
 };
+
+    

@@ -1,11 +1,10 @@
 
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import type { Trade } from '@/lib/types';
 import { Sidebar } from '@/components/shell/sidebar';
-import { Header } from '@/components/shell/header';
 import AuthGuard from '@/components/auth/auth-guard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -15,6 +14,7 @@ import { TradeFormProvider } from '@/contexts/trade-form-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loader2 } from 'lucide-react';
 import { TradesProvider } from '@/contexts/trades-context';
+import { Header } from '@/components/shell/header';
 
 const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), {
     ssr: false,
@@ -49,10 +49,12 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
   const FormHeaderComponent = isMobile ? SheetHeader : DialogHeader;
   const FormTitleComponent = isMobile ? SheetTitle : DialogTitle;
   const FormDescriptionComponent = isMobile ? SheetDescription : DialogDescription;
+  
+  const tradeFormValue = useMemo(() => ({ openForm: handleOpenForm }), []);
 
   return (
     <AuthGuard>
-      <TradeFormProvider value={{ openForm: handleOpenForm }}>
+      <TradeFormProvider value={tradeFormValue}>
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-muted/40">
             <Sidebar />
@@ -97,3 +99,5 @@ export default function AuthedLayout({
     </TradesProvider>
   )
 }
+
+    

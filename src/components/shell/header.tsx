@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -16,3 +17,5 @@ export const Header = React.memo(function Header() {
         </header>
     );
 });
+
+    

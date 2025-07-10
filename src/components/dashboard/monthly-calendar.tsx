@@ -37,7 +37,7 @@ type DailyData = {
     losses: number;
 };
 
-export const MonthlyCalendar = memo(function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
+export default memo(function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
@@ -259,4 +259,5 @@ export const MonthlyCalendar = memo(function MonthlyCalendar({ trades, onDateSel
     </Card>
   );
 });
+
     

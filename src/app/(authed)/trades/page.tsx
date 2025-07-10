@@ -16,7 +16,6 @@ import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData } 
 import { Loader2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 
-
 const TRADES_PER_PAGE = 20;
 
 const TradeTable = dynamic(() => import('@/components/dashboard/trade-table').then(mod => mod.TradeTable), {
@@ -30,11 +29,7 @@ const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-tr
 
 const TradesPageContent = React.memo(function TradesPageContent() {
     const { user } = useAuth();
-    const { 
-        deleteTrade, 
-        deleteAllTrades,
-        addMultipleTrades,
-    } = useTrades();
+    const { deleteTrade, deleteAllTrades, addMultipleTrades } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
     
@@ -44,26 +39,31 @@ const TradesPageContent = React.memo(function TradesPageContent() {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    const fetchTrades = async (initial = false) => {
+    const fetchTrades = React.useCallback(async (initial = false) => {
         if (!user) {
-            setIsLoading(false);
+            if (initial) setIsLoading(false);
             return;
-        };
+        }
 
         if (initial) {
-             setIsLoading(true);
+            setIsLoading(true);
+            setLocalTrades([]);
+            setLastVisible(null);
+            setHasMore(true);
         } else {
-            if (!hasMore) return;
+            if (!hasMore || isLoadingMore) return;
             setIsLoadingMore(true);
         }
 
         try {
             const tradesCollection = collection(db, 'users', user.uid, 'trades');
             let q;
-            if (initial || !lastVisible) {
+            const currentLastVisible = initial ? null : lastVisible;
+
+            if (!currentLastVisible) {
                 q = query(tradesCollection, orderBy('date', 'desc'), limit(TRADES_PER_PAGE));
             } else {
-                q = query(tradesCollection, orderBy('date', 'desc'), startAfter(lastVisible), limit(TRADES_PER_PAGE));
+                q = query(tradesCollection, orderBy('date', 'desc'), startAfter(currentLastVisible), limit(TRADES_PER_PAGE));
             }
 
             const documentSnapshots = await getDocs(q);
@@ -88,24 +88,19 @@ const TradesPageContent = React.memo(function TradesPageContent() {
             if (initial) setIsLoading(false);
             setIsLoadingMore(false);
         }
-    };
+    }, [user, hasMore, isLoadingMore, lastVisible, toast]);
 
     useEffect(() => {
         if (user) {
             fetchTrades(true);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
-
+    }, [user, fetchTrades]);
 
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);
         if (success) {
             setLocalTrades(prev => prev.filter(t => t.id !== id));
-            toast({
-                title: "Trade Deleted",
-                description: "The trade has been removed from your log.",
-            });
+            toast({ title: "Trade Deleted", description: "The trade has been removed from your log." });
         }
     };
     
@@ -115,10 +110,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
             setLocalTrades([]);
             setLastVisible(null);
             setHasMore(false);
-            toast({
-                title: "All Trades Deleted",
-                description: "Your trade log has been cleared.",
-            });
+            toast({ title: "All Trades Deleted", description: "Your trade log has been cleared." });
         }
     }
 
@@ -152,7 +144,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
                     <CardDescription>Your complete history of trades.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                   <ImportTrades onImport={handleImport} existingTrades={localTrades} addMultipleTrades={addMultipleTrades} />
+                   <ImportTrades onImport={handleImport} addMultipleTrades={addMultipleTrades} />
                    <ExportTrades trades={localTrades}/>
                    <ClearAllTrades onClear={handleClearAll} disabled={localTrades.length === 0} />
                 </div>
@@ -178,3 +170,5 @@ const TradesPageContent = React.memo(function TradesPageContent() {
 export default function TradesPage() {
     return <TradesPageContent />;
 }
+
+    

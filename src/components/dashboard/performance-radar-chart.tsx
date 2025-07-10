@@ -5,7 +5,6 @@ import { useMemo, useState, useEffect, memo } from 'react';
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { Trade } from '@/lib/types';
 import { useTheme } from 'next-themes';
-import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type PerformanceRadarChartProps = {
@@ -13,7 +12,7 @@ type PerformanceRadarChartProps = {
   tradingRules: string[];
 };
 
-export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
+export default memo(function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -92,12 +91,12 @@ export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trade
   }, [trades, tradingRules]);
 
   if (!mounted) {
-    return <Skeleton className="h-[180px] w-full" />;
+    return <Skeleton className="h-[300px] w-full" />;
   }
   
   if (!metrics) {
     return (
-        <div className="h-[180px] flex items-center justify-center text-center text-muted-foreground">
+        <div className="h-[300px] flex items-center justify-center text-center text-muted-foreground">
             Not enough trade data to generate performance metrics.
         </div>
     )
@@ -119,36 +118,36 @@ export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trade
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   return (
-      <div className="h-[180px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-            <defs>
-                <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
-                    <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
-                </radialGradient>
-            </defs>
-            <PolarGrid stroke={gridColor}/>
-            <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
-            <Tooltip
-              contentStyle={{
-                  background: 'hsl(var(--background))',
-                  borderColor: 'hsl(var(--border))',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
-              }}
-              formatter={(value, name, props) => [props.payload.raw, name]}
-            />
-            <Radar 
-                name="Metrics" 
-                dataKey="value" 
-                stroke={strokeColor} 
-                strokeWidth={2}
-                fill="url(#radar-gradient)"
-                dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+          <defs>
+              <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
+                  <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
+              </radialGradient>
+          </defs>
+          <PolarGrid stroke={gridColor}/>
+          <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
+          <Tooltip
+            contentStyle={{
+                background: 'hsl(var(--background))',
+                borderColor: 'hsl(var(--border))',
+                borderRadius: 'var(--radius)',
+                boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
+            }}
+            formatter={(value, name, props) => [props.payload.raw, name]}
+          />
+          <Radar 
+              name="Metrics" 
+              dataKey="value" 
+              stroke={strokeColor} 
+              strokeWidth={2}
+              fill="url(#radar-gradient)"
+              dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
   );
 });
+
+    
