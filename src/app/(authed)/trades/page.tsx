@@ -1,26 +1,32 @@
 
 'use client';
 
+import * as React from 'react';
 import { useMemo, useState } from 'react';
 import { useTrades } from "@/contexts/trades-context";
-import { TradeTable } from "@/components/dashboard/trade-table";
 import { useToast } from "@/hooks/use-toast";
 import { useTradeForm } from "@/contexts/trade-form-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ImportTrades } from "@/components/dashboard/import-trades";
-import { ExportTrades } from "@/components/dashboard/export-trades";
-import { ClearAllTrades } from "@/components/dashboard/clear-all-trades";
 import { Skeleton } from '@/components/ui/skeleton';
+import dynamic from 'next/dynamic';
 
 const TRADES_PER_PAGE = 20;
 
-export default function TradesPage() {
+const TradeTable = dynamic(() => import('@/components/dashboard/trade-table').then(mod => mod.TradeTable), {
+    ssr: false,
+    loading: () => <Skeleton className="h-96 w-full" />
+});
+
+const ImportTrades = dynamic(() => import('@/components/dashboard/import-trades').then(mod => mod.ImportTrades), { ssr: false });
+const ExportTrades = dynamic(() => import('@/components/dashboard/export-trades').then(mod => mod.ExportTrades), { ssr: false });
+const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
+
+const TradesPageContent = React.memo(function TradesPageContent() {
     const { 
         trades, 
         deleteTrade, 
         deleteAllTrades,
-        refetchTrades,
         isLoaded
     } = useTrades();
     const { toast } = useToast();
@@ -58,7 +64,6 @@ export default function TradesPage() {
     }
 
     const handleImport = async (addedCount: number, skippedCount: number) => {
-       // The context handles adding the trades to the local state, so no refetch is needed.
        toast({
             title: "Import Complete",
             description: `${addedCount} trades were imported. ${skippedCount} duplicates were skipped.`,
@@ -122,4 +127,9 @@ export default function TradesPage() {
             </CardContent>
         </Card>
     );
+});
+
+
+export default function TradesPage() {
+    return <TradesPageContent />;
 }

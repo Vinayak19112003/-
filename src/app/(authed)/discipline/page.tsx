@@ -1,11 +1,17 @@
 
 'use client';
 
-import { HabitTracker } from "@/components/discipline/habit-tracker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import dynamic from 'next/dynamic';
+import { Skeleton } from "@/components/ui/skeleton";
+import * as React from 'react';
 
+const HabitTracker = dynamic(() => import('@/components/discipline/habit-tracker').then(mod => mod.HabitTracker), {
+    ssr: false,
+    loading: () => <Skeleton className="h-48 w-full" />,
+});
 
-export default function DisciplinePage() {
+const DisciplinePageContent = React.memo(function DisciplinePageContent() {
     return (
         <div className="space-y-6">
             <div className="space-y-1">
@@ -27,4 +33,8 @@ export default function DisciplinePage() {
             </Card>
         </div>
     )
+});
+
+export default function DisciplinePage() {
+    return <DisciplinePageContent />;
 }
