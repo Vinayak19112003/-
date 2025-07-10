@@ -12,10 +12,10 @@ import { ManageHabitsDialog } from './manage-habits-dialog';
 import { DisciplineCalendar } from './discipline-calendar';
 import { Separator } from '../ui/separator';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, query, where, onSnapshot, Timestamp, startOfMonth, endOfMonth } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { DailyLog } from '@/hooks/use-daily-habit-log';
-import { format } from 'date-fns';
+import type { DailyLog } from '@/hooks/use-daily-habit-log';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const HABIT_LOGS_COLLECTION = 'habitLogs';
 
@@ -26,6 +26,16 @@ export function HabitTracker() {
     const [monthlyLogs, setMonthlyLogs] = useState<DailyLog[]>([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [monthlyLogsLoaded, setMonthlyLogsLoaded] = useState(false);
+
+    // Combine today's log with the monthly logs for the calendar
+    // This ensures the calendar updates instantly when a checkbox is toggled
+    const calendarLogs = useMemo(() => {
+        const logsMap = new Map(monthlyLogs.map(log => [format(log.date, 'yyyy-MM-dd'), log]));
+        if (dailyLog) {
+            logsMap.set(format(dailyLog.date, 'yyyy-MM-dd'), dailyLog);
+        }
+        return Array.from(logsMap.values());
+    }, [monthlyLogs, dailyLog]);
 
     // Effect to fetch logs for the calendar
     useEffect(() => {
@@ -63,16 +73,6 @@ export function HabitTracker() {
     const handleToggle = (habit: string) => {
         toggleHabit(habit);
     };
-
-    // Combine today's log with the monthly logs for the calendar
-    // This ensures the calendar updates instantly when a checkbox is toggled
-    const calendarLogs = useMemo(() => {
-        const logsMap = new Map(monthlyLogs.map(log => [format(log.date, 'yyyy-MM-dd'), log]));
-        if (dailyLog) {
-            logsMap.set(format(dailyLog.date, 'yyyy-MM-dd'), dailyLog);
-        }
-        return Array.from(logsMap.values());
-    }, [monthlyLogs, dailyLog]);
     
     if (!habitsLoaded) {
         return <Skeleton className="h-48 w-full" />;
