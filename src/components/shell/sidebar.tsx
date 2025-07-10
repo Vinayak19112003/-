@@ -34,7 +34,7 @@ export const Sidebar = React.memo(function Sidebar() {
   const { setTheme } = useTheme();
   const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
   const { user } = useAuth();
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -50,6 +50,14 @@ export const Sidebar = React.memo(function Sidebar() {
 
   const isActive = (href: string) => pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard');
 
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
+  
+  const handleAddTradeClick = () => {
+    openForm();
+    setOpenMobile(false);
+  }
 
   return (
     <SidebarPrimitive collapsible="icon">
@@ -65,6 +73,7 @@ export const Sidebar = React.memo(function Sidebar() {
                     asChild
                     isActive={isActive(item.href)}
                     tooltip={{ children: item.tooltip, side: 'right' }}
+                    onClick={handleLinkClick}
                 >
                     <Link href={item.href} prefetch={false}>
                         <item.icon />
@@ -75,7 +84,7 @@ export const Sidebar = React.memo(function Sidebar() {
           ))}
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => openForm()}
+              onClick={handleAddTradeClick}
               tooltip={{ children: 'Add New Trade', side: 'right' }}
             >
               <PlusCircle />
