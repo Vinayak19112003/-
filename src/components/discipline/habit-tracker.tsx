@@ -27,8 +27,6 @@ export function HabitTracker() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [monthlyLogsLoaded, setMonthlyLogsLoaded] = useState(false);
 
-    const completedHabits = dailyLog?.habits || [];
-
     // Effect to fetch logs for the calendar
     useEffect(() => {
         if (!user || !habitsLoaded) return;
@@ -66,10 +64,6 @@ export function HabitTracker() {
         toggleHabit(habit);
     };
 
-    if (!habitsLoaded) {
-        return <Skeleton className="h-48 w-full" />;
-    }
-    
     // Combine today's log with the monthly logs for the calendar
     // This ensures the calendar updates instantly when a checkbox is toggled
     const calendarLogs = useMemo(() => {
@@ -79,6 +73,12 @@ export function HabitTracker() {
         }
         return Array.from(logsMap.values());
     }, [monthlyLogs, dailyLog]);
+    
+    if (!habitsLoaded) {
+        return <Skeleton className="h-48 w-full" />;
+    }
+    
+    const completedHabits = dailyLog?.habits || [];
 
     return (
         <div className="space-y-8">
