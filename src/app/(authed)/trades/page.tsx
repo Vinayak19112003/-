@@ -94,7 +94,8 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         if (user) {
             fetchTrades(true);
         }
-    }, [user, fetchTrades, refreshKey]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, refreshKey]);
 
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);
