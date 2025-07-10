@@ -20,7 +20,7 @@ import {
   isToday
 } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StreamerModeText } from '@/components/streamer-mode-text';
 
