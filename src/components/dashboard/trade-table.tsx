@@ -40,7 +40,7 @@ import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { MoreHorizontal, ImageIcon, Trash2, Edit, Eye, Loader2 } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StreamerModeText } from "@/components/streamer-mode-text";
@@ -350,3 +350,4 @@ export const TradeTable = memo(function TradeTable({
     </div>
   );
 });
+
