@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useCallback, useContext, useMemo, useEffect, type ReactNode } from 'react';
@@ -120,8 +121,10 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
             newTrades.forEach(trade => {
                 const docRef = doc(tradesCollection);
-                batch.set(docRef, { ...trade, date: Timestamp.fromDate(trade.date) });
-                tradesToAddLocally.push({ ...trade, id: docRef.id });
+                // Ensure date is a Date object before converting to Timestamp
+                const tradeWithDateObject = { ...trade, date: new Date(trade.date) };
+                batch.set(docRef, { ...tradeWithDateObject, date: Timestamp.fromDate(tradeWithDateObject.date) });
+                tradesToAddLocally.push({ ...tradeWithDateObject, id: docRef.id });
             });
 
             await batch.commit();
