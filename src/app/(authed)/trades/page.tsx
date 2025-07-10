@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTrades } from "@/contexts/trades-context";
 import { useToast } from "@/hooks/use-toast";
 import { useTradeForm } from "@/contexts/trade-form-context";
@@ -10,6 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
+import type { Trade } from '@/lib/types';
+
 
 const TRADES_PER_PAGE = 20;
 
@@ -23,29 +29,79 @@ const ExportTrades = dynamic(() => import('@/components/dashboard/export-trades'
 const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
 
 const TradesPageContent = React.memo(function TradesPageContent() {
+    const { user } = useAuth();
     const { 
-        trades, 
         deleteTrade, 
         deleteAllTrades,
-        isLoaded
+        addMultipleTrades,
     } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
-    const [currentPage, setCurrentPage] = useState(1);
+    
+    const [localTrades, setLocalTrades] = useState<Trade[]>([]);
+    const [lastVisible, setLastVisible] = useState<DocumentData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
 
-    const paginatedTrades = useMemo(() => {
-        const startIndex = (currentPage - 1) * TRADES_PER_PAGE;
-        const endIndex = startIndex + TRADES_PER_PAGE;
-        return trades.slice(startIndex, endIndex);
-    }, [trades, currentPage]);
+    const fetchTrades = async (initial = false) => {
+        if (!user) {
+            setIsLoading(false);
+            return;
+        };
 
-    const totalPages = useMemo(() => {
-        return Math.ceil(trades.length / TRADES_PER_PAGE);
-    }, [trades]);
+        if (initial) {
+             setIsLoading(true);
+        } else {
+            if (!hasMore) return;
+            setIsLoadingMore(true);
+        }
+
+        try {
+            const tradesCollection = collection(db, 'users', user.uid, 'trades');
+            let q;
+            if (initial || !lastVisible) {
+                q = query(tradesCollection, orderBy('date', 'desc'), limit(TRADES_PER_PAGE));
+            } else {
+                q = query(tradesCollection, orderBy('date', 'desc'), startAfter(lastVisible), limit(TRADES_PER_PAGE));
+            }
+
+            const documentSnapshots = await getDocs(q);
+
+            const newTrades = documentSnapshots.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                date: doc.data().date.toDate()
+            })) as Trade[];
+
+            setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
+            setLocalTrades(prev => initial ? newTrades : [...prev, ...newTrades]);
+            
+            if (documentSnapshots.docs.length < TRADES_PER_PAGE) {
+                setHasMore(false);
+            }
+
+        } catch (error) {
+            console.error("Error fetching trades:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch trades.' });
+        } finally {
+            if (initial) setIsLoading(false);
+            setIsLoadingMore(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchTrades(true);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
 
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);
         if (success) {
+            setLocalTrades(prev => prev.filter(t => t.id !== id));
             toast({
                 title: "Trade Deleted",
                 description: "The trade has been removed from your log.",
@@ -56,6 +112,9 @@ const TradesPageContent = React.memo(function TradesPageContent() {
     const handleClearAll = async () => {
         const success = await deleteAllTrades();
         if (success) {
+            setLocalTrades([]);
+            setLastVisible(null);
+            setHasMore(false);
             toast({
                 title: "All Trades Deleted",
                 description: "Your trade log has been cleared.",
@@ -68,9 +127,10 @@ const TradesPageContent = React.memo(function TradesPageContent() {
             title: "Import Complete",
             description: `${addedCount} trades were imported. ${skippedCount} duplicates were skipped.`,
         });
+        fetchTrades(true); // Refetch to show new trades
     }
 
-    if (!isLoaded) {
+    if (isLoading) {
         return (
             <Card>
                 <CardHeader>
@@ -92,36 +152,21 @@ const TradesPageContent = React.memo(function TradesPageContent() {
                     <CardDescription>Your complete history of trades.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                   <ImportTrades onImport={handleImport} />
-                   <ExportTrades trades={trades}/>
-                   <ClearAllTrades onClear={handleClearAll} disabled={trades.length === 0} />
+                   <ImportTrades onImport={handleImport} existingTrades={localTrades} addMultipleTrades={addMultipleTrades} />
+                   <ExportTrades trades={localTrades}/>
+                   <ClearAllTrades onClear={handleClearAll} disabled={localTrades.length === 0} />
                 </div>
             </CardHeader>
             <CardContent>
                <TradeTable 
-                    trades={paginatedTrades} 
+                    trades={localTrades} 
                     onEdit={openForm} 
                     onDelete={handleDeleteTrade}
                 />
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-center space-x-4 pt-4">
-                        <Button
-                            variant="outline"
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                        >
-                            Previous
-                        </Button>
-                        <span className="text-sm font-medium">
-                            Page {currentPage} of {totalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                        >
-                            Next
-                        </Button>
+                 {isLoadingMore && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+                {hasMore && !isLoadingMore && (
+                    <div className="flex justify-center pt-4">
+                        <Button onClick={() => fetchTrades(false)}>Load More</Button>
                     </div>
                 )}
             </CardContent>

@@ -1,38 +1,79 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import dynamic from 'next/dynamic';
-import { useTrades } from "@/contexts/trades-context";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
-import { startOfMonth, isWithinInterval, isSameDay } from "date-fns";
+import { startOfMonth, endOfDay, isSameDay } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { SummaryBanner } from "@/components/dashboard/summary-banner";
+import type { Trade } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const EquityCurveChart = dynamic(() => import('@/components/dashboard/equity-curve-chart').then(mod => mod.EquityCurveChart), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-calendar').then(mod => mod.MonthlyCalendar), { ssr: false, loading: () => <Skeleton className="h-[600px]" /> });
 
 
 export default function DashboardPage() {
-  const { trades, isLoaded } = useTrades();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [allTrades, setAllTrades] = useState<Trade[]>([]);
+  const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
     to: new Date(),
   });
+
+  // Effect to fetch ALL trades for components that need it (SummaryBanner, MonthlyCalendar)
+  useEffect(() => {
+    const fetchAllTrades = async () => {
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const tradesCollection = collection(db, 'users', user.uid, 'trades');
+            const q = query(tradesCollection, orderBy('date', 'desc'));
+            const querySnapshot = await getDocs(q);
+            const fetchedTrades = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: doc.data().date.toDate()})) as Trade[];
+            setAllTrades(fetchedTrades);
+        } catch (error) {
+            console.error("Error fetching all trades for dashboard:", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch summary trade data." });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchAllTrades();
+  }, [user, toast]);
   
-  const filteredTrades = useMemo(() => {
-    if (!dateRange?.from || !dateRange?.to) {
-        return trades;
+  // Effect to fetch trades for the filtered date range
+  useEffect(() => {
+    const fetchFilteredTrades = () => {
+        if (!dateRange?.from || !dateRange?.to) {
+            setFilteredTrades(allTrades); // "All time"
+            return;
+        }
+        const toDate = endOfDay(dateRange.to);
+        const filtered = allTrades.filter(trade => 
+            new Date(trade.date) >= dateRange.from! && new Date(trade.date) <= toDate
+        );
+        setFilteredTrades(filtered);
+    };
+
+    if (!isLoading) {
+        fetchFilteredTrades();
     }
-    const toDate = new Date(dateRange.to);
-    toDate.setHours(23, 59, 59, 999);
-    return trades.filter(trade => 
-      isWithinInterval(new Date(trade.date), { start: dateRange.from!, end: toDate })
-    );
-  }, [trades, dateRange]);
+  }, [dateRange, allTrades, isLoading]);
 
 
   const handleCalendarDateSelect = (date: Date) => {
@@ -45,7 +86,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!isLoaded) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -74,12 +115,12 @@ export default function DashboardPage() {
           <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
       </div>
       
-      <SummaryBanner trades={trades} />
+      <SummaryBanner trades={allTrades} />
 
       <StatsCards trades={filteredTrades} />
       
       <div className="grid grid-cols-1 gap-4 md:gap-8">
-          <MonthlyCalendar trades={trades} onDateSelect={handleCalendarDateSelect} />
+          <MonthlyCalendar trades={allTrades} onDateSelect={handleCalendarDateSelect} />
           <EquityCurveChart trades={filteredTrades} />
       </div>
     </>

@@ -18,18 +18,19 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Upload, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { importTrades } from '@/ai/flows/import-trades-flow';
-import { useTrades } from '@/contexts/trades-context';
+import type { Trade } from '@/lib/types';
 
 type ImportTradesProps = {
   onImport: (addedCount: number, skippedCount: number) => void;
+  existingTrades: Trade[];
+  addMultipleTrades: (newTrades: Omit<Trade, 'id'>[]) => Promise<{success: boolean, addedCount: number}>;
 };
 
-export function ImportTrades({ onImport }: ImportTradesProps) {
+export function ImportTrades({ onImport, existingTrades, addMultipleTrades }: ImportTradesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
-  const { trades: existingTrades, addMultipleTrades } = useTrades();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
