@@ -1,4 +1,3 @@
-// src/app/(authed)/layout.tsx
 
 'use client';
 
@@ -8,7 +7,7 @@ import type { Trade } from '@/lib/types';
 import { Sidebar } from '@/components/shell/sidebar';
 import { Header } from '@/components/shell/header';
 import AuthGuard from '@/components/auth/auth-guard';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
