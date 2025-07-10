@@ -64,7 +64,7 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
               </main>
             </div>
           </div>
-          <FormComponent open={isFormОpen} onOpenChange={setIsFormOpen}>
+          <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
               <FormContentComponent className={cn(isMobile ? "w-full" : "max-w-4xl")}>
                   <FormHeaderComponent>
                   <FormTitleComponent>{editingTrade ? "Edit Trade" : "Add New Trade"}</FormTitleComponent>
