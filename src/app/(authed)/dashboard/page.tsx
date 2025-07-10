@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
 import { startOfMonth, isWithinInterval, isSameDay } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
+import { SummaryBanner } from "@/components/dashboard/summary-banner";
 
 const EquityCurveChart = dynamic(() => import('@/components/dashboard/equity-curve-chart').then(mod => mod.EquityCurveChart), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-calendar').then(mod => mod.MonthlyCalendar), { ssr: false, loading: () => <Skeleton className="h-[600px]" /> });
@@ -51,6 +52,7 @@ export default function DashboardPage() {
             <Skeleton className="h-8 w-36" />
             <Skeleton className="h-10 w-full sm:w-[470px]" />
         </div>
+        <Skeleton className="h-24 w-full" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Skeleton className="h-28" />
             <Skeleton className="h-28" />
@@ -72,6 +74,8 @@ export default function DashboardPage() {
           <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
       </div>
       
+      <SummaryBanner trades={trades} />
+
       <StatsCards trades={filteredTrades} />
       
       <div className="grid grid-cols-1 gap-4 md:gap-8">
