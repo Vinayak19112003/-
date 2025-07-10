@@ -34,7 +34,7 @@ export const Sidebar = React.memo(function Sidebar() {
   const { setTheme } = useTheme();
   const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
   const { user } = useAuth();
-  const { state, setOpenMobile } = useSidebar();
+  const { setOpenMobile } = useSidebar();
 
   const handleLogout = async () => {
     await signOut(auth);
