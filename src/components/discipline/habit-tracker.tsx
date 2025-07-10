@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHabits } from '@/hooks/use-habits';
 import { useDailyHabitLog } from '@/hooks/use-daily-habit-log';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ export function HabitTracker() {
     const [checkedState, setCheckedState] = useState<{ [key: string]: boolean }>({});
 
     // This effect ensures our local state for checkboxes is in sync with the fetched data
-    useState(() => {
+    useEffect(() => {
         if (logLoaded && dailyLog) {
             const completedHabitsForToday = dailyLog.habits || [];
             const newCheckedState: { [key: string]: boolean } = {};
@@ -27,14 +27,23 @@ export function HabitTracker() {
                 newCheckedState[habit] = completedHabitsForToday.includes(habit);
             });
             setCheckedState(newCheckedState);
+        } else if (logLoaded && !dailyLog) {
+            // If no log exists for today, all habits are unchecked.
+            const newCheckedState: { [key: string]: boolean } = {};
+            habits.forEach(habit => {
+                newCheckedState[habit] = false;
+            });
+            setCheckedState(newCheckedState);
         }
-    });
+    }, [logLoaded, dailyLog, habits]);
 
     const handleToggle = (habit: string) => {
+        // Optimistically update UI
         setCheckedState(prevState => ({
             ...prevState,
             [habit]: !prevState[habit],
         }));
+        // Update database
         toggleHabit(habit);
     };
 
