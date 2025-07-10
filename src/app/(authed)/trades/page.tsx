@@ -18,12 +18,12 @@ import type { Trade } from '@/lib/types';
 
 const TRADES_PER_PAGE = 20;
 
-const TradeTable = dynamic(() => import('@/components/dashboard/trade-table').then(mod => mod.TradeTable), {
+const TradeTable = dynamic(() => import('@/components/dashboard/trade-table'), {
     ssr: false,
     loading: () => <Skeleton className="h-96 w-full" />
 });
 
-const ImportTrades = dynamic(() => import('@/components/dashboard/import-trades').then(mod => mod.ImportTrades), { ssr: false });
+const ImportTrades = dynamic(() => import('@/components/dashboard/import-trades'), { ssr: false });
 const ExportTrades = dynamic(() => import('@/components/dashboard/export-trades').then(mod => mod.ExportTrades), { ssr: false });
 const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
 
@@ -170,5 +170,3 @@ const TradesPageContent = React.memo(function TradesPageContent() {
 export default function TradesPage() {
     return <TradesPageContent />;
 }
-
-    
