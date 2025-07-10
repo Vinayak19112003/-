@@ -94,6 +94,15 @@ export function TradeForm({
           pnl: trade.pnl ?? 0,
           mistakes: trade.mistakes ?? [],
           rulesFollowed: trade.rulesFollowed ?? [],
+          exitTime: trade.exitTime ?? "",
+          notes: trade.notes ?? "",
+          ticket: trade.ticket ?? "",
+          preTradeEmotion: trade.preTradeEmotion ?? "",
+          postTradeEmotion: trade.postTradeEmotion ?? "",
+          marketContext: trade.marketContext ?? "",
+          entryReason: trade.entryReason ?? "",
+          tradeFeelings: trade.tradeFeelings ?? "",
+          lossAnalysis: trade.lossAnalysis ?? "",
         }
       : {
           date: new Date(),
@@ -115,6 +124,13 @@ export function TradeForm({
           accountSize: 0,
           riskPercentage: 0,
           pnl: 0,
+          ticket: "",
+          preTradeEmotion: "",
+          postTradeEmotion: "",
+          marketContext: "",
+          entryReason: "",
+          tradeFeelings: "",
+          lossAnalysis: "",
         },
   });
 
