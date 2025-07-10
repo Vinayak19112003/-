@@ -16,34 +16,10 @@ export function HabitTracker() {
     const { habits, addHabit, deleteHabit, isLoaded: habitsLoaded } = useHabits();
     const { dailyLog, toggleHabit, isLoaded: logLoaded } = useDailyHabitLog();
 
-    const [checkedState, setCheckedState] = useState<{ [key: string]: boolean }>({});
-
-    // This effect ensures our local state for checkboxes is in sync with the fetched data
-    useEffect(() => {
-        if (logLoaded && dailyLog) {
-            const completedHabitsForToday = dailyLog.habits || [];
-            const newCheckedState: { [key: string]: boolean } = {};
-            habits.forEach(habit => {
-                newCheckedState[habit] = completedHabitsForToday.includes(habit);
-            });
-            setCheckedState(newCheckedState);
-        } else if (logLoaded && !dailyLog) {
-            // If no log exists for today, all habits are unchecked.
-            const newCheckedState: { [key: string]: boolean } = {};
-            habits.forEach(habit => {
-                newCheckedState[habit] = false;
-            });
-            setCheckedState(newCheckedState);
-        }
-    }, [logLoaded, dailyLog, habits]);
+    const completedHabits = dailyLog?.habits || [];
 
     const handleToggle = (habit: string) => {
-        // Optimistically update UI
-        setCheckedState(prevState => ({
-            ...prevState,
-            [habit]: !prevState[habit],
-        }));
-        // Update database
+        // The toggleHabit function from the hook handles both UI and DB updates.
         toggleHabit(habit);
     };
 
@@ -68,9 +44,10 @@ export function HabitTracker() {
                             <div key={habit} className="flex items-center space-x-3 rounded-md border p-4">
                                 <Checkbox
                                     id={habit}
-                                    checked={checkedState[habit] || false}
+                                    checked={completedHabits.includes(habit)}
                                     onCheckedChange={() => handleToggle(habit)}
-                                    aria-label={`Mark habit as ${checkedState[habit] ? 'incomplete' : 'complete'}: ${habit}`}
+                                    aria-label={`Mark habit as ${completedHabits.includes(habit) ? 'incomplete' : 'complete'}: ${habit}`}
+                                    disabled={!logLoaded}
                                 />
                                 <label
                                     htmlFor={habit}

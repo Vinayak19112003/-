@@ -52,9 +52,6 @@ export function DisciplineCalendar() {
     const [logs, setLogs] = useState<DailyLogData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const firstDayOfMonth = startOfMonth(currentDate);
-    const lastDayOfMonth = endOfMonth(currentDate);
-
     useEffect(() => {
         if (!user || !habitsLoaded) {
             setIsLoading(!habitsLoaded);
@@ -62,6 +59,9 @@ export function DisciplineCalendar() {
         };
 
         setIsLoading(true);
+        const firstDayOfMonth = startOfMonth(currentDate);
+        const lastDayOfMonth = endOfMonth(currentDate);
+
         const q = query(
             collection(db, 'users', user.uid, HABIT_LOGS_COLLECTION),
             where('date', '>=', startOfDay(firstDayOfMonth)),
@@ -102,7 +102,9 @@ export function DisciplineCalendar() {
         });
         return dataMap;
     }, [logs, definedHabits]);
-
+    
+    const firstDayOfMonth = startOfMonth(currentDate);
+    const lastDayOfMonth = endOfMonth(currentDate);
     const firstDayOfGrid = startOfWeek(firstDayOfMonth);
     const lastDayOfGrid = endOfWeek(lastDayOfMonth);
     const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
