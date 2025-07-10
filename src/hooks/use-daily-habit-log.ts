@@ -67,13 +67,15 @@ export function useDailyHabitLog(date: Date = new Date()) {
         try {
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
+                // Document exists, update it
                 const currentHabits = docSnap.data().habits || [];
                 const isCompleted = currentHabits.includes(habit);
+
                 await updateDoc(docRef, {
                     habits: isCompleted ? arrayRemove(habit) : arrayUnion(habit)
                 });
             } else {
-                // If document doesn't exist, create it
+                // Document doesn't exist for today, create it
                 await setDoc(docRef, {
                     date: Timestamp.fromDate(startOfDay(date)),
                     habits: [habit]
