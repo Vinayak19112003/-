@@ -11,6 +11,7 @@ export const TradeSchema = z.object({
   strategy: z.string().nonempty({ message: "Strategy is required." }),
   direction: z.enum(["Buy", "Sell"]),
   entryTime: z.string().nonempty({ message: "Entry time is required." }),
+  exitTime: z.string().optional(),
   entryPrice: z.coerce.number({ required_error: "Entry price is required." }).default(0),
   sl: z.coerce.number({ required_error: "Stop loss is required." }).default(0),
   rr: z.coerce.number().optional().default(0),

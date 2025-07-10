@@ -101,6 +101,7 @@ export function TradeForm({
           strategy: "",
           direction: "Buy",
           entryTime: "",
+          exitTime: "",
           entryPrice: 0,
           sl: 0,
           exitPrice: 0,
@@ -258,19 +259,34 @@ export function TradeForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="entryTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Entry Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-2">
+            <FormField
+              control={form.control}
+              name="entryTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Entry Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="exitTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Exit Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
