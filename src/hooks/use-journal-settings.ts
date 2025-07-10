@@ -5,13 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc } from "firebase/firestore";
 import { useToast } from './use-toast';
-import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES } from '@/lib/constants';
+import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES, DEFAULT_HABITS } from '@/lib/constants';
 import { useAuth } from './use-auth';
 
 const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'userConfig';
 
-type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules';
+type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules' | 'habits';
 
 const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] | string[]) => {
   const { user } = useAuth();
@@ -39,6 +39,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
             strategies: [...DEFAULT_STRATEGIES],
             mistakeTags: [...DEFAULT_MISTAKE_TAGS],
             tradingRules: [...DEFAULT_TRADING_RULES],
+            habits: [...DEFAULT_HABITS],
           });
         }
       } catch (error) {

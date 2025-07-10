@@ -34,3 +34,11 @@ export const DEFAULT_TRADING_RULES = [
   "Used proper stop loss and risk-to-reward",
   "Took partials or followed exit plan",
 ] as const;
+
+export const DEFAULT_HABITS = [
+    "Completed pre-market analysis",
+    "Journaled all trades",
+    "Followed my risk management plan",
+    "Did not revenge trade",
+    "Completed post-market review",
+] as const;

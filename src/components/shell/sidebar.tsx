@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video } from 'lucide-react';
+import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video, ClipboardCheck } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { useTradeForm } from '@/contexts/trade-form-context';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ export function Sidebar() {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
     { href: '/analysis', label: 'Analysis', icon: BrainCircuit, tooltip: 'Analysis' },
     { href: '/trades', label: 'Trades', icon: Book, tooltip: 'Trades' },
+    { href: '/discipline', label: 'Discipline', icon: ClipboardCheck, tooltip: 'Discipline' },
   ];
 
   const isActive = (href: string) => pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard');
