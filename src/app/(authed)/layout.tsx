@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import dynamic from 'next/dynamic';
 import type { Trade } from '@/lib/types';
 import { Sidebar } from '@/components/shell/sidebar';
@@ -25,7 +25,7 @@ const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then
     )
 });
 
-function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
+const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
@@ -64,7 +64,7 @@ function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
               </main>
             </div>
           </div>
-          <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <FormComponent open={isFormОpen} onOpenChange={setIsFormOpen}>
               <FormContentComponent className={cn(isMobile ? "w-full" : "max-w-4xl")}>
                   <FormHeaderComponent>
                   <FormTitleComponent>{editingTrade ? "Edit Trade" : "Add New Trade"}</FormTitleComponent>
@@ -85,7 +85,7 @@ function AuthedLayoutContent({ children }: { children: React.ReactNode }) {
       </TradeFormProvider>
     </AuthGuard>
   );
-}
+});
 
 
 export default function AuthedLayout({
