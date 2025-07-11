@@ -14,7 +14,7 @@ import { collection, query, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { DailyLog } from '@/hooks/use-daily-habit-log';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek } from 'date-fns';
-import { HabitHistory } from "@/hooks/use-habits";
+import type { HabitHistory } from "@/hooks/use-habits";
 
 const HabitTracker = dynamic(() => import('@/components/discipline/habit-tracker').then(mod => mod.HabitTracker), {
     ssr: false,
@@ -83,22 +83,21 @@ function DisciplinePageContent() {
         const dataMap = new Map<string, CalendarData>();
         if (!isPageLoaded() || habitHistory.length === 0) return dataMap;
 
+        // Ensure history is sorted by date ascending
         const sortedHistory = [...habitHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
 
         const getHabitsForDate = (date: Date): string[] => {
             let applicableHabits: string[] = [];
-            for (const historyEntry of sortedHistory) {
-                if (historyEntry.date <= date) {
-                    applicableHabits = historyEntry.habits;
-                } else {
-                    break;
-                }
+            // Find the last history entry that is on or before the target date
+            const relevantHistoryEntry = sortedHistory.slice().reverse().find(entry => entry.date <= date);
+            if (relevantHistoryEntry) {
+                 applicableHabits = relevantHistoryEntry.habits;
             }
             return applicableHabits;
         };
 
-        const firstDay = startOfWeek(startOfMonth(currentMonth));
-        const lastDay = endOfWeek(endOfMonth(currentMonth));
+        const firstDay = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 0 });
+        const lastDay = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 });
         const daysInView = eachDayOfInterval({ start: firstDay, end: lastDay });
 
         daysInView.forEach(day => {
@@ -106,7 +105,10 @@ function DisciplinePageContent() {
             const habitsOnDate = getHabitsForDate(day);
             const total = habitsOnDate.length;
 
-            if (total === 0 || sortedHistory[0] && day < sortedHistory[0].date) return;
+            if (total === 0 || (sortedHistory[0] && day < sortedHistory[0].date)) {
+                 // No habits were defined on this day or it's before the first ever habit was defined.
+                return;
+            }
             
             const log = allLogs.find(l => l.id === dateKey);
             const completed = log ? log.habits.filter(h => habitsOnDate.includes(h)).length : 0;

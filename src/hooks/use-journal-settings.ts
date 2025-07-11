@@ -7,7 +7,7 @@ import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc, Ti
 import { useToast } from './use-toast';
 import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES, DEFAULT_HABITS } from '@/lib/constants';
 import { useAuth } from './use-auth';
-import { format } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 
 const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'userConfig';
@@ -48,12 +48,12 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
             mistakeTags: [...DEFAULT_MISTAKE_TAGS],
             tradingRules: [...DEFAULT_TRADING_RULES],
             habits: [...DEFAULT_HABITS],
-            habitHistory: [{ date: Timestamp.now(), habits: [...DEFAULT_HABITS] }]
+            habitHistory: [{ date: Timestamp.fromDate(startOfDay(new Date())), habits: [...DEFAULT_HABITS] }]
           });
         } else if (!docSnap.data().habitHistory) {
             // Backwards compatibility for users without habitHistory
             await updateDoc(docRef, {
-                habitHistory: [{ date: Timestamp.now(), habits: docSnap.data().habits || [...DEFAULT_HABITS] }]
+                habitHistory: [{ date: Timestamp.fromDate(startOfDay(new Date())), habits: docSnap.data().habits || [...DEFAULT_HABITS] }]
             });
         }
       } catch (error) {
@@ -151,7 +151,8 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     try {
       const updatePayload: { [k: string]: any } = { [key]: arrayUnion(trimmedItem) };
       if (key === 'habits') {
-        updatePayload.habitHistory = arrayUnion({ date: Timestamp.now(), habits: [...items, trimmedItem] });
+        const newHabitList = [...items, trimmedItem];
+        updatePayload.habitHistory = arrayUnion({ date: Timestamp.fromDate(startOfDay(new Date())), habits: newHabitList });
       }
 
       await updateDoc(docRef, updatePayload);
@@ -180,7 +181,8 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     try {
         const updatePayload: { [k: string]: any } = { [key]: arrayRemove(itemToDelete) };
         if (key === 'habits') {
-            updatePayload.habitHistory = arrayUnion({ date: Timestamp.now(), habits: items.filter(i => i !== itemToDelete) });
+            const newHabitList = items.filter(i => i !== itemToDelete);
+            updatePayload.habitHistory = arrayUnion({ date: Timestamp.fromDate(startOfDay(new Date())), habits: newHabitList });
         }
         await updateDoc(docRef, updatePayload);
         toast({
