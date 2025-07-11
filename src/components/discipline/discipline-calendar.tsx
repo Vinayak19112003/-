@@ -51,10 +51,11 @@ export function DisciplineCalendar({
         logs.forEach(log => {
             const dateKey = format(log.date, 'yyyy-MM-dd');
             
-            // Find the list of habits that were defined on the date of the log
-            const habitsOnDate = habitHistory.find(h => format(h.date, 'yyyy-MM-dd') === dateKey)?.habits || 
-                                 habitHistory.find(h => h.date < log.date)?.habits ||
-                                 habitHistory[0].habits;
+            // Find the list of habits that were defined on the date of the log.
+            // Find the most recent habit history entry that is on or before the log date.
+            const habitsOnDate = [...habitHistory]
+                .sort((a, b) => b.date.getTime() - a.date.getTime()) // Sort descending
+                .find(h => h.date <= log.date)?.habits || habitHistory[0]?.habits || [];
 
             if (habitsOnDate.length > 0) {
                 const completedCount = log.habits.filter(h => habitsOnDate.includes(h)).length;
