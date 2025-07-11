@@ -75,9 +75,13 @@ function DisciplinePageContent() {
         return allLogs.find(log => log.id === todayKey) || null;
     }, [allLogs]);
 
+    const isPageLoaded = useCallback(() => {
+        return allLogsLoaded && habitsLoaded && logHookLoaded;
+    }, [allLogsLoaded, habitsLoaded, logHookLoaded]);
+
     const calendarDataMap = useMemo(() => {
         const dataMap = new Map<string, CalendarData>();
-        if (!isLoaded() || habitHistory.length === 0) return dataMap;
+        if (!isPageLoaded() || habitHistory.length === 0) return dataMap;
 
         const sortedHistory = [...habitHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -102,7 +106,7 @@ function DisciplinePageContent() {
             const habitsOnDate = getHabitsForDate(day);
             const total = habitsOnDate.length;
 
-            if (total === 0 || day < sortedHistory[0].date) return;
+            if (total === 0 || sortedHistory[0] && day < sortedHistory[0].date) return;
             
             const log = allLogs.find(l => l.id === dateKey);
             const completed = log ? log.habits.filter(h => habitsOnDate.includes(h)).length : 0;
@@ -117,11 +121,7 @@ function DisciplinePageContent() {
         });
 
         return dataMap;
-    }, [allLogs, habitHistory, currentMonth, isLoaded]);
-
-    const isPageLoaded = useCallback(() => {
-        return allLogsLoaded && habitsLoaded && logHookLoaded;
-    }, [allLogsLoaded, habitsLoaded, logHookLoaded]);
+    }, [allLogs, habitHistory, currentMonth, isPageLoaded]);
 
     return (
         <div className="space-y-6">
