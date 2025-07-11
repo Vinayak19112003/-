@@ -46,20 +46,23 @@ export function DisciplineCalendar({
 
     const calendarData = useMemo(() => {
         const dataMap = new Map<string, CalendarData>();
-        if (habitHistory.length === 0) return dataMap;
+        if (habitHistory.length === 0 || !isLoaded) return dataMap;
 
         const sortedHistory = [...habitHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-        const getHabitsForDate = (date: Date) => {
-            // Find the last history entry that is on or before the given date
-            let applicableHabits: string[] | undefined;
-            for (let i = sortedHistory.length - 1; i >= 0; i--) {
-                if (sortedHistory[i].date <= date) {
-                    applicableHabits = sortedHistory[i].habits;
+        // This function finds the list of habits that were active on a given date.
+        const getHabitsForDate = (date: Date): string[] => {
+            let applicableHabits: string[] = [];
+            // Find the latest history entry that is on or before the given date.
+            for (const historyEntry of sortedHistory) {
+                if (historyEntry.date <= date) {
+                    applicableHabits = historyEntry.habits;
+                } else {
+                    // Since history is sorted, we can break early.
                     break;
                 }
             }
-            return applicableHabits || [];
+            return applicableHabits;
         };
 
         const firstDay = startOfWeek(startOfMonth(currentMonth));
@@ -71,12 +74,16 @@ export function DisciplineCalendar({
             const habitsOnDate = getHabitsForDate(day);
             const total = habitsOnDate.length;
 
-            if (total === 0) return;
-
+            // Don't calculate for days before any habits were created or if no habits were defined.
+            if (total === 0 || day < sortedHistory[0].date) return;
+            
             const log = logs.find(l => l.id === dateKey);
+            // We only count habits as completed if they existed on that day.
             const completed = log ? log.habits.filter(h => habitsOnDate.includes(h)).length : 0;
-            const completionRate = completed / total;
-
+            
+            // This prevents division by zero
+            const completionRate = total > 0 ? completed / total : 0;
+            
             dataMap.set(dateKey, {
                 completionRate,
                 completed,
@@ -85,7 +92,7 @@ export function DisciplineCalendar({
         });
 
         return dataMap;
-    }, [logs, habitHistory, currentMonth]);
+    }, [logs, habitHistory, currentMonth, isLoaded]);
     
     const firstDayOfGrid = startOfWeek(startOfMonth(currentMonth));
     const lastDayOfGrid = endOfWeek(endOfMonth(currentMonth));
@@ -93,7 +100,7 @@ export function DisciplineCalendar({
 
     const getCellBgColor = (rate: number | undefined) => {
         if (rate === undefined) return 'bg-card hover:bg-muted/50';
-        if (rate >= 0.9) return 'bg-success/50 hover:bg-success/60';
+        if (rate >= 0.99) return 'bg-success/50 hover:bg-success/60';
         if (rate >= 0.7) return 'bg-success/30 hover:bg-success/40';
         if (rate >= 0.5) return 'bg-accent/40 hover:bg-accent/50';
         if (rate > 0) return 'bg-destructive/20 hover:bg-destructive/30';
@@ -128,10 +135,13 @@ export function DisciplineCalendar({
                         const dateKey = format(day, 'yyyy-MM-dd');
                         const data = calendarData.get(dateKey);
                         const isCurrentMonth = isSameMonth(day, currentMonth);
+                        
+                        // Use a default background for days with no data
                         const bgColor = data ? getCellBgColor(data.completionRate) : 'bg-card hover:bg-muted/50';
+                        
                         const Cell = (
                             <div className={cn(
-                                "p-2 flex flex-col justify-start items-start cursor-pointer transition-colors border-r border-b min-h-[90px]",
+                                "p-2 flex flex-col justify-start items-start transition-colors border-r border-b min-h-[90px]",
                                 isCurrentMonth ? bgColor : 'bg-muted/30',
                             )}>
                                 <span className={cn(
