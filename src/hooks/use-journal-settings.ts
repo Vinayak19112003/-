@@ -138,7 +138,8 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     const trimmedItem = key === 'assets' ? newItem.trim().toUpperCase() : newItem.trim();
     if (!trimmedItem) return false;
     
-    if (items.some(i => i.toLowerCase() === trimmedItem.toLowerCase())) {
+    // Perform a case-insensitive check for existing items.
+    if (items.some(i => i.trim().toLowerCase() === trimmedItem.toLowerCase())) {
         toast({
             variant: "destructive",
             title: "Item Exists",

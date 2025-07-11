@@ -18,81 +18,21 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DailyLog } from '@/hooks/use-daily-habit-log';
-import { HabitHistory } from '@/hooks/use-habits';
-import { useMemo } from 'react';
-
-type CalendarData = {
-    completionRate: number; // 0 to 1
-    completed: number;
-    total: number;
-};
+import type { CalendarData } from '@/app/(authed)/discipline/page';
 
 interface DisciplineCalendarProps {
-    logs: DailyLog[];
-    habitHistory: HabitHistory[];
+    calendarData: Map<string, CalendarData>;
     currentMonth: Date;
     setCurrentMonth: (date: Date) => void;
     isLoaded: boolean;
 }
 
 export function DisciplineCalendar({ 
-    logs, 
-    habitHistory, 
+    calendarData,
     currentMonth, 
     setCurrentMonth,
     isLoaded
 }: DisciplineCalendarProps) {
-
-    const calendarData = useMemo(() => {
-        const dataMap = new Map<string, CalendarData>();
-        if (habitHistory.length === 0 || !isLoaded) return dataMap;
-
-        const sortedHistory = [...habitHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-        // This function finds the list of habits that were active on a given date.
-        const getHabitsForDate = (date: Date): string[] => {
-            let applicableHabits: string[] = [];
-            // Find the latest history entry that is on or before the given date.
-            for (const historyEntry of sortedHistory) {
-                if (historyEntry.date <= date) {
-                    applicableHabits = historyEntry.habits;
-                } else {
-                    // Since history is sorted, we can break early.
-                    break;
-                }
-            }
-            return applicableHabits;
-        };
-
-        const firstDay = startOfWeek(startOfMonth(currentMonth));
-        const lastDay = endOfWeek(endOfMonth(currentMonth));
-        const daysInView = eachDayOfInterval({ start: firstDay, end: lastDay });
-
-        daysInView.forEach(day => {
-            const dateKey = format(day, 'yyyy-MM-dd');
-            const habitsOnDate = getHabitsForDate(day);
-            const total = habitsOnDate.length;
-
-            // Don't calculate for days before any habits were created or if no habits were defined.
-            if (total === 0 || day < sortedHistory[0].date) return;
-            
-            const log = logs.find(l => l.id === dateKey);
-            // We only count habits as completed if they existed on that day.
-            const completed = log ? log.habits.filter(h => habitsOnDate.includes(h)).length : 0;
-            
-            // This prevents division by zero
-            const completionRate = total > 0 ? completed / total : 0;
-            
-            dataMap.set(dateKey, {
-                completionRate,
-                completed,
-                total
-            });
-        });
-
-        return dataMap;
-    }, [logs, habitHistory, currentMonth, isLoaded]);
     
     const firstDayOfGrid = startOfWeek(startOfMonth(currentMonth));
     const lastDayOfGrid = endOfWeek(endOfMonth(currentMonth));
@@ -136,7 +76,6 @@ export function DisciplineCalendar({
                         const data = calendarData.get(dateKey);
                         const isCurrentMonth = isSameMonth(day, currentMonth);
                         
-                        // Use a default background for days with no data
                         const bgColor = data ? getCellBgColor(data.completionRate) : 'bg-card hover:bg-muted/50';
                         
                         const Cell = (

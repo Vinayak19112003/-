@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
 import * as React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useHabits } from '@/hooks/use-habits';
 import { useDailyHabitLog } from '@/hooks/use-daily-habit-log';
 import { Separator } from '@/components/ui/separator';
@@ -13,7 +13,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { collection, query, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { DailyLog } from '@/hooks/use-daily-habit-log';
-import { format, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek } from 'date-fns';
+import { HabitHistory } from "@/hooks/use-habits";
 
 const HabitTracker = dynamic(() => import('@/components/discipline/habit-tracker').then(mod => mod.HabitTracker), {
     ssr: false,
@@ -24,6 +25,12 @@ const DisciplineCalendar = dynamic(() => import('@/components/discipline/discipl
     ssr: false,
     loading: () => <Skeleton className="h-[400px] w-full" />,
 });
+
+export type CalendarData = {
+    completionRate: number;
+    completed: number;
+    total: number;
+};
 
 const HABIT_LOGS_COLLECTION = 'habitLogs';
 
@@ -37,7 +44,6 @@ function DisciplinePageContent() {
     
     const { toggleHabit, isLoaded: logHookLoaded } = useDailyHabitLog();
 
-    // Effect to fetch all logs for the user once
     useEffect(() => {
         if (!user || !habitsLoaded) return;
 
@@ -58,7 +64,7 @@ function DisciplinePageContent() {
             setAllLogsLoaded(true);
         }, (error) => {
             console.error("Error fetching all logs: ", error);
-            setAllLogsLoaded(true); // Still set to loaded on error to unblock UI
+            setAllLogsLoaded(true); 
         });
 
         return () => unsubscribe();
@@ -69,14 +75,53 @@ function DisciplinePageContent() {
         return allLogs.find(log => log.id === todayKey) || null;
     }, [allLogs]);
 
-    const monthlyLogsForCalendar = useMemo(() => {
-        const firstDay = startOfMonth(currentMonth);
-        const lastDay = endOfMonth(currentMonth);
-        return allLogs.filter(log => {
-            const logDate = log.date;
-            return logDate >= firstDay && logDate <= lastDay;
+    const calendarDataMap = useMemo(() => {
+        const dataMap = new Map<string, CalendarData>();
+        if (!isLoaded() || habitHistory.length === 0) return dataMap;
+
+        const sortedHistory = [...habitHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+        const getHabitsForDate = (date: Date): string[] => {
+            let applicableHabits: string[] = [];
+            for (const historyEntry of sortedHistory) {
+                if (historyEntry.date <= date) {
+                    applicableHabits = historyEntry.habits;
+                } else {
+                    break;
+                }
+            }
+            return applicableHabits;
+        };
+
+        const firstDay = startOfWeek(startOfMonth(currentMonth));
+        const lastDay = endOfWeek(endOfMonth(currentMonth));
+        const daysInView = eachDayOfInterval({ start: firstDay, end: lastDay });
+
+        daysInView.forEach(day => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const habitsOnDate = getHabitsForDate(day);
+            const total = habitsOnDate.length;
+
+            if (total === 0 || day < sortedHistory[0].date) return;
+            
+            const log = allLogs.find(l => l.id === dateKey);
+            const completed = log ? log.habits.filter(h => habitsOnDate.includes(h)).length : 0;
+            
+            const completionRate = total > 0 ? completed / total : 0;
+            
+            dataMap.set(dateKey, {
+                completionRate,
+                completed,
+                total
+            });
         });
-    }, [allLogs, currentMonth]);
+
+        return dataMap;
+    }, [allLogs, habitHistory, currentMonth, isLoaded]);
+
+    const isPageLoaded = useCallback(() => {
+        return allLogsLoaded && habitsLoaded && logHookLoaded;
+    }, [allLogsLoaded, habitsLoaded, logHookLoaded]);
 
     return (
         <div className="space-y-6">
@@ -101,7 +146,7 @@ function DisciplinePageContent() {
                         habitsLoaded={habitsLoaded}
                         dailyLog={dailyLogForToday}
                         toggleHabit={toggleHabit}
-                        logLoaded={allLogsLoaded && logHookLoaded}
+                        logLoaded={isPageLoaded()}
                     />
                 </CardContent>
             </Card>
@@ -117,11 +162,10 @@ function DisciplinePageContent() {
                 </CardHeader>
                 <CardContent>
                     <DisciplineCalendar 
-                        logs={monthlyLogsForCalendar}
-                        habitHistory={habitHistory}
+                        calendarData={calendarDataMap}
                         currentMonth={currentMonth}
                         setCurrentMonth={setCurrentMonth}
-                        isLoaded={allLogsLoaded && habitsLoaded}
+                        isLoaded={isPageLoaded()}
                     />
                 </CardContent>
             </Card>
