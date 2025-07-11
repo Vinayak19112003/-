@@ -48,32 +48,47 @@ export function DisciplineCalendar({
         const dataMap = new Map<string, CalendarData>();
         if (habitHistory.length === 0) return dataMap;
 
-        logs.forEach(log => {
-            const dateKey = format(log.date, 'yyyy-MM-dd');
-            
-            // Find the list of habits that were defined on the date of the log.
-            // Find the most recent habit history entry that is on or before the log date.
-            const habitsOnDate = [...habitHistory]
-                .sort((a, b) => b.date.getTime() - a.date.getTime()) // Sort descending
-                .find(h => h.date <= log.date)?.habits || habitHistory[0]?.habits || [];
+        const sortedHistory = [...habitHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-            if (habitsOnDate.length > 0) {
-                const completedCount = log.habits.filter(h => habitsOnDate.includes(h)).length;
-                const completionRate = completedCount / habitsOnDate.length;
-                dataMap.set(dateKey, {
-                    completionRate,
-                    completed: completedCount,
-                    total: habitsOnDate.length,
-                });
+        const getHabitsForDate = (date: Date) => {
+            // Find the last history entry that is on or before the given date
+            let applicableHabits: string[] | undefined;
+            for (let i = sortedHistory.length - 1; i >= 0; i--) {
+                if (sortedHistory[i].date <= date) {
+                    applicableHabits = sortedHistory[i].habits;
+                    break;
+                }
             }
+            return applicableHabits || [];
+        };
+
+        const firstDay = startOfWeek(startOfMonth(currentMonth));
+        const lastDay = endOfWeek(endOfMonth(currentMonth));
+        const daysInView = eachDayOfInterval({ start: firstDay, end: lastDay });
+
+        daysInView.forEach(day => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const habitsOnDate = getHabitsForDate(day);
+            const total = habitsOnDate.length;
+
+            if (total === 0) return;
+
+            const log = logs.find(l => l.id === dateKey);
+            const completed = log ? log.habits.filter(h => habitsOnDate.includes(h)).length : 0;
+            const completionRate = completed / total;
+
+            dataMap.set(dateKey, {
+                completionRate,
+                completed,
+                total
+            });
         });
+
         return dataMap;
-    }, [logs, habitHistory]);
+    }, [logs, habitHistory, currentMonth]);
     
-    const firstDayOfMonth = startOfMonth(currentMonth);
-    const lastDayOfMonth = endOfMonth(currentMonth);
-    const firstDayOfGrid = startOfWeek(firstDayOfMonth);
-    const lastDayOfGrid = endOfWeek(lastDayOfMonth);
+    const firstDayOfGrid = startOfWeek(startOfMonth(currentMonth));
+    const lastDayOfGrid = endOfWeek(endOfMonth(currentMonth));
     const calendarDays = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
 
     const getCellBgColor = (rate: number | undefined) => {
@@ -81,7 +96,7 @@ export function DisciplineCalendar({
         if (rate >= 0.9) return 'bg-success/50 hover:bg-success/60';
         if (rate >= 0.7) return 'bg-success/30 hover:bg-success/40';
         if (rate >= 0.5) return 'bg-accent/40 hover:bg-accent/50';
-        if (rate >= 0.2) return 'bg-destructive/20 hover:bg-destructive/30';
+        if (rate > 0) return 'bg-destructive/20 hover:bg-destructive/30';
         return 'bg-destructive/40 hover:bg-destructive/50';
     };
 
