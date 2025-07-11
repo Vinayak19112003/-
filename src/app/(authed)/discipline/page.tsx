@@ -10,10 +10,10 @@ import { useHabits } from '@/hooks/use-habits';
 import { useDailyHabitLog } from '@/hooks/use-daily-habit-log';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { DailyLog } from '@/hooks/use-daily-habit-log';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
 
 const HabitTracker = dynamic(() => import('@/components/discipline/habit-tracker').then(mod => mod.HabitTracker), {
     ssr: false,
@@ -29,26 +29,21 @@ const HABIT_LOGS_COLLECTION = 'habitLogs';
 
 function DisciplinePageContent() {
     const { user } = useAuth();
-    const { habits, addHabit, deleteHabit, isLoaded: habitsLoaded } = useHabits();
-    const { dailyLog, toggleHabit, isLoaded: logLoaded } = useDailyHabitLog();
+    const { habits, addHabit, deleteHabit, isLoaded: habitsLoaded, habitHistory } = useHabits();
     
-    const [monthlyLogs, setMonthlyLogs] = useState<DailyLog[]>([]);
+    const [allLogs, setAllLogs] = useState<DailyLog[]>([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [monthlyLogsLoaded, setMonthlyLogsLoaded] = useState(false);
+    const [allLogsLoaded, setAllLogsLoaded] = useState(false);
+    
+    const { toggleHabit, isLoaded: logHookLoaded } = useDailyHabitLog();
 
-    // Effect to fetch logs for the calendar view for the selected month
+    // Effect to fetch all logs for the user once
     useEffect(() => {
         if (!user || !habitsLoaded) return;
 
-        setMonthlyLogsLoaded(false);
-        const firstDay = startOfMonth(currentMonth);
-        const lastDay = endOfMonth(currentMonth);
-
-        const q = query(
-            collection(db, 'users', user.uid, HABIT_LOGS_COLLECTION),
-            where('date', '>=', firstDay),
-            where('date', '<=', lastDay)
-        );
+        setAllLogsLoaded(false);
+        
+        const q = query(collection(db, 'users', user.uid, HABIT_LOGS_COLLECTION));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const logs = snapshot.docs.map(doc => {
@@ -59,26 +54,29 @@ function DisciplinePageContent() {
                     habits: data.habits || [],
                 };
             });
-            setMonthlyLogs(logs);
-            setMonthlyLogsLoaded(true);
+            setAllLogs(logs);
+            setAllLogsLoaded(true);
         }, (error) => {
-            console.error("Error fetching monthly logs: ", error);
-            setMonthlyLogsLoaded(true); // Still set to loaded on error to unblock UI
+            console.error("Error fetching all logs: ", error);
+            setAllLogsLoaded(true); // Still set to loaded on error to unblock UI
         });
 
         return () => unsubscribe();
-    }, [user, currentMonth, habitsLoaded]);
+    }, [user, habitsLoaded]);
 
-    // Combine today's log with the monthly logs for the calendar
-    // This ensures the calendar updates instantly when a checkbox is toggled for today's date
-    const calendarLogs = useMemo(() => {
-        const logsMap = new Map(monthlyLogs.map(log => [format(log.date, 'yyyy-MM-dd'), log]));
-        if (dailyLog) {
-            logsMap.set(format(dailyLog.date, 'yyyy-MM-dd'), dailyLog);
-        }
-        return Array.from(logsMap.values());
-    }, [monthlyLogs, dailyLog]);
+    const dailyLogForToday = useMemo(() => {
+        const todayKey = format(new Date(), 'yyyy-MM-dd');
+        return allLogs.find(log => log.id === todayKey) || null;
+    }, [allLogs]);
 
+    const monthlyLogsForCalendar = useMemo(() => {
+        const firstDay = startOfMonth(currentMonth);
+        const lastDay = endOfMonth(currentMonth);
+        return allLogs.filter(log => {
+            const logDate = log.date;
+            return logDate >= firstDay && logDate <= lastDay;
+        });
+    }, [allLogs, currentMonth]);
 
     return (
         <div className="space-y-6">
@@ -101,9 +99,9 @@ function DisciplinePageContent() {
                         addHabit={addHabit}
                         deleteHabit={deleteHabit}
                         habitsLoaded={habitsLoaded}
-                        dailyLog={dailyLog}
+                        dailyLog={dailyLogForToday}
                         toggleHabit={toggleHabit}
-                        logLoaded={logLoaded}
+                        logLoaded={allLogsLoaded && logHookLoaded}
                     />
                 </CardContent>
             </Card>
@@ -119,11 +117,11 @@ function DisciplinePageContent() {
                 </CardHeader>
                 <CardContent>
                     <DisciplineCalendar 
-                        logs={calendarLogs}
-                        definedHabits={habits}
+                        logs={monthlyLogsForCalendar}
+                        habitHistory={habitHistory}
                         currentMonth={currentMonth}
                         setCurrentMonth={setCurrentMonth}
-                        isLoaded={monthlyLogsLoaded && habitsLoaded}
+                        isLoaded={allLogsLoaded && habitsLoaded}
                     />
                 </CardContent>
             </Card>

@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
 import {
   format,
   startOfMonth,
@@ -20,7 +19,8 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DailyLog } from '@/hooks/use-daily-habit-log';
-
+import { HabitHistory } from '@/hooks/use-habits';
+import { useMemo } from 'react';
 
 type CalendarData = {
     completionRate: number; // 0 to 1
@@ -30,7 +30,7 @@ type CalendarData = {
 
 interface DisciplineCalendarProps {
     logs: DailyLog[];
-    definedHabits: string[];
+    habitHistory: HabitHistory[];
     currentMonth: Date;
     setCurrentMonth: (date: Date) => void;
     isLoaded: boolean;
@@ -38,7 +38,7 @@ interface DisciplineCalendarProps {
 
 export function DisciplineCalendar({ 
     logs, 
-    definedHabits, 
+    habitHistory, 
     currentMonth, 
     setCurrentMonth,
     isLoaded
@@ -46,20 +46,28 @@ export function DisciplineCalendar({
 
     const calendarData = useMemo(() => {
         const dataMap = new Map<string, CalendarData>();
-        if (definedHabits.length === 0) return dataMap;
+        if (habitHistory.length === 0) return dataMap;
 
         logs.forEach(log => {
             const dateKey = format(log.date, 'yyyy-MM-dd');
-            const completedCount = log.habits.length;
-            const completionRate = completedCount / definedHabits.length;
-            dataMap.set(dateKey, {
-                completionRate,
-                completed: completedCount,
-                total: definedHabits.length,
-            });
+            
+            // Find the list of habits that were defined on the date of the log
+            const habitsOnDate = habitHistory.find(h => format(h.date, 'yyyy-MM-dd') === dateKey)?.habits || 
+                                 habitHistory.find(h => h.date < log.date)?.habits ||
+                                 habitHistory[0].habits;
+
+            if (habitsOnDate.length > 0) {
+                const completedCount = log.habits.filter(h => habitsOnDate.includes(h)).length;
+                const completionRate = completedCount / habitsOnDate.length;
+                dataMap.set(dateKey, {
+                    completionRate,
+                    completed: completedCount,
+                    total: habitsOnDate.length,
+                });
+            }
         });
         return dataMap;
-    }, [logs, definedHabits]);
+    }, [logs, habitHistory]);
     
     const firstDayOfMonth = startOfMonth(currentMonth);
     const lastDayOfMonth = endOfMonth(currentMonth);
