@@ -36,9 +36,9 @@ export function useTradingModel() {
         }
     }, [model, updateWholeObject]);
     
-    const deleteItem = useCallback(async (section: ModelSection, item: string) => {
+    const deleteItem = useCallback(async (section: ModelSection, itemToDelete: string) => {
         const newModel = { ...model };
-        newModel[section] = newModel[section].filter((i: string) => i !== item);
+        newModel[section] = newModel[section].filter((i: string) => i !== itemToDelete);
         await updateWholeObject(newModel);
     }, [model, updateWholeObject]);
     
