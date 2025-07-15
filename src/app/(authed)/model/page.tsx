@@ -51,11 +51,23 @@ const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSec
                     onBlur={handleUpdate}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
                     autoFocus
-                    className="h-8"
+                    className="h-8 flex-1"
                 />
             ) : (
                 <p className="flex-1 cursor-pointer" onClick={() => setIsEditing(true)}>{item}</p>
             )}
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(section, item);
+                }}
+            >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete item</span>
+            </Button>
         </div>
     );
 };
@@ -136,7 +148,6 @@ export default function TradingModelPage() {
         }
     };
 
-    // This is the corrected delete logic, implemented directly on the page.
     const handleDeleteItem = async (section: ModelSection, itemToDelete: string) => {
         const newModel = { ...model };
         newModel[section] = newModel[section].filter((i: string) => i !== itemToDelete);
@@ -176,7 +187,6 @@ export default function TradingModelPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                    {/* Render each editable section of the trading model */}
                     <Section 
                         title="Week Preparation" 
                         sectionKey="week"
