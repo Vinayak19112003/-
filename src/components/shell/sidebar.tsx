@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video, ClipboardCheck, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { useTradeForm } from '@/contexts/trade-form-context';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ export const Sidebar = React.memo(function Sidebar() {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
     { href: '/trades', label: 'Trades', icon: Book, tooltip: 'Trade Log' },
     { href: '/analysis', label: 'Analysis', icon: BrainCircuit, tooltip: 'Analysis' },
+    { href: '/discipline', label: 'Discipline', icon: ShieldCheck, tooltip: 'Discipline Checklist' },
     { href: '/model', label: 'Trading Model', icon: ClipboardCheck, tooltip: 'Trading Model' },
   ];
 
