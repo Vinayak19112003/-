@@ -65,6 +65,9 @@ For each trade, you must provide values for all the fields in the output schema.
 - **screenshotURL**: Default to an empty string \`""\` if not present.
 - **accountSize**: Default to 0 if not present.
 - **riskPercentage**: Default to 0 if not present.
+- **session**: If not specified, default to 'Other'. Must be one of "London", "New York", "Asian", "Other".
+- **keyLevel**: If not specified, default to an empty string "".
+- **entryTimeFrame**: If not specified, default to '15m'. Must be one of "1m", "3m", "5m", "15m", "1h", "4h", "Daily".
 
 Analyze this file and provide the output in the specified JSON format:
 {{media url=fileDataUri}}

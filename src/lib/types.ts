@@ -26,13 +26,19 @@ export const TradeSchema = z.object({
   riskPercentage: z.coerce.number().optional().default(0),
   pnl: z.coerce.number().optional().default(0),
   ticket: z.string().optional(),
-  // New psychological fields
+  
+  // New psychological/contextual fields
   preTradeEmotion: EmotionalStateSchema,
   postTradeEmotion: EmotionalStateSchema,
   marketContext: z.string().optional(),
   entryReason: z.string().optional(),
   tradeFeelings: z.string().optional(),
   lossAnalysis: z.string().optional(),
+  
+  // New user-requested fields
+  session: z.enum(["London", "New York", "Asian", "Other"]).optional(),
+  keyLevel: z.string().optional(),
+  entryTimeFrame: z.enum(["1m", "3m", "5m", "15m", "1h", "4h", "Daily"]).optional(),
 });
 
 export type Trade = z.infer<typeof TradeSchema>;

@@ -110,6 +110,13 @@ export function TradeDetailsDialog({ trade, isOpen, onOpenChange }: TradeDetails
                         </StreamerModeText>
                     }
                  />
+                
+                <Separator className="col-span-full my-2" />
+
+                <h4 className="col-span-full text-base font-semibold font-headline">Trade Context</h4>
+                <DetailItem label="Session" value={trade.session || 'N/A'} />
+                <DetailItem label="Entry Time Frame" value={trade.entryTimeFrame || 'N/A'} />
+                <DetailItem label="Key Level" value={trade.keyLevel || 'N/A'} />
 
                 <Separator className="col-span-full my-2" />
                 

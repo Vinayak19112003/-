@@ -59,6 +59,8 @@ const FormSchema = TradeSchema.omit({ id: true }).extend({
 });
 
 const emotionalStates = ["Focused", "Anxious", "FOMO", "Greedy", "Confident", "Tired", "Neutral", "Other"];
+const sessions = ["London", "New York", "Asian", "Other"];
+const timeFrames = ["1m", "3m", "5m", "15m", "1h", "4h", "Daily"];
 
 type TradeFormProps = {
   trade?: Trade;
@@ -103,6 +105,9 @@ export function TradeForm({
           entryReason: trade.entryReason ?? "",
           tradeFeelings: trade.tradeFeelings ?? "",
           lossAnalysis: trade.lossAnalysis ?? "",
+          session: trade.session,
+          keyLevel: trade.keyLevel ?? "",
+          entryTimeFrame: trade.entryTimeFrame,
         }
       : {
           date: new Date(),
@@ -131,6 +136,9 @@ export function TradeForm({
           entryReason: "",
           tradeFeelings: "",
           lossAnalysis: "",
+          session: undefined,
+          keyLevel: "",
+          entryTimeFrame: undefined,
         },
   });
 
@@ -377,6 +385,62 @@ export function TradeForm({
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+                control={form.control}
+                name="entryTimeFrame"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Entry Time Frame</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select time frame" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {timeFrames.map(tf => <SelectItem key={tf} value={tf}>{tf}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="session"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Session</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select session" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {sessions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+              control={form.control}
+              name="keyLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Key Level</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="e.g. 4H OB, Daily FVG" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
