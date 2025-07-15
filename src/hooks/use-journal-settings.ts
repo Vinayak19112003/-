@@ -5,27 +5,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc, Timestamp } from "firebase/firestore";
 import { useToast } from './use-toast';
-import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES, DEFAULT_HABITS } from '@/lib/constants';
+import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES } from '@/lib/constants';
 import { useAuth } from './use-auth';
-import { format, startOfDay } from 'date-fns';
 
 const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'userConfig';
 
-type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules' | 'habits';
+type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules';
 
-export type HabitHistory = {
-  date: Date;
-  habits: string[];
-};
 
 const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] | string[]) => {
   const { user } = useAuth();
   const [items, setItems] = useState<string[]>([...defaultValues]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
-  const [habitHistory, setHabitHistory] = useState<HabitHistory[]>([]);
-
 
   const getSettingsDocRef = useCallback(() => {
     if (!user || !db) return null;
@@ -47,14 +40,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
             strategies: [...DEFAULT_STRATEGIES],
             mistakeTags: [...DEFAULT_MISTAKE_TAGS],
             tradingRules: [...DEFAULT_TRADING_RULES],
-            habits: [...DEFAULT_HABITS],
-            habitHistory: [{ date: Timestamp.fromDate(startOfDay(new Date())), habits: [...DEFAULT_HABITS] }]
           });
-        } else if (!docSnap.data().habitHistory) {
-            // Backwards compatibility for users without habitHistory
-            await updateDoc(docRef, {
-                habitHistory: [{ date: Timestamp.fromDate(startOfDay(new Date())), habits: docSnap.data().habits || [...DEFAULT_HABITS] }]
-            });
         }
       } catch (error) {
         console.error("Failed to check or initialize settings doc:", error);
@@ -107,11 +93,6 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
           } else {
             setItems([...defaultValues]);
           }
-          
-          if (key === 'habits' && Array.isArray(data.habitHistory)) {
-             setHabitHistory(data.habitHistory.map((h: any) => ({ ...h, date: (h.date as Timestamp).toDate() })).sort((a: HabitHistory, b: HabitHistory) => a.date.getTime() - b.date.getTime()));
-          }
-
       }
       setIsLoaded(true);
     }, (error) => {
@@ -150,11 +131,6 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
 
     try {
       const updatePayload: { [k: string]: any } = { [key]: arrayUnion(trimmedItem) };
-      if (key === 'habits') {
-        const newHabitList = [...items, trimmedItem];
-        updatePayload.habitHistory = arrayUnion({ date: Timestamp.fromDate(startOfDay(new Date())), habits: newHabitList });
-      }
-
       await updateDoc(docRef, updatePayload);
       toast({
         title: "Item Added",
@@ -180,10 +156,6 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     }
     try {
         const updatePayload: { [k: string]: any } = { [key]: arrayRemove(itemToDelete) };
-        if (key === 'habits') {
-            const newHabitList = items.filter(i => i !== itemToDelete);
-            updatePayload.habitHistory = arrayUnion({ date: Timestamp.fromDate(startOfDay(new Date())), habits: newHabitList });
-        }
         await updateDoc(docRef, updatePayload);
         toast({
             title: "Item Deleted",
@@ -199,7 +171,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     }
   };
 
-  return { items, addItem, deleteItem, isLoaded, habitHistory };
+  return { items, addItem, deleteItem, isLoaded };
 };
 
 export default useJournalSettings;
