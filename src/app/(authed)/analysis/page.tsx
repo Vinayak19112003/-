@@ -1,6 +1,13 @@
 
 "use client";
 
+/**
+ * @fileoverview This file defines the Analysis page.
+ * This page provides a deep dive into the user's trading data with various
+ * analytical charts and tables. It fetches trade data based on a selectable
+ * date range and passes it to different visualization components.
+ */
+
 import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +23,8 @@ import { useTradingRules } from "@/hooks/use-trading-rules";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
 
+// Dynamically import all charting components to reduce the initial bundle size.
+// Skeletons are shown as placeholders while the components load.
 const PatternAnalysis = dynamic(() => import('@/components/dashboard/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
 const SharePerformance = dynamic(() => import('@/components/dashboard/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
 const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
@@ -27,12 +36,16 @@ const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-perf
 const MonthlyPerformance = dynamic(() => import('@/components/dashboard/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
 const DurationAnalysis = dynamic(() => import('@/components/dashboard/duration-analysis').then(mod => mod.DurationAnalysis), { ssr: false, loading: () => <Skeleton className="h-[340px]" /> });
 
-
+/**
+ * The main component for the Analysis page.
+ * It handles fetching trade data for a specific date range and rendering
+ * the various analysis components.
+ */
 export default function AnalysisPage() {
     const { user } = useAuth();
     const { toast } = useToast();
     const { tradingRules } = useTradingRules();
-    const { refreshKey } = useTrades();
+    const { refreshKey } = useTrades(); // Used to trigger a refetch when trades change.
     
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +55,7 @@ export default function AnalysisPage() {
         to: new Date(),
     });
 
+    // Effect to fetch trades whenever the user, date range, or refreshKey changes.
     useEffect(() => {
         const fetchTradesForRange = async () => {
             if (!user) {
@@ -56,13 +70,15 @@ export default function AnalysisPage() {
                 
                 let q;
                 if (dateRange?.from && dateRange?.to) {
+                     // Query for a specific date range.
                      q = query(
                         tradesCollection, 
                         where('date', '>=', Timestamp.fromDate(dateRange.from)),
                         where('date', '<=', Timestamp.fromDate(endOfDay(dateRange.to))),
                         orderBy('date', 'desc')
                     );
-                } else { // "All time" selected
+                } else { 
+                    // Query for "All time" if no date range is selected.
                     q = query(tradesCollection, orderBy('date', 'desc'));
                 }
                 
@@ -85,7 +101,7 @@ export default function AnalysisPage() {
         fetchTradesForRange();
     }, [user, dateRange, toast, refreshKey]);
 
-
+    // Renders a skeleton layout while data is loading.
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -108,6 +124,7 @@ export default function AnalysisPage() {
         );
     }
     
+    // Renders the main analysis page layout with all the components.
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">

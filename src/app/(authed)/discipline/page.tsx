@@ -1,11 +1,24 @@
 
 'use client';
 
+/**
+ * @fileoverview This file defines the Discipline Checklist page.
+ * It displays the user's defined trading model in a simple, read-only checklist format.
+ * This serves as a quick reference for the user to review their trading rules and procedures.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTradingModel, type ModelSection } from '@/hooks/use-trading-model';
+import { useTradingModel } from '@/hooks/use-trading-model';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Check } from "lucide-react";
 
+/**
+ * A component that renders a section of the checklist.
+ * @param {object} props - The component props.
+ * @param {string} props.title - The title of the checklist section.
+ * @param {string[]} props.items - An array of checklist items to display.
+ * @param {string} [props.description] - An optional description for the section.
+ */
 const ChecklistSection = ({ title, items, description }: { title: string; items: string[]; description?: string }) => {
     return (
         <div className="space-y-3">
@@ -27,9 +40,14 @@ const ChecklistSection = ({ title, items, description }: { title: string; items:
     );
 };
 
+/**
+ * The main component for the Discipline page.
+ * It fetches the user's trading model and displays it using ChecklistSection components.
+ */
 export default function DisciplinePage() {
     const { model, isLoaded } = useTradingModel();
 
+    // Renders a skeleton loader while the trading model data is being fetched.
     if (!isLoaded) {
         return (
             <div className="space-y-6">
@@ -59,6 +77,7 @@ export default function DisciplinePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
+                    {/* Render each section of the trading model */}
                     <ChecklistSection 
                         title="Week Preparation" 
                         items={model.week}

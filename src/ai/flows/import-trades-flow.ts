@@ -3,9 +3,13 @@
 /**
  * @fileOverview An AI agent for parsing trade data from various file types (CSV, PDF, Image).
  *
- * - importTrades - A function that handles the trade import process.
- * - ImportTradesInput - The input type for the importTrades function.
- * - ImportTradesOutput - The return type for the importTrades function.
+ * This file defines a Genkit flow that uses an AI model to analyze a file
+ * (provided as a data URI) and extract structured trade data from it. It's
+ * designed to be robust and handle various formats intelligently.
+ *
+ * @exports importTrades - The primary function to invoke the AI trade parsing flow.
+ * @exports ImportTradesInput - The Zod schema for the input to the flow.
+ * @exports ImportTradesOutput - The Zod schema for the output of the flow.
  */
 
 import {ai} from '@/ai/genkit';
@@ -19,21 +23,33 @@ const AITradeSchema = TradeSchema.omit({id: true}).extend({
     date: z.string().transform((val) => new Date(val)),
 });
 
-const ImportTradesInputSchema = z.object({
+export const ImportTradesInputSchema = z.object({
   fileDataUri: z.string().describe("A file containing trade data, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'. The file can be a CSV, PDF, or an image of trades."),
 });
 export type ImportTradesInput = z.infer<typeof ImportTradesInputSchema>;
 
-const ImportTradesOutputSchema = z.object({
+export const ImportTradesOutputSchema = z.object({
   trades: z.array(AITradeSchema).describe('An array of parsed trade objects.'),
 });
 export type ImportTradesOutput = z.infer<typeof ImportTradesOutputSchema>;
 
 
+/**
+ * A wrapper function that executes the Genkit flow for importing trades.
+ * This is the main entry point for using this AI capability from the frontend.
+ * @param input - The input data containing the file data URI.
+ * @returns A promise that resolves to the parsed trade data.
+ */
 export async function importTrades(input: ImportTradesInput): Promise<ImportTradesOutput> {
   return importTradesFlow(input);
 }
 
+/**
+ * @name importTradesPrompt
+ * @description A Genkit prompt that instructs the AI on how to parse trade data from a file.
+ * It's a detailed prompt that tells the AI how to handle various data formats,
+ * missing fields, and specific calculations (like Risk/Reward).
+ */
 const prompt = ai.definePrompt({
   name: 'importTradesPrompt',
   input: {schema: ImportTradesInputSchema},
@@ -74,6 +90,11 @@ Analyze this file and provide the output in the specified JSON format:
 `,
 });
 
+/**
+ * @name importTradesFlow
+ * @description The main Genkit flow definition for importing trades.
+ * It takes the file data URI, passes it to the AI prompt, and returns the structured output.
+ */
 const importTradesFlow = ai.defineFlow(
   {
     name: 'importTradesFlow',

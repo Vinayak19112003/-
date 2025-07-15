@@ -1,6 +1,14 @@
 
 'use client';
 
+/**
+ * @fileoverview This file defines the Trade Log page.
+ * It displays a paginated table of all the user's trades. It includes
+ * functionality for editing, deleting, importing, exporting, and clearing trades.
+ * It uses infinite scrolling ("Load More" button) to fetch trades in batches
+ * for better performance.
+ */
+
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { useTrades } from "@/contexts/trades-context";
@@ -16,29 +24,41 @@ import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData } 
 import { Loader2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 
+// The number of trades to fetch per page.
 const TRADES_PER_PAGE = 7;
 
+// Dynamically import child components to optimize initial load.
 const TradeTable = dynamic(() => import('@/components/dashboard/trade-table'), {
     ssr: false,
     loading: () => <Skeleton className="h-96 w-full" />
 });
-
 const ImportTrades = dynamic(() => import('@/components/dashboard/import-trades'), { ssr: false });
 const ExportTrades = dynamic(() => import('@/components/dashboard/export-trades').then(mod => mod.ExportTrades), { ssr: false });
 const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
 
+/**
+ * The main content component for the Trades page.
+ * It is memoized to prevent re-renders unless its props change.
+ */
 const TradesPageContent = React.memo(function TradesPageContent() {
     const { user } = useAuth();
     const { deleteTrade, deleteAllTrades, addMultipleTrades, refreshKey } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
     
+    // State to hold the trades displayed on the page.
     const [localTrades, setLocalTrades] = useState<Trade[]>([]);
+    // State to keep track of the last Firestore document for pagination.
     const [lastVisible, setLastVisible] = useState<DocumentData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+    const [hasMore, setHasMore] = useState(true); // Tracks if there are more trades to load.
 
+    /**
+     * Fetches trades from Firestore.
+     * @param {boolean} [initial=false] - If true, it's the first fetch, so it resets the list.
+     *                                      If false, it's a "load more" fetch.
+     */
     const fetchTrades = React.useCallback(async (initial = false) => {
         if (!user) {
             if (initial) setIsLoading(false);
@@ -61,8 +81,10 @@ const TradesPageContent = React.memo(function TradesPageContent() {
             const currentLastVisible = initial ? null : lastVisible;
 
             if (!currentLastVisible) {
+                // Initial query
                 q = query(tradesCollection, orderBy('date', 'desc'), limit(TRADES_PER_PAGE));
             } else {
+                // Subsequent query for "load more"
                 q = query(tradesCollection, orderBy('date', 'desc'), startAfter(currentLastVisible), limit(TRADES_PER_PAGE));
             }
 
@@ -77,6 +99,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
             setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
             setLocalTrades(prev => initial ? newTrades : [...prev, ...newTrades]);
             
+            // If fewer trades are returned than requested, we know there are no more.
             if (documentSnapshots.docs.length < TRADES_PER_PAGE) {
                 setHasMore(false);
             }
@@ -90,6 +113,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         }
     }, [user, hasMore, isLoadingMore, lastVisible, toast]);
 
+    // Effect to trigger the initial fetch of trades when the user or refreshKey changes.
     useEffect(() => {
         if (user) {
             fetchTrades(true);
@@ -97,6 +121,10 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, refreshKey]);
 
+    /**
+     * Handles the deletion of a single trade.
+     * @param {string} id - The ID of the trade to delete.
+     */
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);
         if (success) {
@@ -105,6 +133,9 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         }
     };
     
+    /**
+     * Handles clearing all trades from the user's log.
+     */
     const handleClearAll = async () => {
         const success = await deleteAllTrades();
         if (success) {
@@ -115,6 +146,11 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         }
     }
 
+    /**
+     * Callback for when the AI import is complete.
+     * @param {number} addedCount - The number of trades successfully added.
+     * @param {number} skippedCount - The number of duplicate trades skipped.
+     */
     const handleImport = async (addedCount: number, skippedCount: number) => {
        toast({
             title: "Import Complete",
@@ -123,6 +159,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         fetchTrades(true); // Refetch to show new trades
     }
 
+    // Renders a skeleton loader while the initial trades are being fetched.
     if (isLoading) {
         return (
             <Card>
@@ -137,6 +174,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         );
     }
 
+    // Renders the main content of the trade log page.
     return (
         <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -156,7 +194,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
                     onEdit={openForm} 
                     onDelete={handleDeleteTrade}
                 />
-                 {isLoadingMore && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+                {isLoadingMore && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
                 {hasMore && !isLoadingMore && (
                     <div className="flex justify-center pt-4">
                         <Button onClick={() => fetchTrades(false)}>Load More</Button>
@@ -167,7 +205,9 @@ const TradesPageContent = React.memo(function TradesPageContent() {
     );
 });
 
-
+/**
+ * The main export for the Trades page.
+ */
 export default function TradesPage() {
     return <TradesPageContent />;
 }

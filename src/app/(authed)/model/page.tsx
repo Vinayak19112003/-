@@ -1,6 +1,14 @@
 
 'use client';
 
+/**
+ * @fileoverview This file defines the Trading Model page.
+ * This page allows users to create, edit, reorder, and delete items in their
+ * personal trading checklist. The checklist is divided into multiple sections
+ * (e.g., Week Preparation, Daily Preparation). The state is managed by the
+ * `use-trading-model` hook and persists in Firestore.
+ */
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -8,10 +16,15 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useTradingModel, type ModelSection } from '@/hooks/use-trading-model';
 import { Skeleton } from '@/components/ui/skeleton';
+// DND-Kit imports for drag-and-drop functionality.
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+/**
+ * A sortable and editable checklist item component.
+ * It uses dnd-kit for drag-and-drop reordering.
+ */
 const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSection; item: string; onUpdate: (section: ModelSection, oldItem: string, newItem: string) => void; onDelete: (section: ModelSection, item: string) => void; }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item });
     const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +63,9 @@ const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSec
     );
 };
 
+/**
+ * A component that renders an entire editable section of the trading model.
+ */
 const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteItem, onUpdateOrder, description }: { title: string; sectionKey: ModelSection; items: string[]; onAddItem: (section: ModelSection, item: string) => void; onUpdateItem: (section: ModelSection, oldItem: string, newItem: string) => void; onDeleteItem: (section: ModelSection, item: string) => void; onUpdateOrder: (section: ModelSection, newOrder: string[]) => void; description?: string; }) => {
     const [newItem, setNewItem] = useState("");
     const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -61,6 +77,10 @@ const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteIt
         }
     };
     
+    /**
+     * Handles the end of a drag-and-drop event to reorder items.
+     * @param {DragEndEvent} event - The event object from dnd-kit.
+     */
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
@@ -99,16 +119,24 @@ const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteIt
     );
 };
 
+/**
+ * The main component for the Trading Model page.
+ */
 export default function TradingModelPage() {
     const { model, addItem, updateItem, deleteItem, updateOrder, isLoaded } = useTradingModel();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // Local loading state for individual actions.
 
+    /**
+     * A wrapper function to show a loading spinner during async operations.
+     * @param {() => Promise<any>} action - The async function to execute.
+     */
     const handleAction = async (action: () => Promise<any>) => {
         setIsLoading(true);
         await action();
         setIsLoading(false);
     };
 
+    // Show skeleton loader while the model is being fetched from Firestore.
     if (!isLoaded) {
         return (
             <div className="space-y-6">
@@ -141,6 +169,7 @@ export default function TradingModelPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
+                    {/* Render each editable section of the trading model */}
                     <Section 
                         title="Week Preparation" 
                         sectionKey="week"

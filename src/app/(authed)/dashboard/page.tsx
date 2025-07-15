@@ -1,6 +1,14 @@
 
 "use client";
 
+/**
+ * @fileoverview This file defines the main Dashboard page.
+ * It serves as the primary landing page for authenticated users, displaying
+ * a high-level overview of their trading performance. It includes a summary
+ * banner, key performance indicator (KPI) cards, a monthly calendar view,
+ * and an equity curve chart.
+ */
+
 import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -15,14 +23,19 @@ import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
 
+// Dynamically import components to improve initial page load performance.
 const SummaryBanner = dynamic(() => import('@/components/dashboard/summary-banner').then(mod => mod.SummaryBanner), { ssr: false, loading: () => <Skeleton className="h-28" /> });
 const EquityCurveChart = dynamic(() => import('@/components/dashboard/equity-curve-chart').then(mod => mod.EquityCurveChart), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 const MonthlyCalendar = dynamic(() => import('@/components/dashboard/monthly-calendar'), { ssr: false, loading: () => <Skeleton className="h-[600px]" /> });
 
+/**
+ * The main component for the Dashboard page.
+ * It manages fetching and filtering trade data to pass to its child components.
+ */
 export default function DashboardPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { refreshKey } = useTrades();
+  const { refreshKey } = useTrades(); // A key that changes to trigger data refetches.
   
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
   const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
@@ -33,7 +46,8 @@ export default function DashboardPage() {
     to: new Date(),
   });
 
-  // Effect to fetch ALL trades for components that need the full history (SummaryBanner, MonthlyCalendar)
+  // Effect to fetch ALL trades once. This is used for components that need the
+  // full trade history, like the SummaryBanner and MonthlyCalendar.
   useEffect(() => {
     const fetchAllTrades = async () => {
         if (!user) {
@@ -57,11 +71,12 @@ export default function DashboardPage() {
     fetchAllTrades();
   }, [user, toast, refreshKey]);
   
-  // Effect to filter trades based on date range
+  // Effect to filter the `allTrades` array based on the selected date range.
+  // This runs whenever the date range or the list of all trades changes.
   useEffect(() => {
     const fetchFilteredTrades = () => {
         if (!dateRange?.from || !dateRange?.to) {
-            setFilteredTrades(allTrades); // "All time"
+            setFilteredTrades(allTrades); // "All time" is selected
             return;
         }
         const toDate = endOfDay(dateRange.to);
@@ -77,6 +92,12 @@ export default function DashboardPage() {
   }, [dateRange, allTrades, isLoading]);
 
 
+  /**
+   * Handles date selection from the MonthlyCalendar component.
+   * Sets the date range filter to the single selected day.
+   * If the day is already selected, it resets the filter.
+   * @param {Date} date - The date selected on the calendar.
+   */
   const handleCalendarDateSelect = (date: Date) => {
     const from = dateRange?.from;
     const to = dateRange?.to;
@@ -88,6 +109,7 @@ export default function DashboardPage() {
     }
   };
 
+  // Renders a skeleton loading state while fetching initial data.
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -110,6 +132,7 @@ export default function DashboardPage() {
     );
   }
 
+  // Renders the main dashboard layout.
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -117,8 +140,10 @@ export default function DashboardPage() {
           <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
       </div>
       
+      {/* Uses all trades for historical summary */}
       <SummaryBanner trades={allTrades} />
 
+      {/* Uses filtered trades for date-range specific stats */}
       <StatsCards trades={filteredTrades} />
       
       <div className="grid grid-cols-1 gap-4 md:gap-6">

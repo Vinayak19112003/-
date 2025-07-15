@@ -4,20 +4,25 @@
 /**
  * @fileOverview AI agent for pattern detection in trade notes.
  *
- * - patternDetection - A function that analyzes trade notes for patterns.
- * - PatternDetectionInput - The input type for the patternDetection function.
- * - PatternDetectionOutput - The return type for the patternDetection function.
+ * This file defines a Genkit flow that uses an AI model to analyze a collection
+ * of a trader's journal entries, notes, and psychological data. It identifies
+ * behavioral patterns, emotional correlations, and provides actionable insights
+ * to help improve trading performance.
+ *
+ * @exports patternDetection - The primary function to invoke the AI analysis flow.
+ * @exports PatternDetectionInput - The Zod schema for the input to the flow.
+ * @exports PatternDetectionOutput - The Zod schema for the output of the flow.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const PatternDetectionInputSchema = z.object({
+export const PatternDetectionInputSchema = z.object({
   tradeNotes: z.string().describe('A string containing all trade notes, emotional states, and psychological reflections to analyze.'),
 });
 export type PatternDetectionInput = z.infer<typeof PatternDetectionInputSchema>;
 
-const PatternDetectionOutputSchema = z.object({
+export const PatternDetectionOutputSchema = z.object({
   patterns: z
     .string()
     .describe(
@@ -26,10 +31,22 @@ const PatternDetectionOutputSchema = z.object({
 });
 export type PatternDetectionOutput = z.infer<typeof PatternDetectionOutputSchema>;
 
+/**
+ * A wrapper function that executes the Genkit flow for pattern detection.
+ * This is the main entry point for using this AI capability from the frontend.
+ * @param input - The input data containing the compiled trade notes.
+ * @returns A promise that resolves to the AI-generated analysis.
+ */
 export async function patternDetection(input: PatternDetectionInput): Promise<PatternDetectionOutput> {
   return patternDetectionFlow(input);
 }
 
+/**
+ * @name patternDetectionPrompt
+ * @description A Genkit prompt that instructs the AI to act as a trading psychologist.
+ * It provides a structured set of tasks for the AI to perform, such as identifying
+ * emotional correlations and analyzing behavioral loops, based on the provided journal entries.
+ */
 const patternDetectionPrompt = ai.definePrompt({
   name: 'patternDetectionPrompt',
   input: {schema: PatternDetectionInputSchema},
@@ -54,6 +71,11 @@ Your analysis MUST go beyond surface-level observations. Connect the dots betwee
 {{{tradeNotes}}}`,
 });
 
+/**
+ * @name patternDetectionFlow
+ * @description The main Genkit flow definition for trade pattern analysis.
+ * It takes the compiled notes, passes them to the AI prompt, and returns the analysis.
+ */
 const patternDetectionFlow = ai.defineFlow(
   {
     name: 'patternDetectionFlow',
