@@ -165,10 +165,13 @@ export default function AnalysisPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                  <DurationAnalysis trades={trades} />
-                 <div className="space-y-4 md:space-y-6">
-                    <DailyPerformance trades={trades} />
+                 <DailyPerformance trades={trades} />
+            </div>
+
+            <div className="flex justify-center">
+                <div className="w-full lg:w-1/2">
                     <MonthlyPerformance trades={trades} />
-                 </div>
+                </div>
             </div>
 
         </div>
