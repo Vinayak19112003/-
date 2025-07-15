@@ -119,8 +119,8 @@ export default function AnalysisPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                 <Card>
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>Performance breakdown by trading strategy.</CardDescription>
@@ -138,7 +138,19 @@ export default function AnalysisPage() {
                         <MistakeAnalysis trades={trades} />
                     </CardContent>
                 </Card>
-                <Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+                <Card className="lg:col-span-2">
+                     <CardHeader>
+                        <CardTitle>Performance Metrics</CardTitle>
+                        <CardDescription>A radar view of your key performance indicators.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <PerformanceRadarChart trades={trades} tradingRules={tradingRules} />
+                    </CardContent>
+                </Card>
+                 <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Rule Adherence vs. Outcome</CardTitle>
                         <CardDescription>Analyze the impact of following your rules.</CardDescription>
@@ -147,22 +159,18 @@ export default function AnalysisPage() {
                         <RuleAdherenceAnalysis trades={trades} tradingRules={tradingRules} />
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Performance Metrics</CardTitle>
-                        <CardDescription>A radar view of your key performance indicators.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                        <PerformanceRadarChart trades={trades} tradingRules={tradingRules} />
-                    </CardContent>
-                </Card>
             </div>
+            
             <TimeAnalysis trades={trades} />
-            <DurationAnalysis trades={trades} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <DailyPerformance trades={trades} />
-                <MonthlyPerformance trades={trades} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                 <DurationAnalysis trades={trades} />
+                 <div className="space-y-4 md:space-y-6">
+                    <DailyPerformance trades={trades} />
+                    <MonthlyPerformance trades={trades} />
+                 </div>
             </div>
+
         </div>
     );
 }
