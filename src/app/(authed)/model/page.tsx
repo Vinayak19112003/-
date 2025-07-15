@@ -25,7 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
  * A sortable and editable checklist item component.
  * It uses dnd-kit for drag-and-drop reordering.
  */
-const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSection; item: string; onUpdate: (section: ModelSection, oldItem: string, newItem: string) => void; onDelete: (section: ModelSection, item: string) => void; }) => {
+const SortableItem = ({ section, item, onUpdate, onDelete, isLoading }: { section: ModelSection; item: string; onUpdate: (section: ModelSection, oldItem: string, newItem: string) => void; onDelete: (section: ModelSection, item: string) => void; isLoading: boolean; }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item });
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(item);
@@ -64,6 +64,7 @@ const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSec
                     e.stopPropagation();
                     onDelete(section, item);
                 }}
+                disabled={isLoading}
             >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Delete item</span>
@@ -75,7 +76,7 @@ const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSec
 /**
  * A component that renders an entire editable section of the trading model.
  */
-const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteItem, onUpdateOrder, description }: { title: string; sectionKey: ModelSection; items: string[]; onAddItem: (section: ModelSection, item: string) => void; onUpdateItem: (section: ModelSection, oldItem: string, newItem: string) => void; onDeleteItem: (section: ModelSection, item: string) => void; onUpdateOrder: (section: ModelSection, newOrder: string[]) => void; description?: string; }) => {
+const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteItem, onUpdateOrder, description, isLoading }: { title: string; sectionKey: ModelSection; items: string[]; onAddItem: (section: ModelSection, item: string) => void; onUpdateItem: (section: ModelSection, oldItem: string, newItem: string) => void; onDeleteItem: (section: ModelSection, item: string) => void; onUpdateOrder: (section: ModelSection, newOrder: string[]) => void; description?: string; isLoading: boolean; }) => {
     const [newItem, setNewItem] = useState("");
     const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 
@@ -108,7 +109,7 @@ const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteIt
             <div className="space-y-2 pl-2">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={items} strategy={verticalListSortingStrategy}>
-                        {items.map(item => <SortableItem key={item} section={sectionKey} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} />)}
+                        {items.map(item => <SortableItem key={item} section={sectionKey} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} isLoading={isLoading} />)}
                     </SortableContext>
                 </DndContext>
             </div>
@@ -119,8 +120,10 @@ const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteIt
                     onChange={(e) => setNewItem(e.target.value)} 
                     onKeyDown={(e) => { if (e.key === 'Enter') handleAddItem(); }}
                     className="h-9"
+                    disabled={isLoading}
                 />
-                <Button size="sm" onClick={handleAddItem}>
+                <Button size="sm" onClick={handleAddItem} disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Plus className="mr-2 h-4 w-4" /> Add
                 </Button>
             </div>
@@ -132,7 +135,7 @@ const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteIt
  * The main component for the Trading Model page.
  */
 export default function TradingModelPage() {
-    const { model, addItem, updateItem, updateOrder, updateModel, isLoaded } = useTradingModel();
+    const { model, updateModel, isLoaded } = useTradingModel();
     const [isLoading, setIsLoading] = useState(false); // Local loading state for individual actions.
 
     /**
@@ -140,6 +143,7 @@ export default function TradingModelPage() {
      * @param {() => Promise<any>} action - The async function to execute.
      */
     const handleAction = async (action: () => Promise<any>) => {
+        if (isLoading) return; // Prevent multiple simultaneous actions
         setIsLoading(true);
         try {
             await action();
@@ -147,11 +151,40 @@ export default function TradingModelPage() {
             setIsLoading(false);
         }
     };
+    
+    const addItem = (section: ModelSection, item: string) => {
+        handleAction(async () => {
+            const newModel = { ...model };
+            newModel[section] = [...newModel[section], item];
+            await updateModel(newModel);
+        });
+    };
 
-    const handleDeleteItem = async (section: ModelSection, itemToDelete: string) => {
-        const newModel = { ...model };
-        newModel[section] = newModel[section].filter((i: string) => i !== itemToDelete);
-        await handleAction(() => updateModel(newModel));
+    const updateItem = (section: ModelSection, oldItem: string, newItem: string) => {
+        handleAction(async () => {
+            const newModel = { ...model };
+            const index = newModel[section].indexOf(oldItem);
+            if (index !== -1) {
+                newModel[section][index] = newItem;
+                await updateModel(newModel);
+            }
+        });
+    };
+
+    const updateOrder = (section: ModelSection, newOrder: string[]) => {
+        handleAction(async () => {
+            const newModel = { ...model };
+            newModel[section] = newOrder;
+            await updateModel(newModel);
+        });
+    };
+
+    const handleDeleteItem = (section: ModelSection, itemToDelete: string) => {
+       handleAction(async () => {
+            const newModel = { ...model };
+            newModel[section] = newModel[section].filter((i: string) => i !== itemToDelete);
+            await updateModel(newModel);
+        });
     };
 
     // Show skeleton loader while the model is being fetched from Firestore.
@@ -191,39 +224,43 @@ export default function TradingModelPage() {
                         title="Week Preparation" 
                         sectionKey="week"
                         items={model.week}
-                        onAddItem={(section, item) => handleAction(() => addItem(section, item))}
-                        onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
+                        onAddItem={addItem}
+                        onUpdateItem={updateItem}
                         onDeleteItem={handleDeleteItem}
-                        onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
+                        onUpdateOrder={updateOrder}
+                        isLoading={isLoading}
                     />
                     <Section 
                         title="Daily Preparation"
                         sectionKey="day"
                         items={model.day}
-                        onAddItem={(section, item) => handleAction(() => addItem(section, item))}
-                        onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
+                        onAddItem={addItem}
+                        onUpdateItem={updateItem}
                         onDeleteItem={handleDeleteItem}
-                        onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
+                        onUpdateOrder={updateOrder}
+                        isLoading={isLoading}
                     />
                     <Section 
                         title="Trigger"
                         sectionKey="trigger"
                         description="(Short Term Trade Execution on H1)"
                         items={model.trigger}
-                        onAddItem={(section, item) => handleAction(() => addItem(section, item))}
-                        onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
+                        onAddItem={addItem}
+                        onUpdateItem={updateItem}
                         onDeleteItem={handleDeleteItem}
-                        onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
+                        onUpdateOrder={updateOrder}
+                        isLoading={isLoading}
                     />
                     <Section 
                         title="LTF Execution"
                         sectionKey="ltf"
                         description="(Intraday Execution)"
                         items={model.ltf}
-                        onAddItem={(section, item) => handleAction(() => addItem(section, item))}
-                        onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
+                        onAddItem={addItem}
+                        onUpdateItem={updateItem}
                         onDeleteItem={handleDeleteItem}
-                        onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
+                        onUpdateOrder={updateOrder}
+                        isLoading={isLoading}
                     />
                 </CardContent>
             </Card>
