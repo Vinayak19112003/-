@@ -16,7 +16,7 @@ import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData } 
 import { Loader2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 
-const TRADES_PER_PAGE = 20;
+const TRADES_PER_PAGE = 7;
 
 const TradeTable = dynamic(() => import('@/components/dashboard/trade-table'), {
     ssr: false,
