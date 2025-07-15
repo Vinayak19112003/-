@@ -17,7 +17,7 @@ import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useTradingModel, type ModelSection } from '@/hooks/use-trading-model';
 import { Skeleton } from '@/components/ui/skeleton';
 // DND-Kit imports for drag-and-drop functionality.
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -132,8 +132,11 @@ export default function TradingModelPage() {
      */
     const handleAction = async (action: () => Promise<any>) => {
         setIsLoading(true);
-        await action();
-        setIsLoading(false);
+        try {
+            await action();
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Show skeleton loader while the model is being fetched from Firestore.
