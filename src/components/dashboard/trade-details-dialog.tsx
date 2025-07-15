@@ -49,9 +49,30 @@ const NoteBlock = ({ label, value }: { label: string, value: string | undefined 
     )
 }
 
+const ListBlock = ({ label, items }: { label: string; items: string[] | undefined }) => {
+    if (!items || items.length === 0) return null;
+    return (
+        <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <div className="flex flex-wrap gap-2">
+                {items.map(item => (
+                    <Badge key={item} variant="secondary">{item}</Badge>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export function TradeDetailsDialog({ trade, isOpen, onOpenChange }: TradeDetailsDialogProps) {
   if (!trade) return null;
   const returnPercentage = trade.accountSize && trade.accountSize > 0 && trade.pnl != null ? (trade.pnl / trade.accountSize) * 100 : 0;
+
+  const allModelItems = [
+      ...(trade.modelFollowed?.week ?? []),
+      ...(trade.modelFollowed?.day ?? []),
+      ...(trade.modelFollowed?.trigger ?? []),
+      ...(trade.modelFollowed?.ltf ?? []),
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -147,27 +168,9 @@ export function TradeDetailsDialog({ trade, isOpen, onOpenChange }: TradeDetails
                     </div>
                 )}
                 
-                {trade.rulesFollowed && trade.rulesFollowed.length > 0 && (
-                    <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Rules Followed</p>
-                        <div className="flex flex-wrap gap-2">
-                            {trade.rulesFollowed.map(rule => (
-                                <Badge key={rule} variant="secondary">{rule}</Badge>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {trade.mistakes && trade.mistakes.length > 0 && (
-                    <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Mistakes Made</p>
-                        <div className="flex flex-wrap gap-2">
-                            {trade.mistakes.map(mistake => (
-                                <Badge key={mistake} variant="outline">{mistake}</Badge>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                <ListBlock label="Trading Model Followed" items={allModelItems} />
+                <ListBlock label="Rules Followed" items={trade.rulesFollowed} />
+                <ListBlock label="Mistakes Made" items={trade.mistakes} />
 
                 {trade.notes && (
                     <NoteBlock label="General Notes" value={trade.notes} />

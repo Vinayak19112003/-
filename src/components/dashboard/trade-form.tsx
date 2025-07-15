@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { type Trade, TradeSchema } from "@/lib/types";
+import { type Trade, TradeSchema, type TradingModel } from "@/lib/types";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMistakeTags } from "@/hooks/use-mistake-tags";
@@ -53,6 +53,7 @@ import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Separator } from "../ui/separator";
 import { useTrades } from "@/contexts/trades-context";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { useTradingModel, type ModelSection } from "@/hooks/use-trading-model";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -66,6 +67,49 @@ type TradeFormProps = {
   trade?: Trade;
   onSaveSuccess: () => void;
   setOpen: Dispatch<SetStateAction<boolean>>;
+};
+
+const ChecklistSection = ({ name, title, items, control }: { name: `modelFollowed.${ModelSection}`; title: string; items: string[]; control: any }) => {
+    if (items.length === 0) return null;
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={() => (
+                <FormItem>
+                    <div className="mb-2">
+                        <FormLabel className="text-base">{title}</FormLabel>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                        {items.map((item) => (
+                            <FormField
+                                key={item}
+                                control={control}
+                                name={name}
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value?.includes(item)}
+                                                onCheckedChange={(checked) => {
+                                                    const currentValues = field.value || [];
+                                                    return checked
+                                                        ? field.onChange([...currentValues, item])
+                                                        : field.onChange(currentValues.filter((value) => value !== item));
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">{item}</FormLabel>
+                                    </FormItem>
+                                )}
+                            />
+                        ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+    );
 };
 
 export function TradeForm({ 
@@ -83,6 +127,7 @@ export function TradeForm({
   const { tradingRules, addTradingRule, deleteTradingRule } = useTradingRules();
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
+  const { model: tradingModel } = useTradingModel();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -96,6 +141,7 @@ export function TradeForm({
           pnl: trade.pnl ?? 0,
           mistakes: trade.mistakes ?? [],
           rulesFollowed: trade.rulesFollowed ?? [],
+          modelFollowed: trade.modelFollowed ?? { week: [], day: [], trigger: [], ltf: [] },
           exitTime: trade.exitTime ?? "",
           notes: trade.notes ?? "",
           ticket: trade.ticket ?? "",
@@ -124,6 +170,7 @@ export function TradeForm({
           confidence: 5,
           mistakes: [],
           rulesFollowed: [],
+          modelFollowed: { week: [], day: [], trigger: [], ltf: [] },
           notes: "",
           screenshotURL: "",
           accountSize: 0,
@@ -701,6 +748,18 @@ export function TradeForm({
             )}
         />
         
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="trading-model-checklist">
+                <AccordionTrigger>Trading Model Checklist</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                    <ChecklistSection name="modelFollowed.week" title="Week Preparation" items={tradingModel.week} control={form.control} />
+                    <ChecklistSection name="modelFollowed.day" title="Daily Preparation" items={tradingModel.day} control={form.control} />
+                    <ChecklistSection name="modelFollowed.trigger" title="Trigger" items={tradingModel.trigger} control={form.control} />
+                    <ChecklistSection name="modelFollowed.ltf" title="LTF Execution" items={tradingModel.ltf} control={form.control} />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+
         <FormField
           control={form.control}
           name="rulesFollowed"
@@ -716,7 +775,7 @@ export function TradeForm({
                    />
                 </div>
                 <FormDescription>
-                  Check all the rules you followed for this trade.
+                  Check all the general rules you followed for this trade.
                 </FormDescription>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

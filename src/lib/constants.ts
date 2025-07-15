@@ -34,3 +34,11 @@ export const DEFAULT_TRADING_RULES = [
   "Used proper stop loss and risk-to-reward",
   "Took partials or followed exit plan",
 ] as const;
+
+export const DEFAULT_TRADING_MODEL = {
+    week: ["Check Cot & Seasonals", "Check News", "Outline Possible Weekly Profile"],
+    day: ["Is PA favorable?", "Determine DOL", "Determine most likely daily OLHC"],
+    trigger: ["Establish Narrative", "Establish a POI on H1", "Combine with session profiles"],
+    ltf: ["Wait for Killzone", "Use LTF confirmation / Retracement entry"],
+};
+

@@ -1,8 +1,18 @@
+
 import { z } from "zod";
 
 export const EmotionalStateSchema = z.enum([
   "Focused", "Anxious", "FOMO", "Greedy", "Confident", "Tired", "Neutral", "Other"
 ]).optional();
+
+export const TradingModelSchema = z.object({
+  week: z.array(z.string()).default([]),
+  day: z.array(z.string()).default([]),
+  trigger: z.array(z.string()).default([]),
+  ltf: z.array(z.string()).default([]),
+});
+export type TradingModel = z.infer<typeof TradingModelSchema>;
+
 
 export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
@@ -20,6 +30,7 @@ export const TradeSchema = z.object({
   confidence: z.coerce.number().min(1).max(10).default(5),
   mistakes: z.array(z.string()).optional().default([]),
   rulesFollowed: z.array(z.string()).optional().default([]),
+  modelFollowed: TradingModelSchema.optional(),
   notes: z.string().optional(),
   screenshotURL: z.string().optional().default(""),
   accountSize: z.coerce.number().optional().default(0),
