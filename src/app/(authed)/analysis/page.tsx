@@ -159,8 +159,10 @@ export default function AnalysisPage() {
             </div>
             <TimeAnalysis trades={trades} />
             <DurationAnalysis trades={trades} />
-            <DailyPerformance trades={trades} />
-            <MonthlyPerformance trades={trades} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <DailyPerformance trades={trades} />
+                <MonthlyPerformance trades={trades} />
+            </div>
         </div>
     );
 }
