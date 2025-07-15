@@ -11,7 +11,6 @@ export type ModelSection = keyof TradingModel;
 
 export function useTradingModel() {
     // The `updateWholeObject` function is the key here. It replaces the entire model object in Firestore.
-    // The generic `addItem` and `deleteItem` from this hook are not suitable for the complex model object.
     const { items: model, updateWholeObject, isLoaded } = useJournalSettings('tradingModel', DEFAULT_TRADING_MODEL);
     const { toast } = useToast();
 
@@ -45,7 +44,7 @@ export function useTradingModel() {
         await updateWholeObject(newModel);
     }, [model, updateWholeObject]);
 
-    // The delete logic is now handled directly in the page component to ensure correctness.
-    // We only expose the necessary parts: the model, functions to modify it, and the loading state.
+    // Expose the model, modification functions, and loading state.
+    // The 'updateModel' alias for updateWholeObject allows the page to save the entire new model state.
     return { model, addItem, updateItem, updateOrder, updateModel: updateWholeObject, isLoaded };
 }
