@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, memo, useState, useEffect } from 'react';
@@ -125,7 +126,7 @@ export const MonthlyPerformance = memo(function MonthlyPerformance({ trades }: M
                                 cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
                                 content={<CustomTooltip />}
                             />
-                            <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
+                            <Bar dataKey="pnl" radius={[4, 4, 0, 0]} maxBarSize={60}>
                                 {monthlyStats.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? successColor : destructiveColor} />
                                 ))}
