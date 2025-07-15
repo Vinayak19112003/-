@@ -56,9 +56,6 @@ const SortableItem = ({ section, item, onUpdate, onDelete }: { section: ModelSec
             ) : (
                 <p className="flex-1 cursor-pointer" onClick={() => setIsEditing(true)}>{item}</p>
             )}
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(section, item)}>
-                <Trash2 className="h-4 w-4" />
-            </Button>
         </div>
     );
 };
