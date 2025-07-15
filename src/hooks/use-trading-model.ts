@@ -10,6 +10,8 @@ import { useToast } from './use-toast';
 export type ModelSection = keyof TradingModel;
 
 export function useTradingModel() {
+    // The `updateWholeObject` function is the key here. It replaces the entire model object in Firestore.
+    // The generic `addItem` and `deleteItem` from this hook are not suitable for the complex model object.
     const { items: model, updateWholeObject, isLoaded } = useJournalSettings('tradingModel', DEFAULT_TRADING_MODEL);
     const { toast } = useToast();
 
@@ -21,10 +23,10 @@ export function useTradingModel() {
                 title: 'Item Exists',
                 description: 'This item is already in your checklist.',
             });
-            return;
+            return false;
         }
         newModel[section] = [...newModel[section], item];
-        await updateWholeObject(newModel);
+        return await updateWholeObject(newModel);
     }, [model, updateWholeObject, toast]);
 
     const updateItem = useCallback(async (section: ModelSection, oldItem: string, newItem: string) => {
@@ -32,14 +34,9 @@ export function useTradingModel() {
         const index = newModel[section].indexOf(oldItem);
         if (index !== -1) {
             newModel[section][index] = newItem;
-            await updateWholeObject(newModel);
+            return await updateWholeObject(newModel);
         }
-    }, [model, updateWholeObject]);
-    
-    const deleteItem = useCallback(async (section: ModelSection, itemToDelete: string) => {
-        const newModel = { ...model };
-        newModel[section] = newModel[section].filter((i: string) => i !== itemToDelete);
-        await updateWholeObject(newModel);
+        return false;
     }, [model, updateWholeObject]);
     
     const updateOrder = useCallback(async (section: ModelSection, newOrder: string[]) => {
@@ -48,5 +45,7 @@ export function useTradingModel() {
         await updateWholeObject(newModel);
     }, [model, updateWholeObject]);
 
-    return { model, addItem, updateItem, deleteItem, updateOrder, isLoaded };
+    // The delete logic is now handled directly in the page component to ensure correctness.
+    // We only expose the necessary parts: the model, functions to modify it, and the loading state.
+    return { model, addItem, updateItem, updateOrder, updateModel: updateWholeObject, isLoaded };
 }

@@ -123,7 +123,7 @@ const Section = ({ title, sectionKey, items, onAddItem, onUpdateItem, onDeleteIt
  * The main component for the Trading Model page.
  */
 export default function TradingModelPage() {
-    const { model, addItem, updateItem, deleteItem, updateOrder, isLoaded } = useTradingModel();
+    const { model, addItem, updateItem, updateOrder, updateModel, isLoaded } = useTradingModel();
     const [isLoading, setIsLoading] = useState(false); // Local loading state for individual actions.
 
     /**
@@ -137,6 +137,13 @@ export default function TradingModelPage() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // This is the corrected delete logic, implemented directly on the page.
+    const handleDeleteItem = async (section: ModelSection, itemToDelete: string) => {
+        const newModel = { ...model };
+        newModel[section] = newModel[section].filter((i: string) => i !== itemToDelete);
+        await handleAction(() => updateModel(newModel));
     };
 
     // Show skeleton loader while the model is being fetched from Firestore.
@@ -179,7 +186,7 @@ export default function TradingModelPage() {
                         items={model.week}
                         onAddItem={(section, item) => handleAction(() => addItem(section, item))}
                         onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
-                        onDeleteItem={(section, item) => handleAction(() => deleteItem(section, item))}
+                        onDeleteItem={handleDeleteItem}
                         onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
                     />
                     <Section 
@@ -188,7 +195,7 @@ export default function TradingModelPage() {
                         items={model.day}
                         onAddItem={(section, item) => handleAction(() => addItem(section, item))}
                         onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
-                        onDeleteItem={(section, item) => handleAction(() => deleteItem(section, item))}
+                        onDeleteItem={handleDeleteItem}
                         onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
                     />
                     <Section 
@@ -198,7 +205,7 @@ export default function TradingModelPage() {
                         items={model.trigger}
                         onAddItem={(section, item) => handleAction(() => addItem(section, item))}
                         onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
-                        onDeleteItem={(section, item) => handleAction(() => deleteItem(section, item))}
+                        onDeleteItem={handleDeleteItem}
                         onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
                     />
                     <Section 
@@ -208,7 +215,7 @@ export default function TradingModelPage() {
                         items={model.ltf}
                         onAddItem={(section, item) => handleAction(() => addItem(section, item))}
                         onUpdateItem={(section, oldItem, newItem) => handleAction(() => updateItem(section, oldItem, newItem))}
-                        onDeleteItem={(section, item) => handleAction(() => deleteItem(section, item))}
+                        onDeleteItem={handleDeleteItem}
                         onUpdateOrder={(section, newOrder) => handleAction(() => updateOrder(section, newOrder))}
                     />
                 </CardContent>
