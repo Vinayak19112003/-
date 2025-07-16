@@ -126,11 +126,14 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
                                         borderRadius: 'var(--radius)',
                                     }}
                                     labelStyle={{ fontWeight: 'bold' }}
-                                    formatter={(value: number, name: string) => {
-                                        if (name === 'netR') return [`${value}R`, 'Net R'];
-                                        if (name === 'winRate') return [`${value}%`, 'Win Rate'];
+                                    formatter={(value: number, name: string, props: any) => {
+                                        const { payload } = props;
+                                        if (name === 'netR') return [`${value.toFixed(2)}R`, 'Net R'];
+                                        if (name === 'winRate') return [`${payload.winRate.toFixed(1)}%`, 'Win Rate'];
+                                        if (name === 'trades') return [payload.trades, 'Trades'];
                                         return [value, name];
                                     }}
+                                    
                                 />
                                 <Bar dataKey="netR">
                                     {hourlyStats.chartData.map((entry, index) => (
@@ -142,7 +145,7 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
                     </div>
                 ) : (
                     <div className="h-[300px] flex items-center justify-center text-muted-foreground p-4 text-center">
-                        Not enough trade data to analyze time-based performance.
+                        Not enough trade data with entry times to analyze hourly performance.
                     </div>
                 )}
             </CardContent>

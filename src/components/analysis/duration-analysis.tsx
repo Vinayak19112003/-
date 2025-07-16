@@ -106,48 +106,46 @@ export const DurationAnalysis = memo(function DurationAnalysis({ trades }: Durat
     
     if (!mounted) {
         return (
-            <Card className="mt-4 md:mt-8">
+            <Card>
                 <CardHeader>
                     <Skeleton className="h-6 w-48" />
                     <Skeleton className="h-4 w-64" />
                 </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-[300px] w-full" />
+                <CardContent className="h-[340px]">
+                    <Skeleton className="h-full w-full" />
                 </CardContent>
             </Card>
         );
     }
     
     return (
-        <Card className="mt-4 md:mt-8">
+        <Card>
             <CardHeader>
                 <CardTitle>Trade Duration Analysis</CardTitle>
                 <CardDescription>
                    Discover which holding times are most profitable for your style.
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="h-[340px]">
                 {durationStats.chartData.some(d => d.trades > 0) ? (
-                    <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={durationStats.chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                                <XAxis dataKey="name" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Net R', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
-                                <Tooltip
-                                    cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
-                                    content={<CustomTooltip />}
-                                />
-                                <Bar dataKey="netR" radius={[4, 4, 0, 0]}>
-                                    {durationStats.chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.netR >= 0 ? successColor : destructiveColor} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={durationStats.chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                            <XAxis dataKey="name" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Net R', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
+                            <Tooltip
+                                cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
+                                content={<CustomTooltip />}
+                            />
+                            <Bar dataKey="netR" radius={[4, 4, 0, 0]}>
+                                {durationStats.chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.netR >= 0 ? successColor : destructiveColor} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
                 ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground p-4 text-center">
+                    <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
                         Not enough trade data with entry and exit times to analyze duration.
                     </div>
                 )}
