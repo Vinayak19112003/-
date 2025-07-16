@@ -87,9 +87,9 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
 
   const tickColor = theme === 'dark' ? '#888888' : '#333333';
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-  const strokeColor = 'hsl(var(--primary))';
-  const fillColor = 'hsl(var(--primary))';
-  const peakStrokeColor = 'hsl(var(--success))';
+  const strokeColor = 'hsl(var(--success))';
+  const fillColor = 'hsl(var(--success))';
+  const peakStrokeColor = 'hsl(var(--primary))';
   const drawdownFillColor = 'hsla(var(--destructive), 0.1)';
 
   return (
