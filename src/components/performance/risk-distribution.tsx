@@ -15,9 +15,9 @@ type RiskDistributionProps = {
 };
 
 const RISK_BINS = {
-    Low: { max: 50, color: 'hsl(var(--success))' },
-    Medium: { max: 100, color: 'hsl(var(--chart-2))' },
-    High: { max: Infinity, color: 'hsl(var(--destructive))' },
+    Low: { max: 50, name: 'Low (≤$50)' },
+    Medium: { max: 100, name: 'Medium ($51-$100)' },
+    High: { max: Infinity, name: 'High (>$100)' },
 };
 
 export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskDistributionProps) {
@@ -29,10 +29,10 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
     }, []);
 
     const riskStats = useMemo(() => {
-        const stats: { [key: string]: { trades: number, netR: number, name: string, color: string } } = {
-            Low: { trades: 0, netR: 0, name: 'Low (≤$50)', color: RISK_BINS.Low.color },
-            Medium: { trades: 0, netR: 0, name: 'Medium ($51-$100)', color: RISK_BINS.Medium.color },
-            High: { trades: 0, netR: 0, name: 'High (>$100)', color: RISK_BINS.High.color },
+        const stats: { [key: string]: { trades: number, netR: number, name: string } } = {
+            Low: { trades: 0, netR: 0, name: RISK_BINS.Low.name },
+            Medium: { trades: 0, netR: 0, name: RISK_BINS.Medium.name },
+            High: { trades: 0, netR: 0, name: RISK_BINS.High.name },
         };
 
         trades.forEach(trade => {
@@ -67,6 +67,8 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
 
     const tickColor = theme === 'dark' ? '#888888' : '#333333';
     const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const successColor = 'hsl(var(--success))';
+    const destructiveColor = 'hsl(var(--destructive))';
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -75,10 +77,10 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
                 <div className="rounded-lg border bg-background p-2 shadow-sm text-sm">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                         <div className="col-span-2 font-bold mb-1">{label}</div>
-                        <div className="text-muted-foreground">Trades</div>
-                        <div className="font-semibold text-right">{data.trades}</div>
                         <div className="text-muted-foreground">Net R</div>
                         <div className={cn("font-semibold text-right", data.netR > 0 ? "text-success" : "text-destructive")}>{data.netR.toFixed(2)}R</div>
+                        <div className="text-muted-foreground">Trades</div>
+                        <div className="font-semibold text-right">{data.trades}</div>
                     </div>
                 </div>
             );
@@ -108,7 +110,7 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
                     Risk Distribution
                 </CardTitle>
                 <CardDescription>
-                    Number of trades taken per risk category.
+                    Profitability (Net R) per risk category.
                 </CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
@@ -117,14 +119,14 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
                         <BarChart data={riskStats} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                             <XAxis dataKey="name" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: '# of Trades', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
+                            <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Net R', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
                             <Tooltip
                                 cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
                                 content={<CustomTooltip />}
                             />
-                            <Bar dataKey="trades" radius={[4, 4, 0, 0]}>
+                            <Bar dataKey="netR" radius={[4, 4, 0, 0]}>
                                 {riskStats.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                    <Cell key={`cell-${index}`} fill={entry.netR >= 0 ? successColor : destructiveColor} />
                                 ))}
                             </Bar>
                         </BarChart>
