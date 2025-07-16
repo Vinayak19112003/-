@@ -1,16 +1,105 @@
 
 "use client";
 
-import { memo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import type { Trade } from "@/lib/types";
+import { useMemo, useState, useEffect, memo } from 'react';
+import type { Trade } from '@/lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useTheme } from 'next-themes';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CircleDot } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type RiskDistributionProps = {
   trades: Trade[];
 };
 
+const RISK_BINS = {
+    Low: { max: 50, color: 'hsl(var(--success))' },
+    Medium: { max: 100, color: 'hsl(var(--chart-2))' },
+    High: { max: Infinity, color: 'hsl(var(--destructive))' },
+};
+
 export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskDistributionProps) {
+    const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const riskStats = useMemo(() => {
+        const stats: { [key: string]: { trades: number, netR: number, name: string, color: string } } = {
+            Low: { trades: 0, netR: 0, name: 'Low (≤$50)', color: RISK_BINS.Low.color },
+            Medium: { trades: 0, netR: 0, name: 'Medium ($51-$100)', color: RISK_BINS.Medium.color },
+            High: { trades: 0, netR: 0, name: 'High (>$100)', color: RISK_BINS.High.color },
+        };
+
+        trades.forEach(trade => {
+            if (trade.accountSize && trade.riskPercentage) {
+                const riskAmount = trade.accountSize * (trade.riskPercentage / 100);
+                
+                let binKey: keyof typeof RISK_BINS | null = null;
+                if (riskAmount <= RISK_BINS.Low.max) {
+                    binKey = 'Low';
+                } else if (riskAmount <= RISK_BINS.Medium.max) {
+                    binKey = 'Medium';
+                } else {
+                    binKey = 'High';
+                }
+
+                if (binKey) {
+                    stats[binKey].trades++;
+                    let rValue = 0;
+                    if (trade.result === 'Win') {
+                        rValue = trade.rr || 0;
+                    } else if (trade.result === 'Loss') {
+                        rValue = -1;
+                    }
+                    stats[binKey].netR += rValue;
+                }
+            }
+        });
+        
+        return Object.values(stats).map(s => ({...s, netR: parseFloat(s.netR.toFixed(2))}));
+
+    }, [trades]);
+
+    const tickColor = theme === 'dark' ? '#888888' : '#333333';
+    const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="rounded-lg border bg-background p-2 shadow-sm text-sm">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <div className="col-span-2 font-bold mb-1">{label}</div>
+                        <div className="text-muted-foreground">Trades</div>
+                        <div className="font-semibold text-right">{data.trades}</div>
+                        <div className="text-muted-foreground">Net R</div>
+                        <div className={cn("font-semibold text-right", data.netR > 0 ? "text-success" : "text-destructive")}>{data.netR.toFixed(2)}R</div>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
+    
+    if (!mounted) {
+        return (
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                    <Skeleton className="h-full w-full" />
+                </CardContent>
+            </Card>
+        );
+    }
+    
     return (
         <Card>
             <CardHeader>
@@ -19,13 +108,32 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
                     Risk Distribution
                 </CardTitle>
                 <CardDescription>
-                    Distribution of initial risk per trade.
+                    Number of trades taken per risk category.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="h-[300px] flex items-center justify-center">
-                 <div className="h-full w-full border-2 border-dashed rounded-md flex items-center justify-center text-muted-foreground">
-                    <p>Risk Distribution Chart Coming Soon</p>
-                </div>
+            <CardContent className="h-[300px]">
+                {riskStats.some(d => d.trades > 0) ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={riskStats} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                            <XAxis dataKey="name" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: '# of Trades', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
+                            <Tooltip
+                                cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
+                                content={<CustomTooltip />}
+                            />
+                            <Bar dataKey="trades" radius={[4, 4, 0, 0]}>
+                                {riskStats.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
+                        Not enough trade data with account size and risk % to analyze risk distribution.
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
