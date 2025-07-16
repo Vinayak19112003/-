@@ -24,7 +24,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TradingModelPage from "./trading-model-view";
-import DisciplineChecklistView from "./discipline-checklist-view";
 
 // Dynamically import all charting components to reduce the initial bundle size.
 // Skeletons are shown as placeholders while the components load.
@@ -109,10 +108,9 @@ export default function AnalyticsPage() {
             </div>
 
             <Tabs defaultValue="overview">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="model">Trading Model</TabsTrigger>
-                    <TabsTrigger value="discipline">Discipline Checklist</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview" className="mt-4">
                     {isLoading ? (
@@ -187,9 +185,6 @@ export default function AnalyticsPage() {
                 </TabsContent>
                 <TabsContent value="model" className="mt-4">
                    <TradingModelPage />
-                </TabsContent>
-                <TabsContent value="discipline" className="mt-4">
-                    <DisciplineChecklistView />
                 </TabsContent>
             </Tabs>
         </div>
