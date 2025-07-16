@@ -20,6 +20,8 @@ import { useTrades } from "@/contexts/trades-context";
 // Dynamically import charting components
 const DrawdownAnalysis = dynamic(() => import('@/components/performance/drawdown-analysis').then(mod => mod.DrawdownAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
 const RiskAdjustedReturns = dynamic(() => import('@/components/performance/risk-adjusted-returns').then(mod => mod.RiskAdjustedReturns), { ssr: false, loading: () => <Skeleton className="h-[250px]" /> });
+const RiskDistribution = dynamic(() => import('@/components/performance/risk-distribution').then(mod => mod.RiskDistribution), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
+const AIRiskInsights = dynamic(() => import('@/components/performance/ai-risk-insights').then(mod => mod.AIRiskInsights), { ssr: false, loading: () => <Skeleton className="h-[250px]" /> });
 
 
 /**
@@ -74,14 +76,18 @@ export default function PerformancePage() {
             </div>
 
             {isLoading ? (
-                 <div className="space-y-6 mt-4">
-                    <Skeleton className="h-[250px]" />
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-4">
                     <Skeleton className="h-[420px]" />
+                    <Skeleton className="h-[420px]" />
+                    <Skeleton className="h-[250px]" />
+                    <Skeleton className="h-[250px]" />
                  </div>
             ) : (
-                <div className="space-y-4 md:space-y-6">
-                    <RiskAdjustedReturns trades={trades} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                     <DrawdownAnalysis trades={trades} />
+                    <RiskDistribution trades={trades} />
+                    <RiskAdjustedReturns trades={trades} />
+                    <AIRiskInsights trades={trades} />
                 </div>
             )}
         </div>

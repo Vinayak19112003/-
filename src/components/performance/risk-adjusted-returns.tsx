@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { type Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { StreamerModeText } from "@/components/streamer-mode-text";
+import { TrendingUp } from 'lucide-react';
 
 type RiskAdjustedReturnsProps = {
   trades: Trade[];
@@ -84,31 +85,34 @@ export const RiskAdjustedReturns = memo(function RiskAdjustedReturns({ trades }:
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Risk-Adjusted Returns</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Risk-Adjusted Returns
+                </CardTitle>
                 <CardDescription>Key metrics that measure the quality and consistency of your returns.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     <StatCard 
                         title="Profit Factor" 
                         value={isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : '∞'}
-                        description="Gross profit divided by gross loss"
+                        description="Gross profit / gross loss"
                         valueClassName={stats.profitFactor >= 1 ? "text-success" : "text-destructive"}
                     />
                     <StatCard 
                         title="Expectancy (R)"
                         value={stats.expectancy.toFixed(2) + 'R'}
-                        description="Average R-value per trade"
+                        description="Avg R-value per trade"
                         valueClassName={stats.expectancy > 0 ? "text-success" : "text-destructive"}
                     />
                     <StatCard 
                         title="Recovery Factor" 
                         value={isFinite(stats.recoveryFactor) ? stats.recoveryFactor.toFixed(2) : '∞'}
-                        description="Net profit divided by max drawdown"
+                        description="Net profit / max drawdown"
                         valueClassName={stats.recoveryFactor > 1 ? "text-success" : "text-destructive"}
                     />
                     <StatCard 
-                        title="Average R-Multiple (Win)"
+                        title="Average Win (R)"
                         value={stats.avgRr.toFixed(2) + 'R'}
                         description="Average R of winning trades"
                         valueClassName="text-success"

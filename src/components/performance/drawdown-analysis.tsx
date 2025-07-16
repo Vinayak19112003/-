@@ -2,13 +2,14 @@
 "use client";
 
 import { useMemo, useState, useEffect, memo } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea, Line } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { type Trade } from "@/lib/types";
 import { useTheme } from "next-themes";
 import { format } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 import { StreamerModeText } from "../streamer-mode-text";
+import { LineChart as LineChartIcon } from "lucide-react";
 
 type DrawdownAnalysisProps = {
   trades: Trade[];
@@ -22,9 +23,9 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
         setMounted(true);
     }, []);
 
-    const { data, drawdownStats, maxDrawdownPeriod } = useMemo(() => {
+    const { data, drawdownStats, maxDrawdownPeriod, peakRValue } = useMemo(() => {
         if (trades.length < 2) {
-             return { data: [], drawdownStats: { maxDrawdownR: 0, maxDrawdownPercent: 0 }, maxDrawdownPeriod: null };
+             return { data: [], drawdownStats: { maxDrawdownR: 0, maxDrawdownPercent: 0 }, maxDrawdownPeriod: null, peakRValue: 0 };
         }
         
         let cumulativeR = 0;
@@ -78,7 +79,8 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
                 maxDrawdownR: parseFloat(maxDrawdownR.toFixed(2)),
                 maxDrawdownPercent: parseFloat(maxDrawdownPercent.toFixed(2)),
             },
-            maxDrawdownPeriod
+            maxDrawdownPeriod,
+            peakRValue: peakR,
         };
     }, [trades]);
 
@@ -89,27 +91,22 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
   const drawdownFillColor = 'hsla(var(--destructive), 0.1)';
 
   return (
-    <Card>
+    <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>Drawdown Analysis</CardTitle>
-        <CardDescription>Visualizing your equity curve and largest drawdown periods.</CardDescription>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2 text-sm">
-            <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Max Drawdown (R):</span>
-                <StreamerModeText as="span" className="font-semibold text-destructive">{drawdownStats.maxDrawdownR}R</StreamerModeText>
-            </div>
-             <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Max Drawdown (%):</span>
-                <StreamerModeText as="span" className="font-semibold text-destructive">{drawdownStats.maxDrawdownPercent}%</StreamerModeText>
-            </div>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+            <LineChartIcon className="h-5 w-5 text-primary" />
+            Drawdown Analysis
+        </CardTitle>
+        <CardDescription>
+            Visualizing your equity curve and largest drawdown periods.
+            Max drawdown (R): <StreamerModeText as="span" className="font-semibold text-destructive">{drawdownStats.maxDrawdownR}R</StreamerModeText>
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-[300px]">
         {!mounted ? (
-          <Skeleton className="h-[350px] w-full" />
+          <Skeleton className="h-full w-full" />
         ) : data.length > 1 ? (
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <defs>
                     <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
@@ -118,36 +115,35 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
                     </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis dataKey="tradeNumber" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Trade Number', position: 'insideBottom', dy: 10, fill: tickColor, fontSize: 12 }} />
-                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} label={{ value: 'R Value', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }} />
+                <XAxis dataKey="tradeNumber" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
                 <Tooltip
-                  cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
+                  cursor={{ strokeDasharray: '3 3' }}
                   contentStyle={{
                     background: 'hsl(var(--background))',
                     borderColor: 'hsl(var(--border))',
                     borderRadius: 'var(--radius)',
                   }}
                   labelStyle={{ fontWeight: 'bold' }}
-                  formatter={(value, name, props) => [`${value}R`, `Cumulative R`]}
-                  labelFormatter={(label, payload) => `Trade ${label} (${payload?.[0]?.payload.date || ''})`}
+                  formatter={(value: any, name: any) => [`${value}R`, `Cumulative R`]}
+                  labelFormatter={(label: any, payload: any) => `Trade ${label} (${payload?.[0]?.payload.date || ''})`}
                 />
-                <Area type="monotone" dataKey="cumulativeR" stroke={strokeColor} strokeWidth={2} fillOpacity={1} fill="url(#colorEquity)" />
+                <Area type="monotone" dataKey="cumulativeR" stroke={strokeColor} strokeWidth={2} fillOpacity={1} fill="url(#colorEquity)" dot={false}/>
                 {maxDrawdownPeriod && (
                     <ReferenceArea
                         x1={maxDrawdownPeriod.x1}
                         x2={maxDrawdownPeriod.x2}
                         y1={0}
-                        y2="auto"
-                        stroke="hsla(var(--destructive), 0.5)"
-                        strokeOpacity={0.3}
+                        y2={peakRValue * 1.1} // Ensure it covers the chart area
+                        stroke="hsla(var(--destructive), 0)"
                         fill={drawdownFillColor}
+                        ifOverflow="visible"
                     />
                 )}
               </AreaChart>
             </ResponsiveContainer>
-          </div>
         ) : (
-          <div className="h-[350px] flex items-center justify-center text-muted-foreground p-4 text-center">
+          <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
             Not enough trade data to analyze drawdown. At least 2 trades are required.
           </div>
         )}
