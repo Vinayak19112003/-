@@ -28,13 +28,13 @@ import type { Trade } from '@/lib/types';
 const TRADES_PER_PAGE = 7;
 
 // Dynamically import child components to optimize initial load.
-const TradeTable = dynamic(() => import('@/components/dashboard/trade-table'), {
+const TradeTable = dynamic(() => import('@/components/trade/trade-table'), {
     ssr: false,
     loading: () => <Skeleton className="h-96 w-full" />
 });
-const ImportTrades = dynamic(() => import('@/components/dashboard/import-trades'), { ssr: false });
-const ExportTrades = dynamic(() => import('@/components/dashboard/export-trades').then(mod => mod.ExportTrades), { ssr: false });
-const ClearAllTrades = dynamic(() => import('@/components/dashboard/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
+const ImportTrades = dynamic(() => import('@/components/trade/import-trades'), { ssr: false });
+const ExportTrades = dynamic(() => import('@/components/trade/export-trades').then(mod => mod.ExportTrades), { ssr: false });
+const ClearAllTrades = dynamic(() => import('@/components/trade/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
 
 /**
  * The main content component for the Trades page.

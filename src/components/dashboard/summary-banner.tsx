@@ -8,7 +8,7 @@ import { TrendingUp, TrendingDown, Target, HelpCircle, AlertTriangle, ShieldChec
 import { StreamerModeText } from '@/components/streamer-mode-text';
 import { useTargets } from '@/hooks/use-targets';
 import { Progress } from '@/components/ui/progress';
-import { SetTargetsDialog } from './set-targets-dialog';
+import { SetTargetsDialog } from '@/components/trade/set-targets-dialog';
 
 type SummaryBannerProps = {
   trades: Trade[];

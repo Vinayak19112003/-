@@ -25,7 +25,7 @@ import { Header } from '@/components/shell/header';
 
 // Dynamically import the TradeForm to optimize the initial bundle size.
 // The form is only loaded when the user triggers it.
-const TradeForm = dynamic(() => import('@/components/dashboard/trade-form').then(mod => mod.TradeForm), {
+const TradeForm = dynamic(() => import('@/components/trade/trade-form').then(mod => mod.TradeForm), {
     ssr: false,
     loading: () => (
         <div className="flex items-center justify-center h-full min-h-[400px]">
