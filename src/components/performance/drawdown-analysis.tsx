@@ -23,12 +23,11 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
         setMounted(true);
     }, []);
 
-    const { data, drawdownStats, maxDrawdownPeriod, peakRValue } = useMemo(() => {
+    const { data, drawdownStats, maxDrawdownPeriod } = useMemo(() => {
         if (trades.length < 2) {
-             return { data: [], drawdownStats: { maxDrawdownR: 0, maxDrawdownPercent: 0 }, maxDrawdownPeriod: null, peakRValue: 0 };
+             return { data: [], drawdownStats: { maxDrawdownR: 0, maxDrawdownPercent: 0 }, maxDrawdownPeriod: null };
         }
         
-        // Ensure trades are sorted by date
         const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         let cumulativeR = 0;
@@ -50,7 +49,7 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
 
             if (cumulativeR > peakR) {
                 peakR = cumulativeR;
-                drawdownStartIndex = index + 1; // +1 because we have a 'Start' point at index 0
+                drawdownStartIndex = index + 1; 
             }
 
             const drawdown = peakR - cumulativeR;
@@ -64,16 +63,16 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
                 tradeNumber: index + 1,
                 date: format(new Date(trade.date), 'dd MMM'),
                 cumulativeR: parseFloat(cumulativeR.toFixed(2)),
+                peakR: parseFloat(peakR.toFixed(2)),
             };
         });
         
         const maxDrawdownPercent = peakR > 0 ? (maxDrawdownR / peakR) * 100 : 0;
         
-        // Add a starting point at 0
-        const data = [{ tradeNumber: 0, date: 'Start', cumulativeR: 0 }, ...equityCurve];
+        const data = [{ tradeNumber: 0, date: 'Start', cumulativeR: 0, peakR: 0 }, ...equityCurve];
 
         const maxDrawdownPeriod = maxDrawdownEndIndex > maxDrawdownStartIndex
-            ? { x1: maxDrawdownStartIndex, x2: maxDrawdownEndIndex }
+            ? { x1: maxDrawdownStartIndex, x2: maxDrawdownEndIndex, peak: peakR }
             : null;
 
         return {
@@ -83,7 +82,6 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
                 maxDrawdownPercent: parseFloat(maxDrawdownPercent.toFixed(2)),
             },
             maxDrawdownPeriod,
-            peakRValue: peakR,
         };
     }, [trades]);
 
@@ -91,6 +89,7 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
   const strokeColor = 'hsl(var(--primary))';
   const fillColor = 'hsl(var(--primary))';
+  const peakStrokeColor = 'hsl(var(--success))';
   const drawdownFillColor = 'hsla(var(--destructive), 0.1)';
 
   return (
@@ -101,8 +100,8 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
             Drawdown Analysis
         </CardTitle>
         <CardDescription>
-            Visualizing your equity curve and largest drawdown periods.
-            Max drawdown (R): <StreamerModeText as="span" className="font-semibold text-destructive">{drawdownStats.maxDrawdownR}R</StreamerModeText>
+            Visualizing your equity curve against its peak.
+            Max drawdown: <StreamerModeText as="span" className="font-semibold text-destructive">{drawdownStats.maxDrawdownR}R</StreamerModeText>
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[300px]">
@@ -113,13 +112,13 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
               <AreaChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <defs>
                     <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={fillColor} stopOpacity={0.8}/>
+                        <stop offset="5%" stopColor={fillColor} stopOpacity={0.4}/>
                         <stop offset="95%" stopColor={fillColor} stopOpacity={0}/>
                     </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis dataKey="tradeNumber" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
+                <XAxis dataKey="tradeNumber" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Trade #', position: 'insideBottom', offset: -5, fill: tickColor, fontSize: 12 }} />
+                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} label={{ value: 'R Value', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }} />
                 <Tooltip
                   cursor={{ strokeDasharray: '3 3' }}
                   contentStyle={{
@@ -128,16 +127,15 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
                     borderRadius: 'var(--radius)',
                   }}
                   labelStyle={{ fontWeight: 'bold' }}
-                  formatter={(value: any, name: any) => [`${value}R`, `Cumulative R`]}
                   labelFormatter={(label: any, payload: any) => `Trade ${label} (${payload?.[0]?.payload.date || ''})`}
                 />
-                <Area type="monotone" dataKey="cumulativeR" stroke={strokeColor} strokeWidth={2} fillOpacity={1} fill="url(#colorEquity)" dot={false}/>
+                <Area type="monotone" dataKey="cumulativeR" name="Cumulative R" stroke={strokeColor} strokeWidth={2} fillOpacity={1} fill="url(#colorEquity)" dot={false}/>
+                <Line type="monotone" dataKey="peakR" name="Peak R" stroke={peakStrokeColor} strokeWidth={2} strokeDasharray="5 5" dot={false} />
+
                 {maxDrawdownPeriod && (
                     <ReferenceArea
                         x1={maxDrawdownPeriod.x1}
                         x2={maxDrawdownPeriod.x2}
-                        y1={0}
-                        y2={peakRValue * 1.1} // Ensure it covers the chart area
                         stroke="hsla(var(--destructive), 0)"
                         fill={drawdownFillColor}
                         ifOverflow="visible"
