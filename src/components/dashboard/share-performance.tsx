@@ -18,7 +18,7 @@ import { Loader2, Share2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
 import { StatsCards } from './stats-cards';
-import { PerformanceRadarChart } from './performance-radar-chart';
+import PerformanceRadarChart from './performance-radar-chart';
 import { Logo } from '../logo';
 import { format } from 'date-fns';
 
