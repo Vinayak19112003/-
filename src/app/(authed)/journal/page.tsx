@@ -28,19 +28,19 @@ import type { Trade } from '@/lib/types';
 const TRADES_PER_PAGE = 7;
 
 // Dynamically import child components to optimize initial load.
-const TradeTable = dynamic(() => import('@/components/trade/trade-table'), {
+const TradeTable = dynamic(() => import('@/components/journal/trade-table'), {
     ssr: false,
     loading: () => <Skeleton className="h-96 w-full" />
 });
-const ImportTrades = dynamic(() => import('@/components/trade/import-trades'), { ssr: false });
-const ExportTrades = dynamic(() => import('@/components/trade/export-trades').then(mod => mod.ExportTrades), { ssr: false });
-const ClearAllTrades = dynamic(() => import('@/components/trade/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
+const ImportTrades = dynamic(() => import('@/components/journal/import-trades'), { ssr: false });
+const ExportTrades = dynamic(() => import('@/components/journal/export-trades').then(mod => mod.ExportTrades), { ssr: false });
+const ClearAllTrades = dynamic(() => import('@/components/journal/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
 
 /**
  * The main content component for the Trades page.
  * It is memoized to prevent re-renders unless its props change.
  */
-const TradesPageContent = React.memo(function TradesPageContent() {
+const JournalPageContent = React.memo(function JournalPageContent() {
     const { user } = useAuth();
     const { deleteTrade, deleteAllTrades, addMultipleTrades, refreshKey } = useTrades();
     const { toast } = useToast();
@@ -179,7 +179,7 @@ const TradesPageContent = React.memo(function TradesPageContent() {
         <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="grid gap-2 flex-1">
-                    <CardTitle>Trade Log</CardTitle>
+                    <CardTitle>Trade Journal</CardTitle>
                     <CardDescription>Your complete history of trades.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -208,6 +208,6 @@ const TradesPageContent = React.memo(function TradesPageContent() {
 /**
  * The main export for the Trades page.
  */
-export default function TradesPage() {
-    return <TradesPageContent />;
+export default function JournalPage() {
+    return <JournalPageContent />;
 }

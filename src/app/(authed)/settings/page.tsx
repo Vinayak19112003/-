@@ -39,10 +39,10 @@ const ProfileCard = dynamic(() => Promise.resolve(React.memo(function ProfileCar
 /**
  * The main component for the Profile page.
  */
-export default function ProfilePage() {
+export default function SettingsPage() {
   return (
     <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight font-headline">Profile</h1>
+        <h1 className="text-2xl font-bold tracking-tight font-headline">Settings</h1>
         <ProfileCard />
     </div>
   );

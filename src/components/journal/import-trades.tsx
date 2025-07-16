@@ -167,5 +167,3 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
     </Dialog>
   );
 }
-
-    

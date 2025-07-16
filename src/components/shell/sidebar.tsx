@@ -10,7 +10,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video, ClipboardCheck, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video, ClipboardCheck, ShieldCheck, Settings } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { useTradeForm } from '@/contexts/trade-form-context';
 import { Button } from '@/components/ui/button';
@@ -59,8 +59,8 @@ export const Sidebar = React.memo(function Sidebar() {
   // Configuration for the main navigation items.
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-    { href: '/trades', label: 'Trades', icon: Book, tooltip: 'Trade Log' },
-    { href: '/analysis', label: 'Analysis', icon: BrainCircuit, tooltip: 'Analysis' },
+    { href: '/journal', label: 'Journal', icon: Book, tooltip: 'Trade Journal' },
+    { href: '/analytics', label: 'Analytics', icon: BrainCircuit, tooltip: 'Analytics' },
     { href: '/discipline', label: 'Discipline', icon: ShieldCheck, tooltip: 'Discipline Checklist' },
     { href: '/model', label: 'Trading Model', icon: ClipboardCheck, tooltip: 'Trading Model' },
   ];
@@ -135,9 +135,9 @@ export const Sidebar = React.memo(function Sidebar() {
             <DropdownMenuContent align="end" side="right" className="w-56 mb-2">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/profile')}>
-                  <User className="mr-2 h-4 w-4"/>
-                  <span>Profile</span>
+              <DropdownMenuItem onClick={() => router.push('/settings')}>
+                  <Settings className="mr-2 h-4 w-4"/>
+                  <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
                 <div className="flex items-center justify-between w-full">

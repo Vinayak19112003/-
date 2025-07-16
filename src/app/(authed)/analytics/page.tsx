@@ -25,23 +25,23 @@ import { useTrades } from "@/contexts/trades-context";
 
 // Dynamically import all charting components to reduce the initial bundle size.
 // Skeletons are shown as placeholders while the components load.
-const PatternAnalysis = dynamic(() => import('@/components/analysis/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
-const SharePerformance = dynamic(() => import('@/components/analysis/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
-const StrategyAnalytics = dynamic(() => import('@/components/analysis/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
-const MistakeAnalysis = dynamic(() => import('@/components/analysis/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
-const PerformanceRadarChart = dynamic(() => import('@/components/analysis/performance-radar-chart'), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
-const RuleAdherenceAnalysis = dynamic(() => import('@/components/analysis/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
-const TimeAnalysis = dynamic(() => import('@/components/analysis/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
-const DailyPerformance = dynamic(() => import('@/components/analysis/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
-const MonthlyPerformance = dynamic(() => import('@/components/analysis/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
-const DurationAnalysis = dynamic(() => import('@/components/analysis/duration-analysis').then(mod => mod.DurationAnalysis), { ssr: false, loading: () => <Skeleton className="h-[340px]" /> });
+const PatternAnalysis = dynamic(() => import('@/components/analytics/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
+const SharePerformance = dynamic(() => import('@/components/analytics/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
+const StrategyAnalytics = dynamic(() => import('@/components/analytics/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const MistakeAnalysis = dynamic(() => import('@/components/analytics/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const PerformanceRadarChart = dynamic(() => import('@/components/analytics/performance-radar-chart'), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const RuleAdherenceAnalysis = dynamic(() => import('@/components/analytics/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const TimeAnalysis = dynamic(() => import('@/components/analytics/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
+const DailyPerformance = dynamic(() => import('@/components/analytics/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
+const MonthlyPerformance = dynamic(() => import('@/components/analytics/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
+const DurationAnalysis = dynamic(() => import('@/components/analytics/duration-analysis').then(mod => mod.DurationAnalysis), { ssr: false, loading: () => <Skeleton className="h-[340px]" /> });
 
 /**
  * The main component for the Analysis page.
  * It handles fetching trade data for a specific date range and rendering
  * the various analysis components.
  */
-export default function AnalysisPage() {
+export default function AnalyticsPage() {
     const { user } = useAuth();
     const { toast } = useToast();
     const { tradingRules } = useTradingRules();
@@ -128,7 +128,7 @@ export default function AnalysisPage() {
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <h1 className="text-2xl font-bold tracking-tight font-headline">Analysis</h1>
+                <h1 className="text-2xl font-bold tracking-tight font-headline">Analytics</h1>
                 <div className="flex items-center gap-2">
                     <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
                     <PatternAnalysis trades={trades} />
