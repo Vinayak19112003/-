@@ -191,7 +191,6 @@ export default function TradingModelPage() {
     if (!isLoaded) {
         return (
             <div className="space-y-6">
-                <Skeleton className="h-8 w-48" />
                 <Card>
                     <CardHeader>
                         <Skeleton className="h-7 w-64" />
@@ -208,16 +207,17 @@ export default function TradingModelPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold tracking-tight font-headline">Your Trading Model</h1>
-                {isLoading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
-            </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Trading Checklist</CardTitle>
-                    <CardDescription>
-                        Define your personal trading model. This checklist will appear in your trade logging form.
-                    </CardDescription>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>Trading Checklist</CardTitle>
+                            <CardDescription>
+                                Define your personal trading model. This checklist will appear in your trade logging form.
+                            </CardDescription>
+                        </div>
+                        {isLoading && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-8">
                     <Section 

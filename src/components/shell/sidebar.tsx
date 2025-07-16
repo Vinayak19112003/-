@@ -60,9 +60,7 @@ export const Sidebar = React.memo(function Sidebar() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
     { href: '/journal', label: 'Journal', icon: Book, tooltip: 'Trade Journal' },
-    { href: '/analytics', label: 'Analytics', icon: BrainCircuit, tooltip: 'Analytics' },
-    { href: '/discipline', label: 'Discipline', icon: ShieldCheck, tooltip: 'Discipline Checklist' },
-    { href: '/model', label: 'Trading Model', icon: ClipboardCheck, tooltip: 'Trading Model' },
+    { href: '/analytics', label: 'Analytics', icon: BrainCircuit, tooltip: 'Analytics & Model' },
   ];
 
   /**

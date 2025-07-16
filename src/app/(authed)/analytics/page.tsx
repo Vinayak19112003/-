@@ -22,6 +22,9 @@ import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/
 import { useTradingRules } from "@/hooks/use-trading-rules";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TradingModelPage from "./trading-model-view";
+import DisciplineChecklistView from "./discipline-checklist-view";
 
 // Dynamically import all charting components to reduce the initial bundle size.
 // Skeletons are shown as placeholders while the components load.
@@ -37,7 +40,7 @@ const DurationAnalysis = dynamic(() => import('@/components/analysis/duration-an
 /**
  * The main component for the Analysis page.
  * It handles fetching trade data for a specific date range and rendering
- * the various analysis components.
+ * the various analysis components within a tabbed interface.
  */
 export default function AnalyticsPage() {
     const { user } = useAuth();
@@ -99,92 +102,96 @@ export default function AnalyticsPage() {
         fetchTradesForRange();
     }, [user, dateRange, toast, refreshKey]);
 
-    // Renders a skeleton layout while data is loading.
-    if (isLoading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                    <Skeleton className="h-8 w-36" />
-                    <Skeleton className="h-10 w-full sm:w-[470px]" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                    <Skeleton className="h-[360px]" />
-                    <Skeleton className="h-[360px]" />
-                    <Skeleton className="h-[360px]" />
-                    <Skeleton className="h-[360px]" />
-                </div>
-                <Skeleton className="h-[420px]" />
-                <div className="space-y-4 md:space-y-8">
-                    <Skeleton className="h-[400px]" />
-                    <Skeleton className="h-[400px]" />
-                </div>
-            </div>
-        );
-    }
-    
-    // Renders the main analysis page layout with all the components.
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <h1 className="text-2xl font-bold tracking-tight font-headline">Analytics</h1>
-                <div className="flex items-center gap-2">
-                    <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
-                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Strategy Analytics</CardTitle>
-                        <CardDescription>Performance breakdown by trading strategy.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                        <StrategyAnalytics trades={trades} />
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Mistake Analysis</CardTitle>
-                        <CardDescription>Breakdown of your most common trading errors.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                        <MistakeAnalysis trades={trades} />
-                    </CardContent>
-                </Card>
-            </div>
+            <Tabs defaultValue="overview">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="model">Trading Model</TabsTrigger>
+                    <TabsTrigger value="discipline">Discipline Checklist</TabsTrigger>
+                </TabsList>
+                <TabsContent value="overview" className="mt-4">
+                    {isLoading ? (
+                         <div className="space-y-6 mt-4">
+                            <Skeleton className="h-10 w-full sm:w-[470px] self-end" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                                <Skeleton className="h-[360px]" />
+                                <Skeleton className="h-[360px]" />
+                                <Skeleton className="h-[360px]" />
+                                <Skeleton className="h-[360px]" />
+                            </div>
+                         </div>
+                    ) : (
+                        <div className="space-y-4 md:space-y-6 mt-4">
+                            <div className="flex justify-end">
+                                <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Strategy Analytics</CardTitle>
+                                        <CardDescription>Performance breakdown by trading strategy.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-[300px]">
+                                        <StrategyAnalytics trades={trades} />
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Mistake Analysis</CardTitle>
+                                        <CardDescription>Breakdown of your most common trading errors.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-[300px]">
+                                        <MistakeAnalysis trades={trades} />
+                                    </CardContent>
+                                </Card>
+                            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
-                <Card className="lg:col-span-2">
-                     <CardHeader>
-                        <CardTitle>Performance Metrics</CardTitle>
-                        <CardDescription>A radar view of your key performance indicators.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                        <PerformanceRadarChart trades={trades} tradingRules={tradingRules} />
-                    </CardContent>
-                </Card>
-                 <Card className="lg:col-span-3">
-                    <CardHeader>
-                        <CardTitle>Rule Adherence vs. Outcome</CardTitle>
-                        <CardDescription>Analyze the impact of following your rules.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                        <RuleAdherenceAnalysis trades={trades} tradingRules={tradingRules} />
-                    </CardContent>
-                </Card>
-            </div>
-            
-            <TimeAnalysis trades={trades} />
+                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+                                <Card className="lg:col-span-2">
+                                    <CardHeader>
+                                        <CardTitle>Performance Metrics</CardTitle>
+                                        <CardDescription>A radar view of your key performance indicators.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-[300px]">
+                                        <PerformanceRadarChart trades={trades} tradingRules={tradingRules} />
+                                    </CardContent>
+                                </Card>
+                                <Card className="lg:col-span-3">
+                                    <CardHeader>
+                                        <CardTitle>Rule Adherence vs. Outcome</CardTitle>
+                                        <CardDescription>Analyze the impact of following your rules.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="h-[300px]">
+                                        <RuleAdherenceAnalysis trades={trades} tradingRules={tradingRules} />
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            
+                            <TimeAnalysis trades={trades} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                 <DurationAnalysis trades={trades} />
-                 <DailyPerformance trades={trades} />
-            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                                <DurationAnalysis trades={trades} />
+                                <DailyPerformance trades={trades} />
+                            </div>
 
-            <div className="w-full">
-                <MonthlyPerformance trades={trades} />
-            </div>
-
+                            <div className="w-full">
+                                <MonthlyPerformance trades={trades} />
+                            </div>
+                        </div>
+                    )}
+                </TabsContent>
+                <TabsContent value="model" className="mt-4">
+                   <TradingModelPage />
+                </TabsContent>
+                <TabsContent value="discipline" className="mt-4">
+                    <DisciplineChecklistView />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

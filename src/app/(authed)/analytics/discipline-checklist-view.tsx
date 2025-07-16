@@ -44,14 +44,13 @@ const ChecklistSection = ({ title, items, description }: { title: string; items:
  * The main component for the Discipline page.
  * It fetches the user's trading model and displays it using ChecklistSection components.
  */
-export default function DisciplinePage() {
+export default function DisciplineChecklistView() {
     const { model, isLoaded } = useTradingModel();
 
     // Renders a skeleton loader while the trading model data is being fetched.
     if (!isLoaded) {
         return (
             <div className="space-y-6">
-                <Skeleton className="h-8 w-48" />
                 <Card>
                     <CardHeader>
                         <Skeleton className="h-7 w-64" />
@@ -68,12 +67,11 @@ export default function DisciplinePage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold tracking-tight font-headline">Discipline Checklist</h1>
             <Card>
                 <CardHeader>
-                    <CardTitle>My Trading Model</CardTitle>
+                    <CardTitle>Discipline Checklist</CardTitle>
                     <CardDescription>
-                        A read-only view of your defined trading model. To edit, go to the Trading Model page.
+                        A read-only view of your defined trading model to reinforce your process.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
