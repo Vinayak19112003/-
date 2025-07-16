@@ -181,10 +181,8 @@ export default function AnalyticsPage() {
                  <DailyPerformance trades={trades} />
             </div>
 
-            <div className="flex justify-center">
-                <div className="w-full lg:w-1/2">
-                    <MonthlyPerformance trades={trades} />
-                </div>
+            <div className="w-full">
+                <MonthlyPerformance trades={trades} />
             </div>
 
         </div>
