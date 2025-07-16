@@ -15,9 +15,9 @@ type RiskDistributionProps = {
 };
 
 const RISK_BINS = {
-    Low: { max: 50, name: 'Low (≤$50)' },
-    Medium: { max: 100, name: 'Medium ($51-$100)' },
-    High: { max: Infinity, name: 'High (>$100)' },
+    Low: { max: 1, name: 'Low (≤1%)' },
+    Medium: { max: 2.5, name: 'Medium (1-2.5%)' },
+    High: { max: Infinity, name: 'High (>2.5%)' },
 };
 
 export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskDistributionProps) {
@@ -36,13 +36,13 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
         };
 
         trades.forEach(trade => {
-            if (trade.accountSize && trade.riskPercentage) {
-                const riskAmount = trade.accountSize * (trade.riskPercentage / 100);
+            const riskPercent = trade.riskPercentage;
+            if (riskPercent != null && riskPercent > 0) {
                 
                 let binKey: keyof typeof RISK_BINS | null = null;
-                if (riskAmount <= RISK_BINS.Low.max) {
+                if (riskPercent <= RISK_BINS.Low.max) {
                     binKey = 'Low';
-                } else if (riskAmount <= RISK_BINS.Medium.max) {
+                } else if (riskPercent <= RISK_BINS.Medium.max) {
                     binKey = 'Medium';
                 } else {
                     binKey = 'High';
@@ -110,7 +110,7 @@ export const RiskDistribution = memo(function RiskDistribution({ trades }: RiskD
                     Risk Distribution
                 </CardTitle>
                 <CardDescription>
-                    Profitability (Net R) per risk category.
+                    Profitability (Net R) per risk percentage category.
                 </CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
