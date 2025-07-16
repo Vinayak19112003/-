@@ -1,9 +1,16 @@
 
 'use client';
 
+/**
+ * @fileoverview This file defines the main Sidebar component for the application.
+ * It includes navigation links, a button to add new trades, and a user menu
+ * for accessing profile settings, theme toggles, and logout functionality.
+ * The sidebar is collapsible and responsive for mobile devices.
+ */
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video } from 'lucide-react';
+import { LayoutDashboard, BrainCircuit, Book, PlusCircle, User, LogOut, Moon, Sun, Video, ClipboardCheck, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { useTradeForm } from '@/contexts/trade-form-context';
 import { Button } from '@/components/ui/button';
@@ -11,6 +18,7 @@ import { useTheme } from 'next-themes';
 import { useStreamerMode } from '@/contexts/streamer-mode-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import * as React from 'react';
 import {
   Sidebar as SidebarPrimitive,
   SidebarContent,
@@ -26,28 +34,58 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/use-auth';
 
-export function Sidebar() {
+/**
+ * The main Sidebar component.
+ * It handles navigation state, theme changes, streamer mode, and user authentication actions.
+ * It is memoized for performance to prevent unnecessary re-renders.
+ */
+export const Sidebar = React.memo(function Sidebar() {
   const pathname = usePathname();
-  const { openForm } = useTradeForm();
+  const { openForm } = useTradeForm(); // Context hook to open the trade form modal.
   const router = useRouter();
   const { setTheme } = useTheme();
   const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
   const { user } = useAuth();
-  const { state } = useSidebar();
+  const { setOpenMobile } = useSidebar(); // Hook to control mobile sidebar visibility.
 
+  /**
+   * Handles user logout by calling Firebase signOut and redirecting to the login page.
+   */
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
   };
 
+  // Configuration for the main navigation items.
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
+    { href: '/trades', label: 'Trades', icon: Book, tooltip: 'Trade Log' },
     { href: '/analysis', label: 'Analysis', icon: BrainCircuit, tooltip: 'Analysis' },
-    { href: '/trades', label: 'Trades', icon: Book, tooltip: 'Trades' },
+    { href: '/discipline', label: 'Discipline', icon: ShieldCheck, tooltip: 'Discipline Checklist' },
+    { href: '/model', label: 'Trading Model', icon: ClipboardCheck, tooltip: 'Trading Model' },
   ];
 
+  /**
+   * Checks if a given navigation link should be considered active based on the current URL path.
+   * @param {string} href - The link's href to check.
+   * @returns {boolean} - True if the link is active, false otherwise.
+   */
   const isActive = (href: string) => pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard');
 
+  /**
+   * Closes the mobile sidebar when a navigation link is clicked.
+   */
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
+  
+  /**
+   * Opens the "Add Trade" form and closes the mobile sidebar.
+   */
+  const handleAddTradeClick = () => {
+    openForm();
+    setOpenMobile(false);
+  }
 
   return (
     <SidebarPrimitive collapsible="icon">
@@ -63,6 +101,7 @@ export function Sidebar() {
                     asChild
                     isActive={isActive(item.href)}
                     tooltip={{ children: item.tooltip, side: 'right' }}
+                    onClick={handleLinkClick}
                 >
                     <Link href={item.href} prefetch={false}>
                         <item.icon />
@@ -73,7 +112,7 @@ export function Sidebar() {
           ))}
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={() => openForm()}
+              onClick={handleAddTradeClick}
               tooltip={{ children: 'Add New Trade', side: 'right' }}
             >
               <PlusCircle />
@@ -83,6 +122,7 @@ export function Sidebar() {
         </SidebarMenu>
 
         <SidebarFooter>
+          {/* User profile and settings dropdown menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-2 p-2 h-auto">
@@ -145,4 +185,4 @@ export function Sidebar() {
       </SidebarContent>
     </SidebarPrimitive>
   );
-}
+});

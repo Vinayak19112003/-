@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { type Trade, TradeSchema } from "@/lib/types";
+import { type Trade, TradeSchema, type TradingModel } from "@/lib/types";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMistakeTags } from "@/hooks/use-mistake-tags";
@@ -52,15 +52,64 @@ import { Slider } from "@/components/ui/slider";
 import { useStreamerMode } from "@/contexts/streamer-mode-context";
 import { Separator } from "../ui/separator";
 import { useTrades } from "@/contexts/trades-context";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { useTradingModel, type ModelSection } from "@/hooks/use-trading-model";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
 });
 
+const emotionalStates = ["Focused", "Anxious", "FOMO", "Greedy", "Confident", "Tired", "Neutral", "Other"];
+const sessions = ["London", "New York", "Asian", "Other"];
+const timeFrames = ["1m", "3m", "5m", "15m", "1h", "4h", "Daily"];
+
 type TradeFormProps = {
   trade?: Trade;
   onSaveSuccess: () => void;
   setOpen: Dispatch<SetStateAction<boolean>>;
+};
+
+const ChecklistSection = ({ name, title, items, control }: { name: `modelFollowed.${ModelSection}`; title: string; items: string[]; control: any }) => {
+    if (items.length === 0) return null;
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={() => (
+                <FormItem>
+                    <div className="mb-2">
+                        <FormLabel className="text-base">{title}</FormLabel>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                        {items.map((item) => (
+                            <FormField
+                                key={item}
+                                control={control}
+                                name={name}
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value?.includes(item)}
+                                                onCheckedChange={(checked) => {
+                                                    const currentValues = field.value || [];
+                                                    return checked
+                                                        ? field.onChange([...currentValues, item])
+                                                        : field.onChange(currentValues.filter((value) => value !== item));
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">{item}</FormLabel>
+                                    </FormItem>
+                                )}
+                            />
+                        ))}
+                    </div>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+    );
 };
 
 export function TradeForm({ 
@@ -78,6 +127,7 @@ export function TradeForm({
   const { tradingRules, addTradingRule, deleteTradingRule } = useTradingRules();
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
+  const { model: tradingModel } = useTradingModel();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -91,6 +141,19 @@ export function TradeForm({
           pnl: trade.pnl ?? 0,
           mistakes: trade.mistakes ?? [],
           rulesFollowed: trade.rulesFollowed ?? [],
+          modelFollowed: trade.modelFollowed ?? { week: [], day: [], trigger: [], ltf: [] },
+          exitTime: trade.exitTime ?? "",
+          notes: trade.notes ?? "",
+          ticket: trade.ticket ?? "",
+          preTradeEmotion: trade.preTradeEmotion ?? "",
+          postTradeEmotion: trade.postTradeEmotion ?? "",
+          marketContext: trade.marketContext ?? "",
+          entryReason: trade.entryReason ?? "",
+          tradeFeelings: trade.tradeFeelings ?? "",
+          lossAnalysis: trade.lossAnalysis ?? "",
+          session: trade.session,
+          keyLevel: trade.keyLevel ?? "",
+          entryTimeFrame: trade.entryTimeFrame,
         }
       : {
           date: new Date(),
@@ -98,6 +161,7 @@ export function TradeForm({
           strategy: "",
           direction: "Buy",
           entryTime: "",
+          exitTime: "",
           entryPrice: 0,
           sl: 0,
           exitPrice: 0,
@@ -106,11 +170,22 @@ export function TradeForm({
           confidence: 5,
           mistakes: [],
           rulesFollowed: [],
+          modelFollowed: { week: [], day: [], trigger: [], ltf: [] },
           notes: "",
           screenshotURL: "",
           accountSize: 0,
           riskPercentage: 0,
           pnl: 0,
+          ticket: "",
+          preTradeEmotion: "",
+          postTradeEmotion: "",
+          marketContext: "",
+          entryReason: "",
+          tradeFeelings: "",
+          lossAnalysis: "",
+          session: undefined,
+          keyLevel: "",
+          entryTimeFrame: undefined,
         },
   });
 
@@ -255,19 +330,34 @@ export function TradeForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="entryTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Entry Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-2">
+            <FormField
+              control={form.control}
+              name="entryTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Entry Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="exitTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Exit Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -342,6 +432,62 @@ export function TradeForm({
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+                control={form.control}
+                name="entryTimeFrame"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Entry Time Frame</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select time frame" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {timeFrames.map(tf => <SelectItem key={tf} value={tf}>{tf}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="session"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Session</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select session" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {sessions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+              control={form.control}
+              name="keyLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Key Level</FormLabel>
+                  <FormControl>
+                    <Input type="text" placeholder="e.g. 4H OB, Daily FVG" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -467,6 +613,117 @@ export function TradeForm({
             />
         </div>
         
+        <Separator />
+        
+        <h3 className="text-lg font-semibold font-headline">Psychological Analysis</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="preTradeEmotion"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Pre-Trade Emotion</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select emotional state" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {emotionalStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="postTradeEmotion"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Post-Trade Emotion</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select emotional state" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {emotionalStates.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="journal-prompts">
+                <AccordionTrigger>Structured Journal Prompts (Optional)</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="marketContext"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>What was the market context leading up to this trade?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., High-impact news event coming up, consolidating market..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="entryReason"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>What was my primary reason (the "A+ setup") for entry?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., Perfect break and retest of key level..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="tradeFeelings"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>How did I feel when the trade moved against me?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., Confident in my stop, anxious and wanted to close..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="lossAnalysis"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>If this was a losing trade, was the loss a result of a bad process or bad luck?</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="e.g., Bad process, I didn't follow my rules. Or, good setup that just failed..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+        
+        <Separator />
+
+        <h3 className="text-lg font-semibold font-headline">Execution & Review</h3>
+        
         <FormField
             control={form.control}
             name="confidence"
@@ -491,7 +748,17 @@ export function TradeForm({
             )}
         />
         
-        <Separator />
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="trading-model-checklist">
+                <AccordionTrigger>Trading Model Checklist</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                    <ChecklistSection name="modelFollowed.week" title="Week Preparation" items={tradingModel.week} control={form.control} />
+                    <ChecklistSection name="modelFollowed.day" title="Daily Preparation" items={tradingModel.day} control={form.control} />
+                    <ChecklistSection name="modelFollowed.trigger" title="Trigger" items={tradingModel.trigger} control={form.control} />
+                    <ChecklistSection name="modelFollowed.ltf" title="LTF Execution" items={tradingModel.ltf} control={form.control} />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
 
         <FormField
           control={form.control}
@@ -508,7 +775,7 @@ export function TradeForm({
                    />
                 </div>
                 <FormDescription>
-                  Check all the rules you followed for this trade.
+                  Check all the general rules you followed for this trade.
                 </FormDescription>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -635,10 +902,10 @@ export function TradeForm({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>General Notes</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="What was your thesis? How was your execution?"
+                  placeholder="Any other observations or thoughts about this trade."
                   className="resize-y"
                   {...field}
                 />

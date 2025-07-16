@@ -20,7 +20,7 @@ import {
   isToday
 } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StreamerModeText } from '@/components/streamer-mode-text';
 
@@ -37,7 +37,7 @@ type DailyData = {
     losses: number;
 };
 
-export const MonthlyCalendar = memo(function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
+export default memo(function MonthlyCalendar({ trades, onDateSelect }: MonthlyCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
@@ -259,4 +259,5 @@ export const MonthlyCalendar = memo(function MonthlyCalendar({ trades, onDateSel
     </Card>
   );
 });
+
     

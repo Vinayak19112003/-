@@ -5,7 +5,6 @@ import { useMemo, useState, useEffect, memo } from 'react';
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { Trade } from '@/lib/types';
 import { useTheme } from 'next-themes';
-import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type PerformanceRadarChartProps = {
@@ -13,7 +12,7 @@ type PerformanceRadarChartProps = {
   tradingRules: string[];
 };
 
-export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
+export default memo(function PerformanceRadarChart({ trades, tradingRules }: PerformanceRadarChartProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -27,68 +26,62 @@ export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trade
       return null;
     }
 
-    // --- Basic Stats ---
-    const wins = trades.filter((t) => t.result === 'Win');
-    const losses = trades.filter((t) => t.result === 'Loss');
-    const winCount = wins.length;
-    const lossCount = losses.length;
-    const winRate = winCount + lossCount > 0 ? (winCount / (winCount + lossCount)) * 100 : 0;
-
-    const grossProfit = wins.reduce((acc, t) => acc + (t.rr || 0), 0);
-    const grossLoss = lossCount; // Each loss is -1R
-    const netProfit = grossProfit - grossLoss;
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
-
-    const avgWin = winCount > 0 ? grossProfit / winCount : 0;
-    const lossRate = 1 - winRate / 100;
-    const expectancy = (winRate / 100) * avgWin - lossRate * 1;
-
-    // --- Cumulative & Drawdown Stats ---
     const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    let winCount = 0;
+    let lossCount = 0;
+    let grossProfitR = 0;
+    let totalAdherenceScore = 0;
+    const totalRules = tradingRules.length;
+
     let cumulativeR = 0;
     let peakR = 0;
     let maxDrawdownR = 0;
-    const dailyNetR: { [date: string]: number } = {};
 
     for (const trade of sortedTrades) {
-      const dateKey = format(new Date(trade.date), 'yyyy-MM-dd');
-      dailyNetR[dateKey] = dailyNetR[dateKey] || 0;
+        let rValue = 0;
+        if (trade.result === 'Win') {
+            winCount++;
+            rValue = trade.rr || 0;
+            grossProfitR += rValue;
+        } else if (trade.result === 'Loss') {
+            lossCount++;
+            rValue = -1;
+        }
 
-      let rValue = 0;
-      if (trade.result === 'Win') rValue = trade.rr || 0;
-      else if (trade.result === 'Loss') rValue = -1;
-
-      cumulativeR += rValue;
-      dailyNetR[dateKey] += rValue;
-
-      if (cumulativeR > peakR) {
-        peakR = cumulativeR;
-      }
-      const drawdown = peakR - cumulativeR;
-      if (drawdown > maxDrawdownR) {
-        maxDrawdownR = drawdown;
-      }
+        if (totalRules > 0 && trade.rulesFollowed) {
+            totalAdherenceScore += (trade.rulesFollowed.length / totalRules) * 100;
+        } else if (totalRules === 0) {
+            totalAdherenceScore += 100;
+        }
+        
+        cumulativeR += rValue;
+        if (cumulativeR > peakR) {
+            peakR = cumulativeR;
+        }
+        const drawdown = peakR - cumulativeR;
+        if (drawdown > maxDrawdownR) {
+            maxDrawdownR = drawdown;
+        }
     }
-    
-    const maxDrawdownPercent = peakR > 0 ? (maxDrawdownR / peakR) * 100 : 0;
-    const recoveryFactor = maxDrawdownR > 0 ? netProfit / maxDrawdownR : netProfit > 0 ? Infinity : 0;
 
-    // --- Discipline/Adherence ---
-    const totalRules = tradingRules.length;
-    const totalAdherenceScore = trades.reduce((acc, t) => {
-        if (!t.rulesFollowed) return acc;
-        const adherence = totalRules > 0 ? (t.rulesFollowed.length / totalRules) * 100 : 100;
-        return acc + adherence;
-    }, 0);
+    const winRate = winCount + lossCount > 0 ? (winCount / (winCount + lossCount)) * 100 : 0;
+    const grossLossR = lossCount;
+    const netProfitR = grossProfitR - grossLossR;
+    const profitFactor = grossLossR > 0 ? grossProfitR / grossLossR : grossProfitR > 0 ? Infinity : 0;
+    
+    const avgWinR = winCount > 0 ? grossProfitR / winCount : 0;
+    const expectancy = (winRate / 100) * avgWinR - ((100 - winRate) / 100) * 1;
+    
+    const recoveryFactor = maxDrawdownR > 0 ? netProfitR / maxDrawdownR : netProfitR > 0 ? Infinity : 0;
+    const maxDrawdownPercent = peakR > 0 ? (maxDrawdownR / peakR) * 100 : 0;
     const discipline = totalTrades > 0 ? totalAdherenceScore / totalTrades : 0;
 
-
-    // --- Normalization for Radar Chart ---
     const normalize = (value: number, max: number) => Math.min(Math.max((value / max) * 100, 0), 100);
     const normalizeInverted = (value: number, max: number) => 100 - normalize(value, max);
 
     return {
-      winRate: { raw: winRate, normalized: winRate }, // Already 0-100
+      winRate: { raw: winRate, normalized: winRate },
       profitFactor: { raw: profitFactor, normalized: normalize(profitFactor, 5) },
       recoveryFactor: { raw: recoveryFactor, normalized: normalize(recoveryFactor, 10) },
       expectancy: { raw: expectancy, normalized: normalize(expectancy, 1) },
@@ -98,12 +91,12 @@ export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trade
   }, [trades, tradingRules]);
 
   if (!mounted) {
-    return <Skeleton className="h-[180px] w-full" />;
+    return <Skeleton className="h-[300px] w-full" />;
   }
   
   if (!metrics) {
     return (
-        <div className="h-[180px] flex items-center justify-center text-center text-muted-foreground">
+        <div className="h-[300px] flex items-center justify-center text-center text-muted-foreground">
             Not enough trade data to generate performance metrics.
         </div>
     )
@@ -125,36 +118,36 @@ export const PerformanceRadarChart = memo(function PerformanceRadarChart({ trade
   const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
   return (
-      <div className="h-[180px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-            <defs>
-                <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
-                    <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
-                </radialGradient>
-            </defs>
-            <PolarGrid stroke={gridColor}/>
-            <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
-            <Tooltip
-              contentStyle={{
-                  background: 'hsl(var(--background))',
-                  borderColor: 'hsl(var(--border))',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
-              }}
-              formatter={(value, name, props) => [props.payload.raw, name]}
-            />
-            <Radar 
-                name="Metrics" 
-                dataKey="value" 
-                stroke={strokeColor} 
-                strokeWidth={2}
-                fill="url(#radar-gradient)"
-                dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+          <defs>
+              <radialGradient id="radar-gradient" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={fillColor} stopOpacity={0.5} />
+                  <stop offset="100%" stopColor={fillColor} stopOpacity={0.1} />
+              </radialGradient>
+          </defs>
+          <PolarGrid stroke={gridColor}/>
+          <PolarAngleAxis dataKey="subject" tick={{ fill: tickColor, fontSize: 12, fontWeight: 500 }} />
+          <Tooltip
+            contentStyle={{
+                background: 'hsl(var(--background))',
+                borderColor: 'hsl(var(--border))',
+                borderRadius: 'var(--radius)',
+                boxShadow: '0 4px 12px hsla(var(--foreground) / 0.1)',
+            }}
+            formatter={(value, name, props) => [props.payload.raw, name]}
+          />
+          <Radar 
+              name="Metrics" 
+              dataKey="value" 
+              stroke={strokeColor} 
+              strokeWidth={2}
+              fill="url(#radar-gradient)"
+              dot={{ r: 3, strokeWidth: 1.5, stroke: 'hsl(var(--background))', fill: strokeColor }}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
   );
 });
+
+    

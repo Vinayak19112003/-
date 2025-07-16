@@ -1,49 +1,108 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+/**
+ * @fileoverview This file defines the Analysis page.
+ * This page provides a deep dive into the user's trading data with various
+ * analytical charts and tables. It fetches trade data based on a selectable
+ * date range and passes it to different visualization components.
+ */
+
+import { useState, useEffect } from "react";
 import dynamic from 'next/dynamic';
-import { useTrades } from "@/contexts/trades-context";
-import { useTradingRules } from "@/hooks/use-trading-rules";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DateRange } from "react-day-picker";
-import { startOfMonth, isWithinInterval } from "date-fns";
+import { startOfMonth, endOfDay } from "date-fns";
 import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SharePerformance } from "@/components/dashboard/share-performance";
+import type { Trade } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
+import { useTradingRules } from "@/hooks/use-trading-rules";
+import { useToast } from "@/hooks/use-toast";
+import { useTrades } from "@/contexts/trades-context";
 
+// Dynamically import all charting components to reduce the initial bundle size.
+// Skeletons are shown as placeholders while the components load.
 const PatternAnalysis = dynamic(() => import('@/components/dashboard/pattern-analysis').then(mod => mod.PatternAnalysis), { ssr: false, loading: () => <Skeleton className="h-10 w-32" /> });
-const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
-const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
-const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart').then(mod => mod.PerformanceRadarChart), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
-const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-full w-full" /> });
+const SharePerformance = dynamic(() => import('@/components/dashboard/share-performance').then(mod => mod.SharePerformance), { ssr: false, loading: () => <Skeleton className="h-10 w-24" /> });
+const StrategyAnalytics = dynamic(() => import('@/components/dashboard/strategy-analytics').then(mod => mod.StrategyAnalytics), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const MistakeAnalysis = dynamic(() => import('@/components/dashboard/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const PerformanceRadarChart = dynamic(() => import('@/components/dashboard/performance-radar-chart'), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
+const RuleAdherenceAnalysis = dynamic(() => import('@/components/dashboard/rule-adherence-analysis').then(mod => mod.RuleAdherenceAnalysis), { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> });
 const TimeAnalysis = dynamic(() => import('@/components/dashboard/time-analysis').then(mod => mod.TimeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
-const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[485px]" /> });
-const MonthlyPerformance = dynamic(() => import('@/components/dashboard/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[485px]" /> });
+const DailyPerformance = dynamic(() => import('@/components/dashboard/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
+const MonthlyPerformance = dynamic(() => import('@/components/dashboard/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
+const DurationAnalysis = dynamic(() => import('@/components/dashboard/duration-analysis').then(mod => mod.DurationAnalysis), { ssr: false, loading: () => <Skeleton className="h-[340px]" /> });
 
-
+/**
+ * The main component for the Analysis page.
+ * It handles fetching trade data for a specific date range and rendering
+ * the various analysis components.
+ */
 export default function AnalysisPage() {
-    const { trades, isLoaded } = useTrades();
+    const { user } = useAuth();
+    const { toast } = useToast();
     const { tradingRules } = useTradingRules();
+    const { refreshKey } = useTrades(); // Used to trigger a refetch when trades change.
+    
+    const [trades, setTrades] = useState<Trade[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: startOfMonth(new Date()),
         to: new Date(),
     });
 
-    const filteredTrades = useMemo(() => {
-        if (!dateRange?.from || !dateRange?.to) {
-            return trades;
-        }
-        const toDate = new Date(dateRange.to);
-        toDate.setHours(23, 59, 59, 999);
-        return trades.filter(trade => 
-          isWithinInterval(new Date(trade.date), { start: dateRange.from!, end: toDate })
-        );
-      }, [trades, dateRange]);
+    // Effect to fetch trades whenever the user, date range, or refreshKey changes.
+    useEffect(() => {
+        const fetchTradesForRange = async () => {
+            if (!user) {
+                setTrades([]);
+                setIsLoading(false);
+                return;
+            }
 
+            setIsLoading(true);
+            try {
+                const tradesCollection = collection(db, 'users', user.uid, 'trades');
+                
+                let q;
+                if (dateRange?.from && dateRange?.to) {
+                     // Query for a specific date range.
+                     q = query(
+                        tradesCollection, 
+                        where('date', '>=', Timestamp.fromDate(dateRange.from)),
+                        where('date', '<=', Timestamp.fromDate(endOfDay(dateRange.to))),
+                        orderBy('date', 'desc')
+                    );
+                } else { 
+                    // Query for "All time" if no date range is selected.
+                    q = query(tradesCollection, orderBy('date', 'desc'));
+                }
+                
+                const querySnapshot = await getDocs(q);
+                const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() })) as Trade[];
+                setTrades(fetchedTrades);
 
-    if (!isLoaded) {
+            } catch (error) {
+                console.error("Error fetching trades for analysis:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Could not fetch trade data for the selected range."
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchTradesForRange();
+    }, [user, dateRange, toast, refreshKey]);
+
+    // Renders a skeleton layout while data is loading.
+    if (isLoading) {
         return (
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -58,32 +117,33 @@ export default function AnalysisPage() {
                 </div>
                 <Skeleton className="h-[420px]" />
                 <div className="space-y-4 md:space-y-8">
-                    <Skeleton className="h-[485px]" />
-                    <Skeleton className="h-[485px]" />
+                    <Skeleton className="h-[400px]" />
+                    <Skeleton className="h-[400px]" />
                 </div>
             </div>
         );
     }
     
+    // Renders the main analysis page layout with all the components.
     return (
-        <>
+        <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <h1 className="text-2xl font-bold tracking-tight font-headline">Analysis</h1>
                 <div className="flex items-center gap-2">
                     <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
-                    <PatternAnalysis trades={filteredTrades} />
-                    <SharePerformance trades={filteredTrades} tradingRules={tradingRules} />
+                    <PatternAnalysis trades={trades} />
+                    <SharePerformance trades={trades} tradingRules={tradingRules} />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                 <Card>
                     <CardHeader>
                         <CardTitle>Strategy Analytics</CardTitle>
                         <CardDescription>Performance breakdown by trading strategy.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
-                        <StrategyAnalytics trades={filteredTrades} />
+                        <StrategyAnalytics trades={trades} />
                     </CardContent>
                 </Card>
                 <Card>
@@ -92,33 +152,45 @@ export default function AnalysisPage() {
                         <CardDescription>Breakdown of your most common trading errors.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
-                        <MistakeAnalysis trades={filteredTrades} />
+                        <MistakeAnalysis trades={trades} />
                     </CardContent>
                 </Card>
-                <Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+                <Card className="lg:col-span-2">
+                     <CardHeader>
+                        <CardTitle>Performance Metrics</CardTitle>
+                        <CardDescription>A radar view of your key performance indicators.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <PerformanceRadarChart trades={trades} tradingRules={tradingRules} />
+                    </CardContent>
+                </Card>
+                 <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Rule Adherence vs. Outcome</CardTitle>
                         <CardDescription>Analyze the impact of following your rules.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
-                        <RuleAdherenceAnalysis trades={filteredTrades} tradingRules={tradingRules} />
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Performance Metrics</CardTitle>
-                        <CardDescription>A radar view of your key performance indicators.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                        <PerformanceRadarChart trades={filteredTrades} tradingRules={tradingRules} />
+                        <RuleAdherenceAnalysis trades={trades} tradingRules={tradingRules} />
                     </CardContent>
                 </Card>
             </div>
-            <TimeAnalysis trades={filteredTrades} />
-            <div className="space-y-4 md:space-y-8 mt-4 md:mt-8">
-              <DailyPerformance trades={filteredTrades} />
-              <MonthlyPerformance trades={filteredTrades} />
+            
+            <TimeAnalysis trades={trades} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                 <DurationAnalysis trades={trades} />
+                 <DailyPerformance trades={trades} />
             </div>
-        </>
+
+            <div className="flex justify-center">
+                <div className="w-full lg:w-1/2">
+                    <MonthlyPerformance trades={trades} />
+                </div>
+            </div>
+
+        </div>
     );
 }

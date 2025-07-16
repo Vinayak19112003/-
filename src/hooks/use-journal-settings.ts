@@ -3,19 +3,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc, Timestamp } from "firebase/firestore";
 import { useToast } from './use-toast';
-import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES } from '@/lib/constants';
+import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES, DEFAULT_TRADING_MODEL } from '@/lib/constants';
 import { useAuth } from './use-auth';
 
 const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'userConfig';
 
-type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules';
+type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules' | 'tradingModel';
 
-const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] | string[]) => {
+
+const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
   const { user } = useAuth();
-  const [items, setItems] = useState<string[]>([...defaultValues]);
+  const [items, setItems] = useState(defaultValues);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
@@ -39,6 +40,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
             strategies: [...DEFAULT_STRATEGIES],
             mistakeTags: [...DEFAULT_MISTAKE_TAGS],
             tradingRules: [...DEFAULT_TRADING_RULES],
+            tradingModel: { ...DEFAULT_TRADING_MODEL },
           });
         }
       } catch (error) {
@@ -60,7 +62,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
   // Effect to listen for real-time updates
   useEffect(() => {
     if (!user) {
-        setItems([...defaultValues]);
+        setItems(defaultValues);
         setIsLoaded(true);
         return;
     }
@@ -71,7 +73,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
             title: 'Database Connection Error',
             description: 'Could not connect to the database. Using default values.',
         });
-        setItems([...defaultValues]);
+        setItems(defaultValues);
         setIsLoaded(true);
         return;
     }
@@ -87,10 +89,10 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
           const data = docSnap.data();
           const currentItems = data[key];
 
-          if (Array.isArray(currentItems)) {
+          if (currentItems) {
             setItems(currentItems);
           } else {
-            setItems([...defaultValues]);
+            setItems(defaultValues);
           }
       }
       setIsLoaded(true);
@@ -101,7 +103,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
           title: "Sync Error",
           description: `Could not load settings. Using default values.`,
       });
-      setItems([...defaultValues]);
+      setItems(defaultValues);
       setIsLoaded(true);
     });
     
@@ -118,7 +120,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     const trimmedItem = key === 'assets' ? newItem.trim().toUpperCase() : newItem.trim();
     if (!trimmedItem) return false;
     
-    if (items.some(i => i.toLowerCase() === trimmedItem.toLowerCase())) {
+    if (items.some((i: string) => i.trim().toLowerCase() === trimmedItem.toLowerCase())) {
         toast({
             variant: "destructive",
             title: "Item Exists",
@@ -128,9 +130,8 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
     }
 
     try {
-      await updateDoc(docRef, {
-        [key]: arrayUnion(trimmedItem)
-      });
+      const updatePayload: { [k: string]: any } = { [key]: arrayUnion(trimmedItem) };
+      await updateDoc(docRef, updatePayload);
       toast({
         title: "Item Added",
         description: `"${trimmedItem}" has been added.`,
@@ -154,9 +155,8 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
         return;
     }
     try {
-        await updateDoc(docRef, {
-            [key]: arrayRemove(itemToDelete)
-        });
+        const updatePayload: { [k: string]: any } = { [key]: arrayRemove(itemToDelete) };
+        await updateDoc(docRef, updatePayload);
         toast({
             title: "Item Deleted",
             description: `"${itemToDelete}" has been removed.`,
@@ -170,8 +170,25 @@ const useJournalSettings = (key: SettingsKey, defaultValues: readonly string[] |
         });
     }
   };
+  
+  const updateWholeObject = async (newObject: any) => {
+    const docRef = getSettingsDocRef();
+    if (!docRef) {
+      toast({ variant: 'destructive', title: 'Database Error', description: 'You must be logged in and connected.' });
+      return false;
+    }
+     try {
+      const updatePayload = { [key]: newObject };
+      await updateDoc(docRef, updatePayload);
+      return true;
+    } catch (error) {
+      console.error(`Error updating ${key}:`, error);
+      toast({ variant: "destructive", title: "Update Error", description: "Could not save changes." });
+      return false;
+    }
+  }
 
-  return { items, addItem, deleteItem, isLoaded };
+  return { items, addItem, deleteItem, updateWholeObject, isLoaded };
 };
 
 export default useJournalSettings;

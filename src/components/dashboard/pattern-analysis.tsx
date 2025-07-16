@@ -22,13 +22,22 @@ export function PatternAnalysis({ trades }: { trades: Trade[] }) {
   const handleAnalyze = async () => {
     setIsLoading(true);
     setIsOpen(true);
-    const tradeNotes = trades
-      .map(t => t.notes)
-      .filter(Boolean)
-      .join('\n\n---\n\n');
+    
+    // Compile a comprehensive string of all psychological data
+    const tradeNotes = trades.map(t => {
+      let entry = `Trade Date: ${t.date.toLocaleDateString()}\nResult: ${t.result}, PNL: ${t.pnl?.toFixed(2) ?? 'N/A'}\n`;
+      if (t.preTradeEmotion) entry += `Pre-Trade Emotion: ${t.preTradeEmotion}\n`;
+      if (t.postTradeEmotion) entry += `Post-Trade Emotion: ${t.postTradeEmotion}\n`;
+      if (t.marketContext) entry += `Market Context: ${t.marketContext}\n`;
+      if (t.entryReason) entry += `Entry Reason: ${t.entryReason}\n`;
+      if (t.tradeFeelings) entry += `Feelings During Trade: ${t.tradeFeelings}\n`;
+      if (t.lossAnalysis) entry += `Loss Analysis: ${t.lossAnalysis}\n`;
+      if (t.notes) entry += `General Notes: ${t.notes}\n`;
+      return entry;
+    }).join('\n\n---\n\n');
       
     if (!tradeNotes.trim()) {
-      setAnalysis('You have no trade notes to analyze. Add some notes to your trades to use this feature.');
+      setAnalysis('You have no journal entries to analyze. Add some notes or psychological data to your trades to use this feature.');
       setIsLoading(false);
       return;
     }
@@ -63,7 +72,7 @@ export function PatternAnalysis({ trades }: { trades: Trade[] }) {
                 Trade Pattern Analysis
             </DialogTitle>
             <DialogDescription>
-              AI-powered insights based on your trade notes.
+              AI-powered psychological and behavioral insights from your journal.
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-72 w-full rounded-md border p-4">
