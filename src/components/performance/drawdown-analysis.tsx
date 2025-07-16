@@ -28,6 +28,9 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
              return { data: [], drawdownStats: { maxDrawdownR: 0, maxDrawdownPercent: 0 }, maxDrawdownPeriod: null, peakRValue: 0 };
         }
         
+        // Ensure trades are sorted by date
+        const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
         let cumulativeR = 0;
         let peakR = 0;
         let maxDrawdownR = 0;
@@ -36,7 +39,7 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
         let maxDrawdownStartIndex = 0;
         let maxDrawdownEndIndex = 0;
 
-        const equityCurve = trades.map((trade, index) => {
+        const equityCurve = sortedTrades.map((trade, index) => {
             let rValue = 0;
             if (trade.result === 'Win' && trade.rr) {
                 rValue = trade.rr;
@@ -91,7 +94,7 @@ export const DrawdownAnalysis = memo(function DrawdownAnalysis({ trades }: Drawd
   const drawdownFillColor = 'hsla(var(--destructive), 0.1)';
 
   return (
-    <Card className="col-span-1 lg:col-span-2">
+    <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <LineChartIcon className="h-5 w-5 text-primary" />
