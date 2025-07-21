@@ -24,7 +24,6 @@ import { useTradingRules } from "@/hooks/use-trading-rules";
 const RiskAnalysisTab = dynamic(() => import('@/components/performance/risk-analysis-tab'), { ssr: false, loading: () => <TabSkeleton /> });
 const PsychologyTab = dynamic(() => import('@/components/performance/psychology-tab'), { ssr: false, loading: () => <TabSkeleton /> });
 const TimeAnalysisTab = dynamic(() => import('@/components/performance/time-analysis-tab'), { ssr: false, loading: () => <TabSkeleton /> });
-const PlaybookTab = dynamic(() => import('@/components/performance/playbook-tab'), { ssr: false, loading: () => <TabSkeleton /> });
 
 const TabSkeleton = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-4">
@@ -100,11 +99,10 @@ export default function PerformancePage() {
             </div>
 
              <Tabs defaultValue="risk-analysis">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="risk-analysis">Risk Analysis</TabsTrigger>
                     <TabsTrigger value="psychology">Psychology</TabsTrigger>
                     <TabsTrigger value="time-analysis">Time Analysis</TabsTrigger>
-                    <TabsTrigger value="playbook">Playbook</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="risk-analysis" className="mt-4">
@@ -115,9 +113,6 @@ export default function PerformancePage() {
                 </TabsContent>
                 <TabsContent value="time-analysis" className="mt-4">
                     {isLoading ? <TabSkeleton /> : <TimeAnalysisTab trades={trades} />}
-                </TabsContent>
-                <TabsContent value="playbook" className="mt-4">
-                    {isLoading ? <TabSkeleton /> : <PlaybookTab trades={trades} tradingRules={tradingRules} />}
                 </TabsContent>
             </Tabs>
         </div>
