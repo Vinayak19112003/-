@@ -85,14 +85,29 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
 
             // Deduplication logic against Firestore
             const newTicketIds = tradesFromAI.map(t => t.ticket).filter(Boolean);
-            let existingTicketIds = new Set<string>();
+            const existingTicketIds = new Set<string>();
 
             if (newTicketIds.length > 0) {
                 const tradesCollection = collection(db, 'users', user.uid, 'trades');
-                const q = query(tradesCollection, where('ticket', 'in', newTicketIds), where('accountId', '==', selectedAccountId));
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach(doc => {
-                    existingTicketIds.add(doc.data().ticket);
+                
+                // Firestore 'in' query has a limit of 30 items. We need to chunk the array.
+                const CHUNK_SIZE = 30;
+                const chunks: string[][] = [];
+                for (let i = 0; i < newTicketIds.length; i += CHUNK_SIZE) {
+                    chunks.push(newTicketIds.slice(i, i + CHUNK_SIZE));
+                }
+
+                const queryPromises = chunks.map(chunk => {
+                    const q = query(tradesCollection, where('ticket', 'in', chunk), where('accountId', '==', selectedAccountId));
+                    return getDocs(q);
+                });
+
+                const querySnapshots = await Promise.all(queryPromises);
+
+                querySnapshots.forEach(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        existingTicketIds.add(doc.data().ticket);
+                    });
                 });
             }
             
