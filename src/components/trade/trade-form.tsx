@@ -56,6 +56,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { useTradingModel, type ModelSection } from "@/hooks/use-trading-model";
 import { useAccounts } from "@/hooks/use-accounts";
 import { AddAccountDialog } from "../settings/add-account-dialog";
+import { useAccountContext } from "@/contexts/account-context";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -130,7 +131,9 @@ export function TradeForm({
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
   const { model: tradingModel } = useTradingModel();
-  const { accounts } = useAccounts();
+  const { accounts } = useAccountContext();
+  const { selectedAccountId } = useAccountContext();
+
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -159,7 +162,7 @@ export function TradeForm({
           entryTimeFrame: trade.entryTimeFrame,
         }
       : {
-          accountId: accounts?.[0]?.id ?? "",
+          accountId: selectedAccountId,
           date: new Date(),
           asset: "",
           strategy: "",
@@ -205,15 +208,16 @@ export function TradeForm({
 
   // Set account size when account changes or when editing a trade
   useEffect(() => {
-    const selectedAccount = accounts.find((acc: any) => acc.id === accountId);
-    if (selectedAccount) {
-      if (trade) {
-        // When editing, show the balance *before* this trade
+    if (trade) {
+        // If editing, the accountSize is fixed to what it was when the trade was made.
         setValue("accountSize", trade.accountSize);
-      } else {
-        // For new trades, use the latest balance
-        setValue("accountSize", selectedAccount.currentBalance ?? selectedAccount.initialBalance);
-      }
+    } else {
+        // For new trades, get the latest balance.
+        const selectedAccount = accounts.find((acc: any) => acc.id === accountId);
+        if (selectedAccount) {
+            const currentBalance = selectedAccount.currentBalance ?? selectedAccount.initialBalance;
+            setValue("accountSize", currentBalance);
+        }
     }
   }, [accountId, accounts, setValue, trade]);
 
