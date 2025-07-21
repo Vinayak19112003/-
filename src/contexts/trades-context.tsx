@@ -14,11 +14,11 @@ import {
   getDocs,
   query,
   runTransaction,
+  where,
 } from "firebase/firestore";
 import { Trade } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { useAccountContext } from './account-context';
 
 const TRADES_COLLECTION = 'trades';
 const ACCOUNTS_COLLECTION = 'settings';
@@ -29,7 +29,7 @@ interface TradesContextType {
     addMultipleTrades: (newTrades: Omit<Trade, 'id'>[]) => Promise<{success: boolean, addedCount: number}>;
     updateTrade: (trade: Trade) => Promise<boolean>;
     deleteTrade: (id: string) => Promise<boolean>;
-    deleteAllTrades: () => Promise<boolean>;
+    deleteAllTrades: (accountId: string) => Promise<boolean>;
     refreshKey: number;
 }
 
@@ -213,13 +213,12 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         }
     }, [getTradesCollectionRef, getAccountsDocRef, toast]);
 
-    const deleteAllTrades = useCallback(async () => {
+    const deleteAllTrades = useCallback(async (accountId: string) => {
         const tradesCollection = getTradesCollectionRef();
-        const { selectedAccountId } = useAccountContext.getState();
-        if (!tradesCollection || !selectedAccountId) return false;
+        if (!tradesCollection || !accountId) return false;
 
         try {
-            const q = query(tradesCollection, where('accountId', '==', selectedAccountId));
+            const q = query(tradesCollection, where('accountId', '==', accountId));
             const querySnapshot = await getDocs(q);
             const batch = writeBatch(db);
             querySnapshot.forEach(doc => batch.delete(doc.ref));

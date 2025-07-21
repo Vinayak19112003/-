@@ -152,7 +152,11 @@ const JournalPageContent = React.memo(function JournalPageContent() {
      * Handles clearing all trades from the user's log.
      */
     const handleClearAll = async () => {
-        const success = await deleteAllTrades();
+        if (!selectedAccountId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'No account selected to clear.' });
+            return;
+        }
+        const success = await deleteAllTrades(selectedAccountId);
         if (success) {
             setLocalTrades([]);
             setLastVisible(null);
