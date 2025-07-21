@@ -131,36 +131,12 @@ export default function DashboardPage() {
             <Skeleton className="h-8 w-36" />
             <Skeleton className="h-10 w-full sm:w-[470px]" />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-2 flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-6 w-24 mx-auto" />
-                <Skeleton className="h-10 w-48 mx-auto" />
-            </div>
-            <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-5 w-20 mx-auto" />
-                <Skeleton className="h-8 w-24 mx-auto" />
-            </div>
-             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-5 w-20 mx-auto" />
-                <Skeleton className="h-8 w-24 mx-auto" />
-            </div>
-
-            <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-5 w-20 mx-auto" />
-                <Skeleton className="h-8 w-24 mx-auto" />
-            </div>
-             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-5 w-20 mx-auto" />
-                <Skeleton className="h-8 w-24 mx-auto" />
-            </div>
-             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-5 w-20 mx-auto" />
-                <Skeleton className="h-8 w-24 mx-auto" />
-            </div>
-             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
-                <Skeleton className="h-5 w-20 mx-auto" />
-                <Skeleton className="h-8 w-24 mx-auto" />
-            </div>
+        <Skeleton className="h-28" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
         </div>
         <div className="grid grid-cols-1 gap-4 md:gap-8">
             <MonthlyCalendar trades={[]} onDateSelect={()=>{}} />

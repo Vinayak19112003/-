@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, memo } from "react";
@@ -114,8 +115,8 @@ export const StatsCards = memo(function StatsCards({ trades }: { trades: Trade[]
       weeklyPnl,
       monthlyPnl,
       totalTrades,
-      winRate: `${winRate.toFixed(2)}%`,
-      totalR: totalR.toFixed(2),
+      winRate: `${winRate.toFixed(1)}%`,
+      totalR: totalR.toFixed(2) + 'R',
       profitFactor: isFinite(profitFactor) ? profitFactor.toFixed(2) : "∞",
       totalWins: wins,
       totalLosses: losses,
@@ -126,12 +127,12 @@ export const StatsCards = memo(function StatsCards({ trades }: { trades: Trade[]
       mostProfitableDay,
       leastProfitableDay,
       avgTradesPerDay: avgTradesPerDay.toFixed(1),
-      avgTradeDuration: `${avgDurationMinutes.toFixed(1)}min`
+      avgTradeDuration: `${avgDurationMinutes.toFixed(0)} min`
     };
   }, [trades]);
   
   const formatCurrency = (value: number) => {
-      const sign = value < 0 ? "-" : "";
+      const sign = value < 0 ? "-" : "+";
       return `${sign}$${Math.abs(value).toFixed(2)}`;
   }
 
@@ -140,28 +141,27 @@ export const StatsCards = memo(function StatsCards({ trades }: { trades: Trade[]
         <StatCard 
             label="Total P&L" 
             value={formatCurrency(stats.totalPnl)}
-            subValue="Net profit/loss"
+            subValue="Net profit/loss for period"
             icon={DollarSign}
             valueClassName={stats.totalPnl >= 0 ? "text-success" : "text-destructive"}
         />
          <StatCard 
-            label="Week P&L" 
+            label="Avg Daily P&L" 
             value={formatCurrency(stats.weeklyPnl)}
-            subValue="Average weekly P&L"
+            subValue="Avg profit/loss per day"
             icon={CalendarDays}
             valueClassName={stats.weeklyPnl >= 0 ? "text-success" : "text-destructive"}
         />
         <StatCard 
-            label="Monthly P&L" 
-            value={formatCurrency(stats.monthlyPnl)}
-            subValue="Average monthly P&L"
+            label="Win / Loss" 
+            value={`${stats.totalWins} / ${stats.totalLosses}`}
+            subValue="Total winning & losing trades"
             icon={BarChart3}
-            valueClassName={stats.monthlyPnl >= 0 ? "text-success" : "text-destructive"}
         />
         <StatCard 
             label="Total Trades" 
             value={stats.totalTrades}
-            subValue={`${stats.totalWins}W / ${stats.totalLosses}L`}
+            subValue="Total trades in period"
             icon={Hash}
         />
         <StatCard 
@@ -172,9 +172,9 @@ export const StatsCards = memo(function StatsCards({ trades }: { trades: Trade[]
             valueClassName={parseFloat(stats.winRate) >= 50 ? "text-success" : "text-destructive"}
         />
         <StatCard 
-            label="Total R" 
+            label="Net R" 
             value={stats.totalR}
-            subValue="Gross R multiple"
+            subValue="Net R-multiple for period"
             icon={TrendingUp}
             valueClassName={parseFloat(stats.totalR) >= 0 ? "text-success" : "text-destructive"}
         />
@@ -185,58 +185,10 @@ export const StatsCards = memo(function StatsCards({ trades }: { trades: Trade[]
             icon={Divide}
             valueClassName={parseFloat(stats.profitFactor) >= 1 ? "text-success" : "text-destructive"}
         />
-        <StatCard 
-            label="Largest Profit" 
-            value={formatCurrency(stats.largestProfit)}
-            subValue="Best single trade"
-            icon={TrendingUp}
-            valueClassName="text-success"
-        />
-        <StatCard 
-            label="Largest Loss" 
-            value={formatCurrency(stats.largestLoss)}
-            subValue="Worst single trade"
-            icon={TrendingDown}
-            valueClassName="text-destructive"
-        />
-        <StatCard 
-            label="Avg Winning Trade" 
-            value={formatCurrency(stats.avgWin)}
-            subValue="Average profit per win"
-            icon={TrendingUp}
-            valueClassName="text-success"
-        />
-        <StatCard 
-            label="Avg Losing Trade" 
-            value={formatCurrency(-stats.avgLoss)}
-            subValue="Average loss per trade"
-            icon={TrendingDown}
-            valueClassName="text-destructive"
-        />
-        <StatCard 
-            label="Most Profitable Day" 
-            value={stats.mostProfitableDay}
-            subValue="N/A"
-            icon={CalendarDays}
-            valueClassName={stats.mostProfitableDay !== 'N/A' ? "text-success" : ""}
-        />
-        <StatCard 
-            label="Least Profitable Day" 
-            value={stats.leastProfitableDay}
-            subValue="N/A"
-            icon={CalendarDays}
-            valueClassName={stats.leastProfitableDay !== 'N/A' ? "text-destructive" : ""}
-        />
-        <StatCard 
-            label="Avg Trades Per Day" 
-            value={stats.avgTradesPerDay}
-            subValue="Daily trading frequency"
-            icon={Sigma}
-        />
-        <StatCard 
+         <StatCard 
             label="Avg Trade Duration" 
             value={stats.avgTradeDuration}
-            subValue="Minutes per trade"
+            subValue="Average holding time"
             icon={Clock}
         />
     </div>
