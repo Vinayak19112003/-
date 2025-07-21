@@ -3,7 +3,7 @@
 
 /**
  * @fileoverview This is the main layout for all authenticated pages in the application.
- * It wraps the content of each page with common UI elements like the sidebar and header.
+ * It wraps the content of each page with common UI elements like the header.
  * It also contains the logic for the "Add/Edit Trade" form, which is presented as a
  * modal dialog or a sheet on mobile devices.
  */
@@ -11,14 +11,12 @@
 import { useState, memo, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import type { Trade } from '@/lib/types';
-import { Sidebar } from '@/components/shell/sidebar';
 import AuthGuard from '@/components/auth/auth-guard';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TradeFormProvider } from '@/contexts/trade-form-context';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loader2 } from 'lucide-react';
 import { TradesProvider } from '@/contexts/trades-context';
 import { Header } from '@/components/shell/header';
@@ -86,15 +84,11 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
   return (
     <AuthGuard>
       <TradeFormProvider value={tradeFormValue}>
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full bg-muted/40">
-            <Sidebar />
-            <div className="flex flex-1 flex-col">
-              <Header />
-              <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-y-auto transition-all duration-300 ease-in-out">
-                  {children}
-              </main>
-            </div>
+          <div className="flex min-h-screen w-full flex-col bg-muted/40">
+            <Header />
+            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+                {children}
+            </main>
           </div>
           {/* Render the trade form modal/sheet */}
           <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -114,7 +108,6 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
                   </div>
               </FormContentComponent>
           </FormComponent>
-        </SidebarProvider>
       </TradeFormProvider>
     </AuthGuard>
   );
