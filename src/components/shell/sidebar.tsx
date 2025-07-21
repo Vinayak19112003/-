@@ -43,7 +43,7 @@ const NAV_LINKS = [
 ];
 
 export const Sidebar = React.memo(function Sidebar() {
-  const { open } = useTradeForm();
+  const { openForm } = useTradeForm();
   return (
     <AppSidebar>
       <div className="hidden border-r bg-muted/40 md:block">
@@ -75,7 +75,7 @@ export const Sidebar = React.memo(function Sidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => open()}
+                  onClick={() => openForm()}
                   className="flex items-center gap-3"
                 >
                   <PlusCircle />
