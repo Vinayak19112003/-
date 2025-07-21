@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Trash2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { AddAccountDialog } from './add-account-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function ManageAccountsCard() {
     const { accounts, deleteAccount, isLoaded } = useAccounts();
