@@ -20,9 +20,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/use-auth';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData, where, Query, CollectionReference } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
+import { useAccountContext } from '@/contexts/account-context';
 
 // The number of trades to fetch per page.
 const TRADES_PER_PAGE = 7;
@@ -45,6 +46,7 @@ const JournalPageContent = React.memo(function JournalPageContent() {
     const { deleteTrade, deleteAllTrades, addMultipleTrades, refreshKey } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
+    const { selectedAccountId } = useAccountContext();
     
     // State to hold the trades displayed on the page.
     const [localTrades, setLocalTrades] = useState<Trade[]>([]);
@@ -76,17 +78,19 @@ const JournalPageContent = React.memo(function JournalPageContent() {
         }
 
         try {
-            const tradesCollection = collection(db, 'users', user.uid, 'trades');
-            let q;
-            const currentLastVisible = initial ? null : lastVisible;
-
-            if (!currentLastVisible) {
-                // Initial query
-                q = query(tradesCollection, orderBy('date', 'desc'), limit(TRADES_PER_PAGE));
-            } else {
-                // Subsequent query for "load more"
-                q = query(tradesCollection, orderBy('date', 'desc'), startAfter(currentLastVisible), limit(TRADES_PER_PAGE));
+            const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
+            
+            const queries = [orderBy('date', 'desc'), limit(TRADES_PER_PAGE)];
+            if(selectedAccountId !== 'all') {
+                queries.unshift(where('accountId', '==', selectedAccountId));
             }
+
+            const currentLastVisible = initial ? null : lastVisible;
+            if (currentLastVisible) {
+                queries.push(startAfter(currentLastVisible));
+            }
+            
+            const q = query(tradesCollection, ...queries);
 
             const documentSnapshots = await getDocs(q);
 
@@ -111,7 +115,7 @@ const JournalPageContent = React.memo(function JournalPageContent() {
             if (initial) setIsLoading(false);
             setIsLoadingMore(false);
         }
-    }, [user, hasMore, isLoadingMore, lastVisible, toast]);
+    }, [user, hasMore, isLoadingMore, lastVisible, toast, selectedAccountId]);
 
     // Effect to trigger the initial fetch of trades when the user or refreshKey changes.
     useEffect(() => {
@@ -119,7 +123,7 @@ const JournalPageContent = React.memo(function JournalPageContent() {
             fetchTrades(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, refreshKey]);
+    }, [user, refreshKey, selectedAccountId]);
 
     /**
      * Handles the deletion of a single trade.

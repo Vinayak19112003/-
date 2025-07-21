@@ -23,6 +23,7 @@ import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AccountSwitcher } from './account-switcher';
 
 const NAV_LINKS = [
   { icon: Home, text: 'Dashboard', href: '/dashboard' },
@@ -91,6 +92,7 @@ export const Header = React.memo(function Header() {
                     <p className='text-xs text-muted-foreground'>{user?.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <AccountSwitcher />
                     <div className="hidden md:flex items-center gap-2">
                         <Label htmlFor="streamer-mode-switch" className="text-sm text-muted-foreground">Streamer Mode</Label>
                         <Switch id="streamer-mode-switch" checked={isStreamerMode} onCheckedChange={toggleStreamerMode} />

@@ -13,9 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Trade } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, getDocs, orderBy, CollectionReference, where, Query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
+import { useAccountContext } from "@/contexts/account-context";
 
 // Dynamically import charting components
 const DrawdownAnalysis = dynamic(() => import('@/components/performance/drawdown-analysis').then(mod => mod.DrawdownAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
@@ -32,6 +33,7 @@ export default function PerformancePage() {
     const { user } = useAuth();
     const { toast } = useToast();
     const { refreshKey } = useTrades();
+    const { selectedAccountId } = useAccountContext();
     
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -47,8 +49,13 @@ export default function PerformancePage() {
 
             setIsLoading(true);
             try {
-                const tradesCollection = collection(db, 'users', user.uid, 'trades');
-                const q = query(tradesCollection, orderBy('date', 'asc'));
+                const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
+                let q: Query<Trade>;
+                if (selectedAccountId !== 'all') {
+                    q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
+                } else {
+                    q = query(tradesCollection, orderBy('date', 'asc'));
+                }
                 
                 const querySnapshot = await getDocs(q);
                 const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() })) as Trade[];
@@ -67,7 +74,7 @@ export default function PerformancePage() {
         };
 
         fetchAllTrades();
-    }, [user, toast, refreshKey]);
+    }, [user, toast, refreshKey, selectedAccountId]);
 
     return (
         <div className="space-y-4 md:space-y-6">

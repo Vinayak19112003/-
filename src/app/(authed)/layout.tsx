@@ -20,6 +20,7 @@ import { TradeFormProvider } from '@/contexts/trade-form-context';
 import { Loader2 } from 'lucide-react';
 import { TradesProvider } from '@/contexts/trades-context';
 import { Header } from '@/components/shell/header';
+import { AccountProvider } from '@/contexts/account-context';
 
 // Dynamically import the TradeForm to optimize the initial bundle size.
 // The form is only loaded when the user triggers it.
@@ -126,7 +127,9 @@ export default function AuthedLayout({
 }) {
   return (
     <TradesProvider>
-      <AuthedLayoutContent>{children}</AuthedLayoutContent>
+        <AccountProvider>
+            <AuthedLayoutContent>{children}</AuthedLayoutContent>
+        </AccountProvider>
     </TradesProvider>
   )
 }

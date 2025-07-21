@@ -18,12 +18,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { Trade } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp, orderBy, CollectionReference, Query } from "firebase/firestore";
 import { useTradingRules } from "@/hooks/use-trading-rules";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TradingModelPage from "./trading-model-view";
+import { useAccountContext } from "@/contexts/account-context";
 
 // Dynamically import all charting components to reduce the initial bundle size.
 // Skeletons are shown as placeholders while the components load.
@@ -46,6 +47,7 @@ export default function AnalyticsPage() {
     const { toast } = useToast();
     const { tradingRules } = useTradingRules();
     const { refreshKey } = useTrades(); // Used to trigger a refetch when trades change.
+    const { selectedAccountId } = useAccountContext();
     
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -66,24 +68,25 @@ export default function AnalyticsPage() {
 
             setIsLoading(true);
             try {
-                const tradesCollection = collection(db, 'users', user.uid, 'trades');
+                const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
                 
-                let q;
+                const queries: any[] = [orderBy('date', 'desc')];
+                if (selectedAccountId !== 'all') {
+                    queries.unshift(where('accountId', '==', selectedAccountId));
+                }
+
                 if (dateRange?.from && dateRange?.to) {
                      // Query for a specific date range.
-                     q = query(
-                        tradesCollection, 
+                     queries.unshift(
                         where('date', '>=', Timestamp.fromDate(dateRange.from)),
-                        where('date', '<=', Timestamp.fromDate(endOfDay(dateRange.to))),
-                        orderBy('date', 'desc')
+                        where('date', '<=', Timestamp.fromDate(endOfDay(dateRange.to)))
                     );
-                } else { 
-                    // Query for "All time" if no date range is selected.
-                    q = query(tradesCollection, orderBy('date', 'desc'));
                 }
                 
+                const q = query(tradesCollection, ...queries);
+                
                 const querySnapshot = await getDocs(q);
-                const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: doc.data().date.toDate() })) as Trade[];
+                const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate() })) as Trade[];
                 setTrades(fetchedTrades);
 
             } catch (error) {
@@ -99,7 +102,7 @@ export default function AnalyticsPage() {
         };
 
         fetchTradesForRange();
-    }, [user, dateRange, toast, refreshKey]);
+    }, [user, dateRange, toast, refreshKey, selectedAccountId]);
 
     return (
         <div className="space-y-4 md:space-y-6">

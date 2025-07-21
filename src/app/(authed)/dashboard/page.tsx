@@ -19,9 +19,10 @@ import { DateRangeFilter } from "@/components/dashboard/date-range-filter";
 import type { Trade } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp, orderBy, CollectionReference, Query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
+import { useAccountContext } from "@/contexts/account-context";
 
 // Dynamically import components to improve initial page load performance.
 const SummaryBanner = dynamic(() => import('@/components/dashboard/summary-banner').then(mod => mod.SummaryBanner), { ssr: false, loading: () => <Skeleton className="h-28" /> });
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { refreshKey } = useTrades(); // A key that changes to trigger data refetches.
+  const { selectedAccountId } = useAccountContext();
   
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
   const [filteredTrades, setFilteredTrades] = useState<Trade[]>([]);
@@ -56,10 +58,17 @@ export default function DashboardPage() {
         }
         setIsLoading(true);
         try {
-            const tradesCollection = collection(db, 'users', user.uid, 'trades');
-            const q = query(tradesCollection, orderBy('date', 'asc'));
+            const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
+            let q: Query<Trade>;
+
+            if (selectedAccountId !== 'all') {
+                q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
+            } else {
+                q = query(tradesCollection, orderBy('date', 'asc'));
+            }
+            
             const querySnapshot = await getDocs(q);
-            const fetchedTrades = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: doc.data().date.toDate()})) as Trade[];
+            const fetchedTrades = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate()})) as Trade[];
             setAllTrades(fetchedTrades);
         } catch (error) {
             console.error("Error fetching all trades for dashboard:", error);
@@ -69,7 +78,7 @@ export default function DashboardPage() {
         }
     };
     fetchAllTrades();
-  }, [user, toast, refreshKey]);
+  }, [user, toast, refreshKey, selectedAccountId]);
   
   // Effect to filter the `allTrades` array based on the selected date range.
   // This runs whenever the date range or the list of all trades changes.
