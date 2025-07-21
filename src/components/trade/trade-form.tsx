@@ -203,12 +203,16 @@ export function TradeForm({
   const result = watch("result");
   const accountId = watch("accountId");
 
-  // Set account size when account changes
+  // Set account size when account changes or when editing a trade
   useEffect(() => {
-    if (accountId && !trade) { // Only set for new trades, not when editing
-      const selectedAccount = accounts.find((acc: any) => acc.id === accountId);
-      if (selectedAccount) {
-        setValue("accountSize", selectedAccount.currentBalance || selectedAccount.initialBalance);
+    const selectedAccount = accounts.find((acc: any) => acc.id === accountId);
+    if (selectedAccount) {
+      if (trade) {
+        // When editing, show the balance *before* this trade
+        setValue("accountSize", trade.accountSize);
+      } else {
+        // For new trades, use the latest balance
+        setValue("accountSize", selectedAccount.currentBalance ?? selectedAccount.initialBalance);
       }
     }
   }, [accountId, accounts, setValue, trade]);
@@ -313,7 +317,7 @@ export function TradeForm({
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Account</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!!trade}>
                     <FormControl>
                         <SelectTrigger>
                         <SelectValue placeholder="Select an account" />
@@ -325,6 +329,7 @@ export function TradeForm({
                         ))}
                     </SelectContent>
                     </Select>
+                     {!!trade && <FormDescription>Account cannot be changed after a trade is logged.</FormDescription>}
                     <FormMessage />
                 </FormItem>
                 )}
@@ -618,9 +623,9 @@ export function TradeForm({
                     <FormItem>
                     <FormLabel>Account Size ($)</FormLabel>
                     <FormControl>
-                        <Input type="number" step="any" placeholder="e.g. 10000" {...field} className={cn(isStreamerMode && "blur-sm")} readOnly={!trade} />
+                        <Input type="number" {...field} className={cn("bg-muted", isStreamerMode && "blur-sm")} readOnly />
                     </FormControl>
-                     <FormDescription>This is the account balance before the trade.</FormDescription>
+                     <FormDescription>The account balance before this trade.</FormDescription>
                     <FormMessage />
                     </FormItem>
                 )}
