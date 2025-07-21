@@ -5,23 +5,21 @@ import { useMemo, memo } from "react";
 import type { Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { StreamerModeText } from "@/components/streamer-mode-text";
-import { isThisMonth, isThisWeek, startOfWeek } from 'date-fns';
-import { Card } from "../ui/card";
+import { isThisMonth, isThisWeek } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 type StatsCardsProps = {
   trades: Trade[];
 };
 
-const StatCard = ({ label, value, valueClassName, subValue, subValueClassName }: { label: string, value: string | number, valueClassName?: string, subValue?: string, subValueClassName?: string }) => (
-    <Card className="flex items-center justify-between p-4 h-20">
-        <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className={cn("text-2xl font-bold font-headline", valueClassName)}>
-                <StreamerModeText>{value}</StreamerModeText>
-            </p>
-        </div>
+const StatCard = ({ label, value, valueClassName, subValue, className }: { label: string, value: string | number, valueClassName?: string, subValue?: string, className?: string }) => (
+    <Card className={cn("p-4", className)}>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className={cn("text-2xl font-bold font-headline", valueClassName)}>
+            <StreamerModeText>{value}</StreamerModeText>
+        </p>
         {subValue && (
-             <p className={cn("text-lg font-semibold font-headline", subValueClassName)}>
+             <p className="text-xs text-muted-foreground">
                 <StreamerModeText>{subValue}</StreamerModeText>
             </p>
         )}
@@ -89,11 +87,12 @@ export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) 
   }, [trades]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
             label="Total P&L" 
             value={stats.totalPnl} 
             valueClassName={stats.totalPnlValue >= 0 ? "text-success" : "text-destructive"}
+            className="col-span-2 lg:col-span-4"
         />
         <StatCard 
             label="Weekly P&L" 
@@ -120,4 +119,3 @@ export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) 
     </div>
   );
 });
-
