@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
 import * as React from 'react';
+import { ManageAccountsCard } from '@/components/settings/manage-accounts-card';
 
 /**
  * A component that displays the user's profile information in a card.
@@ -43,7 +44,10 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
         <h1 className="text-2xl font-bold tracking-tight font-headline">Settings</h1>
-        <ProfileCard />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ProfileCard />
+            <ManageAccountsCard />
+        </div>
     </div>
   );
 }

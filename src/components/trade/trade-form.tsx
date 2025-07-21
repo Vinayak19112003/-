@@ -54,6 +54,8 @@ import { Separator } from "../ui/separator";
 import { useTrades } from "@/contexts/trades-context";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTradingModel, type ModelSection } from "@/hooks/use-trading-model";
+import { useAccounts } from "@/hooks/use-accounts";
+import { AddAccountDialog } from "../settings/add-account-dialog";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
     screenshotFile: z.instanceof(File).optional(),
@@ -128,6 +130,7 @@ export function TradeForm({
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
   const { model: tradingModel } = useTradingModel();
+  const { accounts, addAccount: createNewAccount } = useAccounts();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -156,6 +159,7 @@ export function TradeForm({
           entryTimeFrame: trade.entryTimeFrame,
         }
       : {
+          accountId: accounts?.[0]?.id ?? "",
           date: new Date(),
           asset: "",
           strategy: "",
@@ -197,6 +201,18 @@ export function TradeForm({
   const riskPercentage = watch("riskPercentage");
   const rr = watch("rr");
   const result = watch("result");
+  const accountId = watch("accountId");
+
+  // Set account size when account changes
+  useEffect(() => {
+    if (accountId) {
+      const selectedAccount = accounts.find((acc: any) => acc.id === accountId);
+      if (selectedAccount) {
+        setValue("accountSize", selectedAccount.initialBalance);
+      }
+    }
+  }, [accountId, accounts, setValue]);
+
 
   useEffect(() => {
     const entry = parseFloat(entryPrice as any);
@@ -291,46 +307,70 @@ export function TradeForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
+            <FormField
+                control={form.control}
+                name="accountId"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Account</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select an account" />
+                        </SelectTrigger>
                     </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date > new Date() && !isSameDay(date, new Date())}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-2 gap-2">
+                    <SelectContent>
+                        {accounts.map((acc: any) => (
+                            <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <FormControl>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                            )}
+                        >
+                            {field.value ? (
+                            format(field.value, "PPP")
+                            ) : (
+                            <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                        </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date > new Date() && !isSameDay(date, new Date())}
+                        initialFocus
+                        />
+                    </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
             <FormField
               control={form.control}
               name="entryTime"
@@ -358,7 +398,6 @@ export function TradeForm({
               )}
             />
           </div>
-        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField

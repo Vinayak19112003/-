@@ -1,4 +1,5 @@
 
+
 export const DEFAULT_ASSETS = [
     "EURUSD",
     "GBPUSD",
@@ -41,3 +42,7 @@ export const DEFAULT_TRADING_MODEL = {
     trigger: ["Establish Narrative", "Establish a POI on H1", "Combine with session profiles"],
     ltf: ["Wait for Killzone", "Use LTF confirmation / Retracement entry"],
 };
+
+export const DEFAULT_ACCOUNTS = [
+    { id: "default", name: "Default Account", initialBalance: 100000 },
+];

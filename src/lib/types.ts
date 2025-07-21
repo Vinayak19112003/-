@@ -13,9 +13,17 @@ export const TradingModelSchema = z.object({
 });
 export type TradingModel = z.infer<typeof TradingModelSchema>;
 
+export const AccountSchema = z.object({
+    id: z.string().default(() => crypto.randomUUID()),
+    name: z.string().nonempty({ message: "Account name is required." }),
+    initialBalance: z.coerce.number().optional().default(0),
+});
+export type Account = z.infer<typeof AccountSchema>;
+
 
 export const TradeSchema = z.object({
   id: z.string().default(() => crypto.randomUUID()),
+  accountId: z.string().nonempty({ message: "Account is required." }),
   date: z.coerce.date(),
   asset: z.string().nonempty({ message: "Asset is required." }),
   strategy: z.string().nonempty({ message: "Strategy is required." }),

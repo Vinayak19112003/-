@@ -5,13 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, getDoc, Timestamp } from "firebase/firestore";
 import { useToast } from './use-toast';
-import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES, DEFAULT_TRADING_MODEL } from '@/lib/constants';
+import { DEFAULT_ASSETS, DEFAULT_STRATEGIES, DEFAULT_MISTAKE_TAGS, DEFAULT_TRADING_RULES, DEFAULT_TRADING_MODEL, DEFAULT_ACCOUNTS } from '@/lib/constants';
 import { useAuth } from './use-auth';
 
 const SETTINGS_COLLECTION = 'settings';
 const SETTINGS_DOC_ID = 'userConfig';
 
-type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules' | 'tradingModel';
+type SettingsKey = 'assets' | 'strategies' | 'mistakeTags' | 'tradingRules' | 'tradingModel' | 'accounts';
 
 
 const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
@@ -41,6 +41,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
             mistakeTags: [...DEFAULT_MISTAKE_TAGS],
             tradingRules: [...DEFAULT_TRADING_RULES],
             tradingModel: { ...DEFAULT_TRADING_MODEL },
+            accounts: [...DEFAULT_ACCOUNTS],
           });
         }
       } catch (error) {
@@ -92,6 +93,10 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
           if (currentItems) {
             setItems(currentItems);
           } else {
+            // Field might not exist yet for an old user, so we set it
+            if (key === 'accounts' && !data.accounts) {
+                updateDoc(docRef, { accounts: [...DEFAULT_ACCOUNTS] });
+            }
             setItems(defaultValues);
           }
       }
@@ -111,30 +116,44 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
   }, [user, key, defaultValues, getSettingsDocRef, toast]);
 
 
-  const addItem = async (newItem: string): Promise<boolean> => {
+  const addItem = async (newItem: any): Promise<boolean> => {
     const docRef = getSettingsDocRef();
     if (!docRef) {
       toast({ variant: 'destructive', title: 'Database Error', description: 'You must be logged in and connected to add an item.' });
       return false;
     }
-    const trimmedItem = key === 'assets' ? newItem.trim().toUpperCase() : newItem.trim();
-    if (!trimmedItem) return false;
-    
-    if (items.some((i: string) => i.trim().toLowerCase() === trimmedItem.toLowerCase())) {
-        toast({
-            variant: "destructive",
-            title: "Item Exists",
-            description: `This ${key.slice(0,-1)} is already in your list.`,
-        });
-        return false;
+
+    let trimmedItem = newItem;
+    if (typeof newItem === 'string') {
+        trimmedItem = key === 'assets' ? newItem.trim().toUpperCase() : newItem.trim();
+        if (!trimmedItem) return false;
+        
+        if (items.some((i: string) => i.trim().toLowerCase() === trimmedItem.toLowerCase())) {
+            toast({
+                variant: "destructive",
+                title: "Item Exists",
+                description: `This ${key.slice(0,-1)} is already in your list.`,
+            });
+            return false;
+        }
+    } else { // Handle account object
+        if (items.some((i: any) => i.name.trim().toLowerCase() === newItem.name.trim().toLowerCase())) {
+             toast({
+                variant: "destructive",
+                title: "Account Exists",
+                description: `An account with this name already exists.`,
+            });
+            return false;
+        }
     }
+
 
     try {
       const updatePayload: { [k: string]: any } = { [key]: arrayUnion(trimmedItem) };
       await updateDoc(docRef, updatePayload);
       toast({
         title: "Item Added",
-        description: `"${trimmedItem}" has been added.`,
+        description: `New item has been added.`,
       });
       return true;
     } catch (error) {
@@ -148,7 +167,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
     }
   };
 
-  const deleteItem = async (itemToDelete: string) => {
+  const deleteItem = async (itemToDelete: any) => {
     const docRef = getSettingsDocRef();
     if (!docRef) {
         toast({ variant: 'destructive', title: 'Database Error', description: 'You must be logged in and connected to delete an item.' });
@@ -159,7 +178,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
         await updateDoc(docRef, updatePayload);
         toast({
             title: "Item Deleted",
-            description: `"${itemToDelete}" has been removed.`,
+            description: `Item has been removed.`,
         });
     } catch (error) {
         console.error(`Error deleting ${key}:`, error);
