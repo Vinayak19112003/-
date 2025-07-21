@@ -1,156 +1,90 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type Trade } from "@/lib/types";
 import { useMemo, memo } from "react";
+import type { Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { StreamerModeText } from "@/components/streamer-mode-text";
-import { Badge } from "../ui/badge";
 
 type StatsCardsProps = {
   trades: Trade[];
 };
 
-const StatProgressCircle = ({ value, colorClass }: { value: number; colorClass: string }) => {
-    const circumference = 2 * Math.PI * 18; // 2 * pi * r
-    const strokeDashoffset = circumference - (value / 100) * circumference;
-
-    return (
-        <div className="relative h-12 w-12">
-            <svg className="h-full w-full" viewBox="0 0 40 40">
-                <circle
-                    className="stroke-muted"
-                    cx="20"
-                    cy="20"
-                    r="18"
-                    strokeWidth="3"
-                    fill="transparent"
-                />
-                <circle
-                    className={cn("transition-all duration-500", colorClass)}
-                    cx="20"
-                    cy="20"
-                    r="18"
-                    strokeWidth="3"
-                    fill="transparent"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="round"
-                    transform="rotate(-90 20 20)"
-                />
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
-                {value.toFixed(0)}%
-            </span>
-        </div>
-    );
-};
+const StatCard = ({ label, value, valueClassName }: { label: string, value: string | number, valueClassName?: string }) => (
+    <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4 text-center h-24">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className={cn("text-2xl font-bold font-headline", valueClassName)}>
+            <StreamerModeText>{value}</StreamerModeText>
+        </p>
+    </div>
+);
 
 export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) {
   const stats = useMemo(() => {
     const totalTrades = trades.length;
     if (totalTrades === 0) {
       return {
-        winRate: 0,
-        totalPnl: 0,
-        wins: 0,
-        losses: 0,
-        bes: 0,
-        avgWin: 0,
-        avgLoss: 0,
-        returnPercentage: 0,
+        totalTrades: 0,
+        winRate: "0%",
+        netPnl: "$0.00",
+        netR: "0.00R",
+        avgWin: "$0.00",
+        avgLoss: "$0.00",
+        largestProfit: "$0.00",
+        largestLoss: "$0.00",
       };
     }
 
     const winTrades = trades.filter((t) => t.result === "Win");
     const lossTrades = trades.filter((t) => t.result === "Loss");
-    const beTrades = trades.filter((t) => t.result === "BE");
 
     const wins = winTrades.length;
     const losses = lossTrades.length;
-    const bes = beTrades.length;
     
-    const winRate = (wins / (wins + losses)) * 100 || 0;
+    const winRate = (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0;
     
-    const totalPnl = trades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
+    const netPnl = trades.reduce((acc, trade) => acc + (trade.pnl || 0), 0);
+
+    const netR = trades.reduce((acc, trade) => {
+        if (trade.result === 'Win') return acc + (trade.rr || 0);
+        if (trade.result === 'Loss') return acc - 1;
+        return acc;
+    }, 0);
 
     const totalWinningPnl = winTrades.reduce((acc, t) => acc + (t.pnl || 0), 0);
     const totalLosingPnl = lossTrades.reduce((acc, t) => acc + (t.pnl || 0), 0);
 
     const avgWin = wins > 0 ? totalWinningPnl / wins : 0;
     const avgLoss = losses > 0 ? totalLosingPnl / losses : 0;
+
+    const largestProfit = Math.max(0, ...trades.map(t => t.pnl || 0));
+    const largestLoss = Math.min(0, ...trades.map(t => t.pnl || 0));
     
-    const accountSize = trades[0]?.accountSize;
-    const returnPercentage = accountSize && accountSize > 0 ? (totalPnl / accountSize) * 100 : 0;
 
     return {
-      winRate,
-      totalPnl,
-      wins,
-      losses,
-      bes,
-      avgWin,
-      avgLoss,
-      returnPercentage,
+      totalTrades,
+      winRate: `${winRate.toFixed(1)}%`,
+      netPnl: `${netPnl >= 0 ? '+$' : '-$'}${Math.abs(netPnl).toFixed(2)}`,
+      netR: `${netR.toFixed(2)}R`,
+      avgWin: `+$${avgWin.toFixed(2)}`,
+      avgLoss: `-$${Math.abs(avgLoss).toFixed(2)}`,
+      largestProfit: `+$${largestProfit.toFixed(2)}`,
+      largestLoss: `-$${Math.abs(largestLoss).toFixed(2)}`,
+      netPnlValue: netPnl,
+      netRValue: netR,
     };
   }, [trades]);
 
-  const StatItem = ({ label, value, valueClassName, progressCircle }: { label: string, value: string | React.ReactNode, valueClassName?: string, progressCircle?: React.ReactNode }) => (
-    <div className="flex items-center justify-between rounded-lg bg-muted/30 p-3 h-16">
-        <div className="flex items-center gap-4">
-            {progressCircle}
-            <div>
-                <p className="text-sm text-muted-foreground">{label}</p>
-                <p className={cn("text-xl font-bold font-headline", valueClassName)}>
-                    {value}
-                </p>
-            </div>
-        </div>
-    </div>
-  );
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-4">
-                <StatItem label="Wins" value={stats.wins} valueClassName="text-success" progressCircle={<StatProgressCircle value={stats.winRate} colorClass="stroke-success"/>} />
-                <StatItem label="Losses" value={stats.losses} valueClassName="text-destructive" progressCircle={<StatProgressCircle value={stats.winRate > 0 ? 100-stats.winRate : 0} colorClass="stroke-destructive"/>} />
-            </div>
-            <div className="space-y-4">
-                <StatItem label="Avg Win" value={<StreamerModeText>${stats.avgWin.toFixed(2)}</StreamerModeText>} valueClassName="text-success" />
-                <StatItem label="Avg Loss" value={<StreamerModeText>${stats.avgLoss.toFixed(2)}</StreamerModeText>} valueClassName="text-destructive" />
-            </div>
-            <div className="space-y-4">
-                <StatItem label="Open" value="0" />
-                <StatItem label="Wash" value={stats.bes} />
-            </div>
-        </div>
-        <div className="lg:col-span-3">
-             <Card className="h-full flex flex-col justify-center items-center">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base text-muted-foreground font-medium text-center">
-                        Total PnL
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                    <StreamerModeText className={cn(
-                        "text-3xl font-bold font-headline",
-                        stats.totalPnl > 0 ? "text-success" : stats.totalPnl < 0 ? "text-destructive" : ""
-                    )}>
-                        {stats.totalPnl >= 0 ? '+$' : '-$'}{Math.abs(stats.totalPnl).toFixed(2)}
-                    </StreamerModeText>
-                    {stats.returnPercentage !== 0 && (
-                         <Badge variant={stats.returnPercentage > 0 ? "success" : "destructive"} className="mt-2">
-                            <StreamerModeText>
-                                {stats.returnPercentage.toFixed(2)}%
-                            </StreamerModeText>
-                         </Badge>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        <StatCard label="Total Trades" value={stats.totalTrades} />
+        <StatCard label="Win Rate" value={stats.winRate} />
+        <StatCard label="Net PNL ($)" value={stats.netPnl} valueClassName={stats.netPnlValue > 0 ? "text-success" : stats.netPnlValue < 0 ? "text-destructive" : ""}/>
+        <StatCard label="Net R" value={stats.netR} valueClassName={stats.netRValue > 0 ? "text-success" : stats.netRValue < 0 ? "text-destructive" : ""}/>
+        <StatCard label="Avg. Win ($)" value={stats.avgWin} valueClassName="text-success" />
+        <StatCard label="Avg. Loss ($)" value={stats.avgLoss} valueClassName="text-destructive" />
+        <StatCard label="Largest Profit" value={stats.largestProfit} valueClassName="text-success" />
+        <StatCard label="Largest Loss" value={stats.largestLoss} valueClassName="text-destructive" />
     </div>
   );
 });
-
