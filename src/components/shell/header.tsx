@@ -21,6 +21,8 @@ import { ModeToggle } from '../mode-toggle';
 import { useStreamerMode } from '@/contexts/streamer-mode-context';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
+import { useAuth } from '@/hooks/use-auth';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const NAV_LINKS = [
   { icon: Home, text: 'Dashboard', href: '/dashboard' },
@@ -29,110 +31,97 @@ const NAV_LINKS = [
   { icon: Users, text: 'Performance', href: '/performance' },
 ];
 
-const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
-    const pathname = usePathname();
-    const isActive = pathname === href;
-    return (
-        <Link
-            href={href}
-            className={cn(
-                "transition-colors hover:text-foreground text-sm",
-                isActive ? "text-foreground font-semibold" : "text-muted-foreground"
-            )}
-        >
-            {children}
-        </Link>
-    );
-};
-
-const MobileNavLink = ({ href, children, icon: Icon }: { href: string; children: React.ReactNode, icon: React.ElementType }) => {
-    const pathname = usePathname();
-    const isActive = pathname === href;
-    return (
-        <SheetClose asChild>
-            <Link
-                href={href}
-                className={cn(
-                    "flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    isActive && "bg-muted text-primary"
-                )}
-            >
-                <Icon className="h-4 w-4" />
-                {children}
-            </Link>
-        </SheetClose>
-    );
-};
-
-
 export const Header = React.memo(function Header() {
+    const pathname = usePathname();
+    const { user } = useAuth();
     const { openForm } = useTradeForm();
     const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
     
     return (
-        <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-            <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-                <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 text-lg font-semibold md:text-base"
-                >
-                    <Logo />
-                    <span className="sr-only">Anony Trading</span>
-                </Link>
-                {NAV_LINKS.map(link => (
-                    <NavLink key={link.href} href={link.href}>{link.text}</NavLink>
-                ))}
-            </nav>
-            <Sheet>
-                <SheetTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0 md:hidden"
-                    >
-                        <Menu className="h-5 w-5" />
-                        <span className="sr-only">Toggle navigation menu</span>
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left">
-                    <nav className="grid gap-6 text-lg font-medium">
-                        <SheetClose asChild>
-                            <Link
-                                href="/dashboard"
-                                className="flex items-center gap-2 text-lg font-semibold"
+        <header className="sticky top-0 z-50 flex h-auto flex-col items-center gap-4 border-b bg-background px-4 md:px-6">
+            {/* Top Row */}
+            <div className='w-full flex items-center justify-between h-16'>
+                <div className='flex items-center gap-4'>
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="shrink-0 md:hidden"
                             >
-                                <Logo />
-                                <span className="sr-only">Anony Trading</span>
-                            </Link>
-                        </SheetClose>
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Toggle navigation menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left">
+                            <nav className="grid gap-6 text-lg font-medium">
+                                <SheetClose asChild>
+                                    <Link
+                                        href="/dashboard"
+                                        className="flex items-center gap-2 text-lg font-semibold"
+                                    >
+                                        <Logo />
+                                        <span className="sr-only">Anony Trading</span>
+                                    </Link>
+                                </SheetClose>
 
-                        {NAV_LINKS.map(link => (
-                             <MobileNavLink key={link.href} href={link.href} icon={link.icon}>{link.text}</MobileNavLink>
-                        ))}
-
-                        <SheetClose asChild>
-                            <Link
-                                href="/settings"
-                                className="flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                            >
-                                <Settings className="h-4 w-4" />
-                                Settings
-                            </Link>
-                        </SheetClose>
-                    </nav>
-                </SheetContent>
-            </Sheet>
-            <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
-                <div className="hidden md:flex items-center gap-2">
-                    <Label htmlFor="streamer-mode-switch" className="text-sm text-muted-foreground">Streamer Mode</Label>
-                    <Switch id="streamer-mode-switch" checked={isStreamerMode} onCheckedChange={toggleStreamerMode} />
+                                {NAV_LINKS.map(link => (
+                                    <SheetClose asChild key={link.href}>
+                                        <Link
+                                            href={link.href}
+                                            className={cn(
+                                                "flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                                pathname === link.href && "bg-muted text-primary"
+                                            )}
+                                        >
+                                            <link.icon className="h-4 w-4" />
+                                            {link.text}
+                                        </Link>
+                                    </SheetClose>
+                                ))}
+                            </nav>
+                        </SheetContent>
+                    </Sheet>
+                    <div className="hidden md:block">
+                        <Logo />
+                    </div>
                 </div>
-                 <ModeToggle />
-                 <Button onClick={() => openForm()} size="sm" className="hidden sm:flex">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Trade
-                </Button>
-                 <UserMenu />
+                <div className="hidden md:flex flex-col items-start">
+                    <p className='text-sm font-semibold'>Welcome back,</p>
+                    <p className='text-xs text-muted-foreground'>{user?.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="hidden md:flex items-center gap-2">
+                        <Label htmlFor="streamer-mode-switch" className="text-sm text-muted-foreground">Streamer Mode</Label>
+                        <Switch id="streamer-mode-switch" checked={isStreamerMode} onCheckedChange={toggleStreamerMode} />
+                    </div>
+                     <ModeToggle />
+                     <UserMenu />
+                </div>
+            </div>
+            
+            {/* Bottom Row - Navigation */}
+            <div className='w-full flex items-center justify-between pb-2'>
+                <nav className="hidden md:flex">
+                     <Tabs value={pathname} className="w-full">
+                        <TabsList>
+                            {NAV_LINKS.map(link => (
+                                <Link key={link.href} href={link.href} passHref>
+                                    <TabsTrigger value={link.href} className='gap-2'>
+                                        <link.icon className="h-4 w-4" />
+                                        {link.text}
+                                    </TabsTrigger>
+                                </Link>
+                            ))}
+                        </TabsList>
+                    </Tabs>
+                </nav>
+                <div className='ml-auto'>
+                    <Button onClick={() => openForm()} size="sm">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Trade
+                    </Button>
+                </div>
             </div>
         </header>
     );
