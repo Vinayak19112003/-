@@ -83,7 +83,7 @@ export const StrategyAnalytics = memo(function StrategyAnalytics({ trades }: Str
                                         stat.netR > 0 && "text-success",
                                         stat.netR < 0 && "text-destructive"
                                     )}>
-                                        {stat.netR > 0 ? '+' : ''}{stat.netR.toFixed(2)}R
+                                        {stat.netR > 0 ? '+$' : '$'}{stat.netR.toFixed(2)}R
                                     </TableCell>
                                 </TableRow>
                             ))}
