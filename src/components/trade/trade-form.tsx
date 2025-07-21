@@ -130,7 +130,7 @@ export function TradeForm({
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
   const { model: tradingModel } = useTradingModel();
-  const { accounts, addAccount: createNewAccount } = useAccounts();
+  const { accounts } = useAccounts();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -205,13 +205,13 @@ export function TradeForm({
 
   // Set account size when account changes
   useEffect(() => {
-    if (accountId) {
+    if (accountId && !trade) { // Only set for new trades, not when editing
       const selectedAccount = accounts.find((acc: any) => acc.id === accountId);
       if (selectedAccount) {
-        setValue("accountSize", selectedAccount.initialBalance);
+        setValue("accountSize", selectedAccount.currentBalance || selectedAccount.initialBalance);
       }
     }
-  }, [accountId, accounts, setValue]);
+  }, [accountId, accounts, setValue, trade]);
 
 
   useEffect(() => {
@@ -618,8 +618,9 @@ export function TradeForm({
                     <FormItem>
                     <FormLabel>Account Size ($)</FormLabel>
                     <FormControl>
-                        <Input type="number" step="any" placeholder="e.g. 10000" {...field} className={cn(isStreamerMode && "blur-sm")} />
+                        <Input type="number" step="any" placeholder="e.g. 10000" {...field} className={cn(isStreamerMode && "blur-sm")} readOnly={!trade} />
                     </FormControl>
+                     <FormDescription>This is the account balance before the trade.</FormDescription>
                     <FormMessage />
                     </FormItem>
                 )}

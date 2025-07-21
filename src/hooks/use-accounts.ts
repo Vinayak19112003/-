@@ -11,8 +11,13 @@ export function useAccounts() {
   const { items: accounts, updateWholeObject, isLoaded } = useJournalSettings('accounts', DEFAULT_ACCOUNTS);
   const { toast } = useToast();
 
-  const addAccount = useCallback(async (newAccount: Omit<Account, 'id'>) => {
-    const accountWithId = { ...newAccount, id: crypto.randomUUID() };
+  const addAccount = useCallback(async (newAccount: Omit<Account, 'id' | 'currentBalance'>) => {
+    const accountWithId: Account = { 
+        ...newAccount, 
+        id: crypto.randomUUID(),
+        currentBalance: newAccount.initialBalance,
+    };
+
     const newAccounts = [...accounts, accountWithId];
     const success = await updateWholeObject(newAccounts);
     if(success) {

@@ -17,6 +17,7 @@ export const AccountSchema = z.object({
     id: z.string().default(() => crypto.randomUUID()),
     name: z.string().nonempty({ message: "Account name is required." }),
     initialBalance: z.coerce.number().optional().default(0),
+    currentBalance: z.coerce.number().optional(),
 });
 export type Account = z.infer<typeof AccountSchema>;
 
