@@ -128,7 +128,7 @@ export default function AnalyticsPage() {
                     {isLoading ? (
                          <div className="space-y-6 mt-4">
                             <Skeleton className="h-10 w-full sm:w-[470px] self-end" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                                 <Skeleton className="h-[250px]" />
                                 <Skeleton className="h-[250px]" />
                                 <Skeleton className="h-[250px]" />
@@ -141,7 +141,7 @@ export default function AnalyticsPage() {
                                 <DateRangeFilter date={dateRange} onDateChange={setDateRange} />
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                                 <CoreMetrics trades={trades} />
                                 <RiskRewardMetrics trades={trades} />
                                 <DrawdownStreakAnalysis trades={trades} />
@@ -171,4 +171,3 @@ export default function AnalyticsPage() {
         </div>
     );
 }
-
