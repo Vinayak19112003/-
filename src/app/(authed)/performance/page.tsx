@@ -41,7 +41,7 @@ export default function PerformancePage() {
     // Effect to fetch all trades for performance analysis
     useEffect(() => {
         const fetchAllTrades = async () => {
-            if (!user) {
+            if (!user || !selectedAccountId) {
                 setTrades([]);
                 setIsLoading(false);
                 return;
@@ -50,12 +50,8 @@ export default function PerformancePage() {
             setIsLoading(true);
             try {
                 const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
-                const queries: any[] = [orderBy('date', 'asc')];
-                if (selectedAccountId !== 'all') {
-                    queries.unshift(where('accountId', '==', selectedAccountId));
-                }
                 
-                const q = query(tradesCollection, ...queries);
+                const q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
                 
                 const querySnapshot = await getDocs(q);
                 const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate() })) as Trade[];

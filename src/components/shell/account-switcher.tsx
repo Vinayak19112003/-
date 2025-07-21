@@ -13,7 +13,7 @@ import { useAccountContext } from "@/contexts/account-context";
 export function AccountSwitcher() {
     const { accounts, selectedAccountId, setSelectedAccountId, isAccountsLoaded } = useAccountContext();
 
-    if (!isAccountsLoaded) {
+    if (!isAccountsLoaded || !selectedAccountId) {
         return <div className="w-[180px] h-9 rounded-md bg-muted animate-pulse" />;
     }
 
@@ -26,7 +26,6 @@ export function AccountSwitcher() {
                 <SelectValue placeholder="Select an account" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="all">All Accounts</SelectItem>
                 {accounts.map(account => (
                     <SelectItem key={account.id} value={account.id}>
                         {account.name}

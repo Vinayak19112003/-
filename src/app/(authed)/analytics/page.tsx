@@ -60,7 +60,7 @@ export default function AnalyticsPage() {
     // Effect to fetch trades whenever the user, date range, or refreshKey changes.
     useEffect(() => {
         const fetchTradesForRange = async () => {
-            if (!user) {
+            if (!user || !selectedAccountId) {
                 setTrades([]);
                 setIsLoading(false);
                 return;
@@ -70,10 +70,10 @@ export default function AnalyticsPage() {
             try {
                 const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
                 
-                const queries: any[] = [orderBy('date', 'desc')];
-                if (selectedAccountId !== 'all') {
-                    queries.unshift(where('accountId', '==', selectedAccountId));
-                }
+                const queries: any[] = [
+                    where('accountId', '==', selectedAccountId),
+                    orderBy('date', 'desc')
+                ];
 
                 if (dateRange?.from && dateRange?.to) {
                      // Query for a specific date range.

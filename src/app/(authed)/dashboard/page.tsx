@@ -52,7 +52,7 @@ export default function DashboardPage() {
   // full trade history, like the SummaryBanner and MonthlyCalendar.
   useEffect(() => {
     const fetchAllTrades = async () => {
-        if (!user) {
+        if (!user || !selectedAccountId) {
             setIsLoading(false);
             return;
         }
@@ -60,12 +60,7 @@ export default function DashboardPage() {
         try {
             const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
             
-            const queries: any[] = [orderBy('date', 'asc')];
-            if (selectedAccountId !== 'all') {
-                queries.unshift(where('accountId', '==', selectedAccountId));
-            }
-
-            const q = query(tradesCollection, ...queries);
+            const q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
             
             const querySnapshot = await getDocs(q);
             const fetchedTrades = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate()})) as Trade[];

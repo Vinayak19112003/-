@@ -62,7 +62,7 @@ const JournalPageContent = React.memo(function JournalPageContent() {
      *                                      If false, it's a "load more" fetch.
      */
     const fetchTrades = React.useCallback(async (initial = false) => {
-        if (!user) {
+        if (!user || !selectedAccountId) {
             if (initial) setIsLoading(false);
             return;
         }
@@ -80,10 +80,11 @@ const JournalPageContent = React.memo(function JournalPageContent() {
         try {
             const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
             
-            const queries: any[] = [orderBy('date', 'desc'), limit(TRADES_PER_PAGE)];
-            if(selectedAccountId !== 'all') {
-                queries.unshift(where('accountId', '==', selectedAccountId));
-            }
+            const queries: any[] = [
+                where('accountId', '==', selectedAccountId),
+                orderBy('date', 'desc'), 
+                limit(TRADES_PER_PAGE)
+            ];
 
             const currentLastVisible = initial ? null : lastVisible;
             if (currentLastVisible) {
@@ -129,7 +130,7 @@ const JournalPageContent = React.memo(function JournalPageContent() {
 
     // Effect to trigger the initial fetch of trades when the user or refreshKey changes.
     useEffect(() => {
-        if (user) {
+        if (user && selectedAccountId) {
             fetchTrades(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
