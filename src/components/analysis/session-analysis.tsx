@@ -26,12 +26,11 @@ export default memo(function SessionAnalysis({ trades }: SessionAnalysisProps) {
             London: { pnl: 0, trades: 0, netR: 0, name: 'London' },
             "New York": { pnl: 0, trades: 0, netR: 0, name: 'New York' },
             Asian: { pnl: 0, trades: 0, netR: 0, name: 'Asian' },
-            Other: { pnl: 0, trades: 0, netR: 0, name: 'Other' },
         };
 
         trades.forEach(trade => {
-            const sessionKey = trade.session || 'Other';
-            if (stats[sessionKey]) {
+            const sessionKey = trade.session;
+            if (sessionKey && stats[sessionKey]) {
                 stats[sessionKey].trades++;
                 stats[sessionKey].pnl += trade.pnl || 0;
                 stats[sessionKey].netR += (trade.result === 'Win' ? trade.rr || 0 : (trade.result === 'Loss' ? -1 : 0));
