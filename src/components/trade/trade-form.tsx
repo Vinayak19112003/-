@@ -61,7 +61,7 @@ const FormSchema = TradeSchema.omit({ id: true }).extend({
 });
 
 const emotionalStates = ["Focused", "Anxious", "FOMO", "Greedy", "Confident", "Tired", "Neutral", "Other"];
-const sessions = ["London", "New York", "Asian", "Other"];
+const sessions = ["London", "New York", "Asian"];
 const timeFrames = ["1m", "3m", "5m", "15m", "1h", "4h", "Daily"];
 
 type TradeFormProps = {
@@ -226,14 +226,20 @@ export function TradeForm({
     const exit = parseFloat(exitPrice as any);
 
     if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(exit) && stopLoss !== entry) {
-      const risk = Math.abs(entry - stopLoss);
-      const reward = Math.abs(exit - entry);
-      const calculatedRr = risk > 0 ? reward / risk : 0;
-      setValue("rr", parseFloat(calculatedRr.toFixed(2)));
+        const risk = Math.abs(entry - stopLoss);
+        let reward = 0;
+        if (direction === 'Buy') {
+            reward = exit - entry;
+        } else { // Sell
+            reward = entry - exit;
+        }
+        // RR should always be positive, reward itself can be negative if trade is a loss.
+        const calculatedRr = risk > 0 ? Math.abs(reward) / risk : 0;
+        setValue("rr", parseFloat(calculatedRr.toFixed(2)));
     } else {
-      setValue("rr", 0);
+        setValue("rr", 0);
     }
-  }, [entryPrice, sl, exitPrice, setValue]);
+}, [entryPrice, sl, exitPrice, direction, setValue]);
 
   useEffect(() => {
     const size = parseFloat(accountSize as any);

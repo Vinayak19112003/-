@@ -56,7 +56,7 @@ export const TradeSchema = z.object({
   lossAnalysis: z.string().optional(),
   
   // New user-requested fields
-  session: z.enum(["London", "New York", "Asian", "Other"]).optional(),
+  session: z.enum(["London", "New York", "Asian"]).optional(),
   keyLevel: z.string().optional(),
   entryTimeFrame: z.enum(["1m", "3m", "5m", "15m", "1h", "4h", "Daily"]).optional(),
 });

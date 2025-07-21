@@ -64,7 +64,7 @@ For each trade, you must provide values for all the fields in the output schema.
 **Handling Missing Data:**
 - **strategy**: If a strategy is not specified, you MUST default to the string 'Imported'.
 - **confidence**: If confidence is not specified, you MUST default to the number 5.
-- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided, you MUST calculate it using the entry, stop loss, and exit prices. The formula is: \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0. It must always be a positive number.
+- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided, you MUST calculate it. For a 'Buy' trade, the formula is \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. For a 'Sell' trade, the formula is also \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. It must always be a positive number. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
 - **pnl**: The profit or loss in currency amount. **Pay close attention to the units.** If a value is in cents (e.g., '100 USC' or a column header indicates cents), you MUST convert it to dollars by dividing by 100. So, a value of 100 in a 'profit_usc' column becomes a PNL of 1.
 - **ticket**: If an order ID, ticket number, or execution ID is present, map it to this field. Default to an empty string \`""\` if not present.
 - **result**: Must be 'Win', 'Loss', or 'BE'. Infer this from the profit/loss value (pnl). A positive pnl is a 'Win', a negative pnl is a 'Loss', and a zero pnl is 'BE'.
@@ -81,7 +81,7 @@ For each trade, you must provide values for all the fields in the output schema.
 - **screenshotURL**: Default to an empty string \`""\` if not present.
 - **accountSize**: Default to 0 if not present.
 - **riskPercentage**: Default to 0 if not present.
-- **session**: If not specified, default to 'Other'. Must be one of "London", "New York", "Asian", "Other".
+- **session**: If not specified, infer from the time of day if possible (e.g., London, New York, Asian). Must be one of "London", "New York", "Asian".
 - **keyLevel**: If not specified, default to an empty string "".
 - **entryTimeFrame**: If not specified, default to '15m'. Must be one of "1m", "3m", "5m", "15m", "1h", "4h", "Daily".
 
