@@ -23,12 +23,12 @@ const AITradeSchema = TradeSchema.omit({id: true}).extend({
     date: z.string().transform((val) => new Date(val)),
 });
 
-export const ImportTradesInputSchema = z.object({
+const ImportTradesInputSchema = z.object({
   fileDataUri: z.string().describe("A file containing trade data, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'. The file can be a CSV, PDF, or an image of trades."),
 });
 export type ImportTradesInput = z.infer<typeof ImportTradesInputSchema>;
 
-export const ImportTradesOutputSchema = z.object({
+const ImportTradesOutputSchema = z.object({
   trades: z.array(AITradeSchema).describe('An array of parsed trade objects.'),
 });
 export type ImportTradesOutput = z.infer<typeof ImportTradesOutputSchema>;
@@ -64,7 +64,7 @@ For each trade, you must provide values for all the fields in the output schema.
 **Handling Missing Data:**
 - **strategy**: If a strategy is not specified, you MUST default to the string 'Imported'.
 - **confidence**: If confidence is not specified, you MUST default to the number 5.
-- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided, you MUST calculate it. For a 'Buy' trade, the formula is \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. For a 'Sell' trade, the formula is also \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. It must always be a positive number. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
+- **rr (Risk/Reward)**: If the risk-to-reward ratio is not provided, you MUST calculate it. For a 'Buy' trade, the formula is \`abs(exitPrice - entryPrice) / abs(entryPrice - sl)\`. For a 'Sell' trade, the formula is also \`abs(entryPrice - exitPrice) / abs(entryPrice - sl)\`. It must always be a positive number. If \`entryPrice\` is equal to \`sl\`, the denominator will be zero; in this case, you MUST set \`rr\` to 0.
 - **pnl**: The profit or loss in currency amount. **Pay close attention to the units.** If a value is in cents (e.g., '100 USC' or a column header indicates cents), you MUST convert it to dollars by dividing by 100. So, a value of 100 in a 'profit_usc' column becomes a PNL of 1.
 - **ticket**: If an order ID, ticket number, or execution ID is present, map it to this field. Default to an empty string \`""\` if not present.
 - **result**: Must be 'Win', 'Loss', or 'BE'. Infer this from the profit/loss value (pnl). A positive pnl is a 'Win', a negative pnl is a 'Loss', and a zero pnl is 'BE'.
