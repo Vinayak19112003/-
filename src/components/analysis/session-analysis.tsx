@@ -50,8 +50,6 @@ export default memo(function SessionAnalysis({ trades }: SessionAnalysisProps) {
 
     const tickColor = theme === 'dark' ? '#888888' : '#333333';
     const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-    const successColor = 'hsl(var(--success))';
-    const destructiveColor = 'hsl(var(--destructive))';
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
@@ -107,7 +105,7 @@ export default memo(function SessionAnalysis({ trades }: SessionAnalysisProps) {
                             />
                             <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
                                 {sessionStats.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? successColor : destructiveColor} />
+                                    <Cell key={`cell-${index}`} fill={'hsl(var(--success))'} />
                                 ))}
                             </Bar>
                         </BarChart>

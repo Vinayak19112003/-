@@ -30,9 +30,10 @@ export default memo(function DrawdownStreakAnalysis({ trades }: { trades: Trade[
         let cumulativeR = 0;
         let peakR = 0;
         let maxDrawdownR = 0;
-        let maxDrawdownDollars = 0;
-        let peakDollars = 0;
+        
         let cumulativeDollars = 0;
+        let peakDollars = 0;
+        let maxDrawdownDollars = 0;
 
         let currentWinStreak = 0;
         let longestWinStreak = 0;
@@ -48,17 +49,17 @@ export default memo(function DrawdownStreakAnalysis({ trades }: { trades: Trade[
 
             const drawdownR = peakR - cumulativeR;
             if (drawdownR > maxDrawdownR) maxDrawdownR = drawdownR;
-
+            
             const drawdownDollars = peakDollars - cumulativeDollars;
             if (drawdownDollars > maxDrawdownDollars) maxDrawdownDollars = drawdownDollars;
 
             if (trade.result === 'Win') {
                 currentWinStreak++;
-                currentLossStreak = 0;
+                if (currentLossStreak > 0) currentLossStreak = 0;
                 if (currentWinStreak > longestWinStreak) longestWinStreak = currentWinStreak;
             } else if (trade.result === 'Loss') {
                 currentLossStreak++;
-                currentWinStreak = 0;
+                if (currentWinStreak > 0) currentWinStreak = 0;
                 if (currentLossStreak > longestLossStreak) longestLossStreak = currentLossStreak;
             } else {
                 currentWinStreak = 0;

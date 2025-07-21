@@ -54,8 +54,6 @@ import { Separator } from "../ui/separator";
 import { useTrades } from "@/contexts/trades-context";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useTradingModel, type ModelSection } from "@/hooks/use-trading-model";
-import { useAccounts } from "@/hooks/use-accounts";
-import { AddAccountDialog } from "../settings/add-account-dialog";
 import { useAccountContext } from "@/contexts/account-context";
 
 const FormSchema = TradeSchema.omit({ id: true }).extend({
@@ -131,15 +129,14 @@ export function TradeForm({
   const { mistakeTags, addMistakeTag, deleteMistakeTag } = useMistakeTags();
   const { assets, addAsset, deleteAsset } = useAssets();
   const { model: tradingModel } = useTradingModel();
-  const { accounts } = useAccountContext();
-  const { selectedAccountId } = useAccountContext();
-
+  const { accounts, selectedAccountId } = useAccountContext();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: trade
       ? { 
           ...trade,
+          accountId: trade.accountId,
           rr: trade.rr ?? 0,
           confidence: trade.confidence ?? 5,
           accountSize: trade.accountSize ?? 0,
@@ -205,6 +202,7 @@ export function TradeForm({
   const rr = watch("rr");
   const result = watch("result");
   const accountId = watch("accountId");
+  const direction = watch("direction");
 
   // Set account size when account changes or when editing a trade
   useEffect(() => {
@@ -228,35 +226,35 @@ export function TradeForm({
     const exit = parseFloat(exitPrice as any);
 
     if (!isNaN(entry) && !isNaN(stopLoss) && !isNaN(exit) && stopLoss !== entry) {
-      let rr = 0;
       const risk = Math.abs(entry - stopLoss);
       const reward = Math.abs(exit - entry);
-      if (risk > 0) {
-        rr = reward / risk;
-      }
-      setValue("rr", parseFloat(rr.toFixed(2)));
+      const calculatedRr = risk > 0 ? reward / risk : 0;
+      setValue("rr", parseFloat(calculatedRr.toFixed(2)));
+    } else {
+      setValue("rr", 0);
     }
   }, [entryPrice, sl, exitPrice, setValue]);
 
   useEffect(() => {
     const size = parseFloat(accountSize as any);
-    const risk = parseFloat(riskPercentage as any);
+    const riskPercent = parseFloat(riskPercentage as any);
     const rRatio = parseFloat(rr as any);
     const tradeResult = result;
-
-    if (!isNaN(size) && size > 0 && !isNaN(risk) && risk > 0) {
-      const riskAmount = size * (risk / 100);
-      let calculatedPnl = 0;
-      if (tradeResult === 'Win' && !isNaN(rRatio)) {
-        calculatedPnl = riskAmount * rRatio;
-      } else if (tradeResult === 'Loss') {
-        calculatedPnl = -riskAmount;
-      }
-      setValue("pnl", parseFloat(calculatedPnl.toFixed(2)));
+    
+    if (!isNaN(size) && size > 0 && !isNaN(riskPercent) && riskPercent > 0) {
+        const riskAmount = size * (riskPercent / 100);
+        let calculatedPnl = 0;
+        if (tradeResult === 'Win' && !isNaN(rRatio)) {
+            calculatedPnl = riskAmount * rRatio;
+        } else if (tradeResult === 'Loss') {
+            calculatedPnl = -riskAmount;
+        }
+        setValue("pnl", parseFloat(calculatedPnl.toFixed(2)));
     } else {
-      setValue("pnl", 0);
+        setValue("pnl", 0);
     }
-  }, [accountSize, riskPercentage, rr, result, setValue]);
+}, [accountSize, riskPercentage, rr, result, setValue]);
+
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsSaving(true);

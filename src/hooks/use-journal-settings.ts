@@ -46,18 +46,13 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
         }
       } catch (error) {
         console.error("Failed to check or initialize settings doc:", error);
-        toast({
-          variant: "destructive",
-          title: "Settings Initialization Failed",
-          description: "Could not create default settings.",
-        });
       }
     };
 
     if (user) {
       initializeSettings();
     }
-  }, [user, getSettingsDocRef, toast]);
+  }, [user, getSettingsDocRef]);
   
 
   // Effect to listen for real-time updates
