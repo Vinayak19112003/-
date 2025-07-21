@@ -111,7 +111,7 @@ export default function PerformancePage() {
                    {isLoading ? <TabSkeleton /> : <RiskAnalysisTab trades={trades} />}
                 </TabsContent>
                 <TabsContent value="psychology" className="mt-4">
-                    {isLoading ? <TabSkeleton /> : <PsychologyTab trades={trades} />}
+                    {isLoading ? <TabSkeleton /> : <PsychologyTab trades={trades} tradingRules={tradingRules} />}
                 </TabsContent>
                 <TabsContent value="time-analysis" className="mt-4">
                     {isLoading ? <TabSkeleton /> : <TimeAnalysisTab trades={trades} />}
