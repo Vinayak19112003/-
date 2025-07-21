@@ -72,6 +72,7 @@ export default function DashboardPage() {
             setAllTrades(fetchedTrades);
         } catch (error: any) {
             if (error.code === 'failed-precondition') {
+                console.error("Firebase Index Required:", error);
                 toast({
                     variant: 'destructive',
                     title: 'Firebase Index Required',

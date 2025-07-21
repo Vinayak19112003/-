@@ -91,11 +91,11 @@ export default function AnalyticsPage() {
 
             } catch (error: any) {
                 if (error.code === 'failed-precondition') {
-                    // This error is handled globally in the dashboard, but we can show a specific message here too.
+                    console.error("Firebase Index Required:", error);
                     toast({
                         variant: 'destructive',
                         title: 'Firebase Index Required',
-                        description: 'Please create the required Firestore index to filter by account.',
+                        description: 'Please create the required Firestore index by clicking the link in the console error.',
                         duration: 10000,
                     });
                 } else {
