@@ -25,6 +25,7 @@ const AITradeSchema = TradeSchema.omit({id: true}).extend({
 
 const ImportTradesInputSchema = z.object({
   fileDataUri: z.string().describe("A file containing trade data, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'. The file can be a CSV, PDF, or an image of trades."),
+  accountId: z.string().describe("The ID of the account to which these trades should be assigned."),
 });
 export type ImportTradesInput = z.infer<typeof ImportTradesInputSchema>;
 
@@ -60,6 +61,9 @@ Your task is to analyze the provided file content (which could be CSV, a broker 
 You must intelligently map the columns or text to the required trade fields. The column names or labels might not be exact matches. Use your understanding of trading terminology to make logical mappings. For example, 'symbol' or 'instrument' should map to 'asset', 'p/l' or 'profit' should map to 'pnl'.
 
 For each trade, you must provide values for all the fields in the output schema.
+
+**CRITICAL INSTRUCTION:**
+- **accountId**: You MUST use the following account ID for every single trade object you generate: \`{{{accountId}}}\`. This field must not be empty.
 
 **Handling Missing Data:**
 - **strategy**: If a strategy is not specified, you MUST default to the string 'Imported'.

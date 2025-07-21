@@ -22,6 +22,7 @@ import type { Trade } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useAccountContext } from '@/contexts/account-context';
 
 type ImportTradesProps = {
   onImport: (addedCount: number, skippedCount: number) => void;
@@ -34,6 +35,7 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { selectedAccountId } = useAccountContext();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -42,11 +44,11 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
   };
 
   const handleImport = async () => {
-    if (!file || !user) {
+    if (!file || !user || !selectedAccountId) {
       toast({
         variant: "destructive",
         title: "Import Failed",
-        description: "Please select a file and ensure you are logged in.",
+        description: "Please select a file and ensure you are logged in and an account is selected.",
       });
       return;
     }
@@ -68,7 +70,7 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
         }
 
         try {
-            const result = await importTrades({ fileDataUri });
+            const result = await importTrades({ fileDataUri, accountId: selectedAccountId });
             const tradesFromAI = result.trades;
 
             if (!tradesFromAI || tradesFromAI.length === 0) {
@@ -87,7 +89,7 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
 
             if (newTicketIds.length > 0) {
                 const tradesCollection = collection(db, 'users', user.uid, 'trades');
-                const q = query(tradesCollection, where('ticket', 'in', newTicketIds));
+                const q = query(tradesCollection, where('ticket', 'in', newTicketIds), where('accountId', '==', selectedAccountId));
                 const querySnapshot = await getDocs(q);
                 querySnapshot.forEach(doc => {
                     existingTicketIds.add(doc.data().ticket);
@@ -108,12 +110,15 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
             
             setIsOpen(false);
             setFile(null);
-        } catch (error) {
+        } catch (error: any) {
             console.error("AI import failed:", error);
+            const errorMessage = error.message && error.message.includes('Schema validation failed') 
+                ? "The AI returned data in an invalid format. Please check the file and try again."
+                : "An error occurred while the AI was processing your file. Please try again.";
             toast({
                 variant: "destructive",
                 title: "AI Import Error",
-                description: "An error occurred while the AI was processing your file. Please try again.",
+                description: errorMessage,
             });
         } finally {
             setIsImporting(false);
@@ -147,7 +152,7 @@ export default function ImportTrades({ onImport, addMultipleTrades }: ImportTrad
             AI-Powered Trade Import
             </DialogTitle>
           <DialogDescription>
-            Upload a CSV, PDF, or image file and our AI will automatically parse your trades. It will skip duplicates based on Ticket/Order ID.
+            Upload a CSV, PDF, or image file and our AI will automatically parse your trades for the currently selected account. It will skip duplicates based on Ticket/Order ID.
           </DialogDescription>
         </DialogHeader>
         <div className="grid w-full max-w-sm items-center gap-1.5 py-4">

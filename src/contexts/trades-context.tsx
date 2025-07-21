@@ -18,10 +18,11 @@ import {
 import { Trade } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useAccountContext } from './account-context';
 
 const TRADES_COLLECTION = 'trades';
-const SETTINGS_COLLECTION = 'settings';
-const SETTINGS_DOC_ID = 'userConfig'; 
+const ACCOUNTS_COLLECTION = 'settings';
+const ACCOUNTS_DOC_ID = 'userConfig'; 
 
 interface TradesContextType {
     addTrade: (trade: Omit<Trade, 'id'>) => Promise<boolean>;
@@ -46,15 +47,15 @@ export function TradesProvider({ children }: { children: ReactNode }) {
         return collection(db, 'users', user.uid, TRADES_COLLECTION);
     }, [user]);
 
-    const getSettingsDocRef = useCallback(() => {
+    const getAccountsDocRef = useCallback(() => {
         if (!user || !db) return null;
-        return doc(db, 'users', user.uid, SETTINGS_COLLECTION, SETTINGS_DOC_ID);
+        return doc(db, 'users', user.uid, ACCOUNTS_COLLECTION, ACCOUNTS_DOC_ID);
     }, [user]);
 
     const addTrade = useCallback(async (trade: Omit<Trade, 'id'>) => {
         const tradesCollection = getTradesCollectionRef();
-        const settingsDocRef = getSettingsDocRef();
-        if (!tradesCollection || !settingsDocRef) return false;
+        const accountsDocRef = getAccountsDocRef();
+        if (!tradesCollection || !accountsDocRef) return false;
 
         try {
             await runTransaction(db, async (transaction) => {
@@ -64,12 +65,13 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                     date: Timestamp.fromDate(trade.date),
                 });
 
-                const settingsDoc = await transaction.get(settingsDocRef);
-                if (!settingsDoc.exists()) {
-                    throw new Error("Settings document not found for user.");
+                const accountsDoc = await transaction.get(accountsDocRef);
+                if (!accountsDoc.exists()) {
+                    console.warn("Accounts document not found for user. Skipping balance update.");
+                    return;
                 }
 
-                const accounts = settingsDoc.data().accounts || [];
+                const accounts = accountsDoc.data().accounts || [];
                 const accountIndex = accounts.findIndex((acc: any) => acc.id === trade.accountId);
                 
                 if (accountIndex === -1) {
@@ -81,7 +83,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 const currentBalance = updatedAccounts[accountIndex].currentBalance ?? updatedAccounts[accountIndex].initialBalance;
                 updatedAccounts[accountIndex].currentBalance = currentBalance + (trade.pnl || 0);
 
-                transaction.update(settingsDocRef, { accounts: updatedAccounts });
+                transaction.update(accountsDocRef, { accounts: updatedAccounts });
             });
 
             triggerRefresh();
@@ -91,7 +93,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error Saving Trade", description: "Could not save the trade." });
             return false;
         }
-    }, [getTradesCollectionRef, getSettingsDocRef, toast]);
+    }, [getTradesCollectionRef, getAccountsDocRef, toast]);
 
     const addMultipleTrades = useCallback(async (newTrades: Omit<Trade, 'id'>[]) => {
         const tradesCollection = getTradesCollectionRef();
@@ -122,8 +124,8 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
     const updateTrade = useCallback(async (trade: Trade) => {
         const tradesCollection = getTradesCollectionRef();
-        const settingsDocRef = getSettingsDocRef();
-        if (!tradesCollection || !settingsDocRef || !trade.id) return false;
+        const accountsDocRef = getAccountsDocRef();
+        if (!tradesCollection || !accountsDocRef || !trade.id) return false;
 
         try {
             const tradeRef = doc(tradesCollection, trade.id);
@@ -141,11 +143,12 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                     date: Timestamp.fromDate(trade.date),
                 });
                 
-                const settingsDoc = await transaction.get(settingsDocRef);
-                if (!settingsDoc.exists()) {
-                     throw new Error("Settings document not found for user.");
+                const accountsDoc = await transaction.get(accountsDocRef);
+                if (!accountsDoc.exists()) {
+                     console.warn("Accounts document not found for user. Skipping balance update.");
+                     return;
                 }
-                const accounts = settingsDoc.data().accounts || [];
+                const accounts = accountsDoc.data().accounts || [];
                 const accountIndex = accounts.findIndex((acc: any) => acc.id === trade.accountId);
 
                 if (accountIndex === -1) return;
@@ -154,7 +157,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 const currentBalance = updatedAccounts[accountIndex].currentBalance ?? updatedAccounts[accountIndex].initialBalance;
                 updatedAccounts[accountIndex].currentBalance = currentBalance + pnlDifference;
                 
-                transaction.update(settingsDocRef, { accounts: updatedAccounts });
+                transaction.update(accountsDocRef, { accounts: updatedAccounts });
             });
 
             triggerRefresh();
@@ -164,12 +167,12 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error Updating Trade", description: "Could not update the trade." });
             return false;
         }
-    }, [getTradesCollectionRef, getSettingsDocRef, toast]);
+    }, [getTradesCollectionRef, getAccountsDocRef, toast]);
 
     const deleteTrade = useCallback(async (id: string) => {
         const tradesCollection = getTradesCollectionRef();
-        const settingsDocRef = getSettingsDocRef();
-        if (!tradesCollection || !settingsDocRef) return false;
+        const accountsDocRef = getAccountsDocRef();
+        if (!tradesCollection || !accountsDocRef) return false;
 
         try {
             const tradeRef = doc(tradesCollection, id);
@@ -184,11 +187,12 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
                 transaction.delete(tradeRef);
                 
-                const settingsDoc = await transaction.get(settingsDocRef);
-                if (!settingsDoc.exists()) {
-                     throw new Error("Settings document not found for user.");
+                const accountsDoc = await transaction.get(accountsDocRef);
+                if (!accountsDoc.exists()) {
+                     console.warn("Accounts document not found for user. Skipping balance update.");
+                     return;
                 }
-                const accounts = settingsDoc.data().accounts || [];
+                const accounts = accountsDoc.data().accounts || [];
                 const accountIndex = accounts.findIndex((acc: any) => acc.id === tradeToDelete.accountId);
                 
                 if (accountIndex === -1) return;
@@ -197,7 +201,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
                 const currentBalance = updatedAccounts[accountIndex].currentBalance ?? updatedAccounts[accountIndex].initialBalance;
                 updatedAccounts[accountIndex].currentBalance = currentBalance - pnlToRemove;
                 
-                transaction.update(settingsDocRef, { accounts: updatedAccounts });
+                transaction.update(accountsDocRef, { accounts: updatedAccounts });
              });
 
             triggerRefresh();
@@ -207,14 +211,15 @@ export function TradesProvider({ children }: { children: ReactNode }) {
             toast({ variant: "destructive", title: "Error Deleting Trade", description: "Could not delete the trade." });
             return false;
         }
-    }, [getTradesCollectionRef, getSettingsDocRef, toast]);
+    }, [getTradesCollectionRef, getAccountsDocRef, toast]);
 
     const deleteAllTrades = useCallback(async () => {
         const tradesCollection = getTradesCollectionRef();
-        if (!tradesCollection) return false;
+        const { selectedAccountId } = useAccountContext.getState();
+        if (!tradesCollection || !selectedAccountId) return false;
 
         try {
-            const q = query(tradesCollection);
+            const q = query(tradesCollection, where('accountId', '==', selectedAccountId));
             const querySnapshot = await getDocs(q);
             const batch = writeBatch(db);
             querySnapshot.forEach(doc => batch.delete(doc.ref));
@@ -222,7 +227,7 @@ export function TradesProvider({ children }: { children: ReactNode }) {
 
             toast({
                 title: "All Trades Cleared",
-                description: "Your account balances have not been reset. You may need to edit them manually in Settings.",
+                description: "Your account balance for this account has not been reset. You may need to edit it manually in Settings.",
             })
 
             triggerRefresh();
