@@ -84,6 +84,26 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
     const successColor = 'hsl(var(--success))';
     const destructiveColor = 'hsl(var(--destructive))';
 
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="rounded-lg border bg-background p-2 shadow-sm text-sm">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <div className="col-span-2 font-bold mb-1">Time: {label}</div>
+                        <div className="text-muted-foreground">Net R</div>
+                        <div className="font-semibold text-right">{data.netR.toFixed(2)}R</div>
+                        <div className="text-muted-foreground">Win Rate</div>
+                        <div className="font-semibold text-right">{data.winRate.toFixed(1)}%</div>
+                        <div className="text-muted-foreground">Trades</div>
+                        <div className="font-semibold text-right">{data.trades}</div>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
+    
     if (!mounted) {
         return (
             <Card>
@@ -110,41 +130,26 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
                     )}
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="h-[340px]">
                 {hourlyStats.chartData.length > 0 ? (
-                    <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={hourlyStats.chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                                <XAxis dataKey="hour" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Net R', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
-                                <Tooltip
-                                    cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
-                                    contentStyle={{
-                                        background: 'hsl(var(--background))',
-                                        borderColor: 'hsl(var(--border))',
-                                        borderRadius: 'var(--radius)',
-                                    }}
-                                    labelStyle={{ fontWeight: 'bold' }}
-                                    formatter={(value: number, name: string, props: any) => {
-                                        const { payload } = props;
-                                        if (name === 'netR') return [`${value.toFixed(2)}R`, 'Net R'];
-                                        if (name === 'winRate') return [`${payload.winRate.toFixed(1)}%`, 'Win Rate'];
-                                        if (name === 'trades') return [payload.trades, 'Trades'];
-                                        return [value, name];
-                                    }}
-                                    
-                                />
-                                <Bar dataKey="netR">
-                                    {hourlyStats.chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.netR >= 0 ? successColor : destructiveColor} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={hourlyStats.chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                            <XAxis dataKey="hour" stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke={tickColor} fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Net R', angle: -90, position: 'insideLeft', fill: tickColor, fontSize: 12, dy: 40 }}/>
+                            <Tooltip
+                                cursor={{ fill: 'hsla(var(--accent) / 0.2)' }}
+                                content={<CustomTooltip />}
+                            />
+                            <Bar dataKey="netR">
+                                {hourlyStats.chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.netR >= 0 ? successColor : destructiveColor} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
                 ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground p-4 text-center">
+                    <div className="h-full flex items-center justify-center text-muted-foreground p-4 text-center">
                         Not enough trade data with entry times to analyze hourly performance.
                     </div>
                 )}

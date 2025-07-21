@@ -17,13 +17,23 @@ import { collection, query, getDocs, orderBy, CollectionReference, where, Query,
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
 import { useAccountContext } from "@/contexts/account-context";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTradingRules } from "@/hooks/use-trading-rules";
 
-// Dynamically import charting components
-const DrawdownAnalysis = dynamic(() => import('@/components/performance/drawdown-analysis').then(mod => mod.DrawdownAnalysis), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
-const RiskAdjustedReturns = dynamic(() => import('@/components/performance/risk-adjusted-returns').then(mod => mod.RiskAdjustedReturns), { ssr: false, loading: () => <Skeleton className="h-[250px]" /> });
-const RiskDistribution = dynamic(() => import('@/components/performance/risk-distribution').then(mod => mod.RiskDistribution), { ssr: false, loading: () => <Skeleton className="h-[420px]" /> });
-const AIRiskInsights = dynamic(() => import('@/components/performance/ai-risk-insights').then(mod => mod.AIRiskInsights), { ssr: false, loading: () => <Skeleton className="h-[250px]" /> });
+// Dynamically import tab content
+const RiskAnalysisTab = dynamic(() => import('@/components/performance/risk-analysis-tab'), { ssr: false, loading: () => <TabSkeleton /> });
+const PsychologyTab = dynamic(() => import('@/components/performance/psychology-tab'), { ssr: false, loading: () => <TabSkeleton /> });
+const TimeAnalysisTab = dynamic(() => import('@/components/performance/time-analysis-tab'), { ssr: false, loading: () => <TabSkeleton /> });
+const PlaybookTab = dynamic(() => import('@/components/performance/playbook-tab'), { ssr: false, loading: () => <TabSkeleton /> });
 
+const TabSkeleton = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-4">
+        <Skeleton className="h-[420px]" />
+        <Skeleton className="h-[420px]" />
+        <Skeleton className="h-[250px]" />
+        <Skeleton className="h-[250px]" />
+    </div>
+)
 
 /**
  * The main component for the Performance page.
@@ -34,6 +44,7 @@ export default function PerformancePage() {
     const { toast } = useToast();
     const { refreshKey } = useTrades();
     const { selectedAccountId } = useAccountContext();
+    const { tradingRules } = useTradingRules();
     
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -88,21 +99,27 @@ export default function PerformancePage() {
                 <h1 className="text-2xl font-bold tracking-tight font-headline">Performance</h1>
             </div>
 
-            {isLoading ? (
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-4">
-                    <Skeleton className="h-[420px]" />
-                    <Skeleton className="h-[420px]" />
-                    <Skeleton className="h-[250px]" />
-                    <Skeleton className="h-[250px]" />
-                 </div>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                    <DrawdownAnalysis trades={trades} />
-                    <RiskDistribution trades={trades} />
-                    <RiskAdjustedReturns trades={trades} />
-                    <AIRiskInsights trades={trades} />
-                </div>
-            )}
+             <Tabs defaultValue="risk-analysis">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+                    <TabsTrigger value="risk-analysis">Risk Analysis</TabsTrigger>
+                    <TabsTrigger value="psychology">Psychology</TabsTrigger>
+                    <TabsTrigger value="time-analysis">Time Analysis</TabsTrigger>
+                    <TabsTrigger value="playbook">Playbook</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="risk-analysis" className="mt-4">
+                   {isLoading ? <TabSkeleton /> : <RiskAnalysisTab trades={trades} />}
+                </TabsContent>
+                <TabsContent value="psychology" className="mt-4">
+                    {isLoading ? <TabSkeleton /> : <PsychologyTab trades={trades} />}
+                </TabsContent>
+                <TabsContent value="time-analysis" className="mt-4">
+                    {isLoading ? <TabSkeleton /> : <TimeAnalysisTab trades={trades} />}
+                </TabsContent>
+                <TabsContent value="playbook" className="mt-4">
+                    {isLoading ? <TabSkeleton /> : <PlaybookTab trades={trades} tradingRules={tradingRules} />}
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
