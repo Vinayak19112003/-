@@ -6,24 +6,26 @@ import type { Trade } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { StreamerModeText } from "@/components/streamer-mode-text";
 import { isThisMonth, isThisWeek } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-type StatsCardsProps = {
-  trades: Trade[];
+type StatCardProps = { 
+  label: string; 
+  value: string | number;
+  valueClassName?: string;
+  subValue?: string;
+  className?: string;
+  isLarge?: boolean;
 };
 
-const StatCard = ({ label, value, valueClassName, subValue, className }: { label: string, value: string | number, valueClassName?: string, subValue?: string, className?: string }) => (
-    <Card className={cn("p-4", className)}>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className={cn("text-2xl font-bold font-headline", valueClassName)}>
+const StatCard = ({ label, value, valueClassName, className, isLarge = false }: StatCardProps) => (
+    <div className={cn(
+        "flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center",
+        className
+    )}>
+        <p className={cn("text-muted-foreground", isLarge ? "text-base" : "text-sm")}>{label}</p>
+        <p className={cn("font-bold font-headline", isLarge ? "text-4xl" : "text-2xl", valueClassName)}>
             <StreamerModeText>{value}</StreamerModeText>
         </p>
-        {subValue && (
-             <p className="text-xs text-muted-foreground">
-                <StreamerModeText>{subValue}</StreamerModeText>
-            </p>
-        )}
-    </Card>
+    </div>
 );
 
 export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) {
@@ -40,6 +42,7 @@ export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) 
         totalTrades: 0,
         winRate: "0%",
         totalR: "0.00R",
+        totalRValue: 0,
         profitFactor: "0.00",
         profitFactorValue: 0,
       };
@@ -81,18 +84,20 @@ export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) 
       totalTrades,
       winRate: `${winRate.toFixed(1)}%`,
       totalR: `${totalR.toFixed(2)}R`,
+      totalRValue: totalR,
       profitFactor: isFinite(profitFactor) ? profitFactor.toFixed(2) : "∞",
       profitFactorValue: profitFactor,
     };
   }, [trades]);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard 
             label="Total P&L" 
             value={stats.totalPnl} 
             valueClassName={stats.totalPnlValue >= 0 ? "text-success" : "text-destructive"}
-            className="col-span-2 lg:col-span-4"
+            className="md:col-span-2 lg:col-span-3"
+            isLarge={true}
         />
         <StatCard 
             label="Weekly P&L" 
@@ -104,13 +109,13 @@ export const StatsCards = memo(function StatsCards({ trades }: StatsCardsProps) 
             value={stats.monthlyPnl} 
             valueClassName={stats.monthlyPnlValue >= 0 ? "text-success" : "text-destructive"}
         />
-        <StatCard label="Total Trades" value={stats.totalTrades} />
-        <StatCard label="Win Rate" value={stats.winRate} />
-        <StatCard 
+         <StatCard 
             label="Total R" 
             value={stats.totalR} 
-            valueClassName={parseFloat(stats.totalR) >= 0 ? "text-success" : "text-destructive"}
+            valueClassName={stats.totalRValue >= 0 ? "text-success" : "text-destructive"}
         />
+        <StatCard label="Total Trades" value={stats.totalTrades} />
+        <StatCard label="Win Rate" value={stats.winRate} />
         <StatCard 
             label="Profit Factor" 
             value={stats.profitFactor} 
