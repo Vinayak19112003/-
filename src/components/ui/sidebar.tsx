@@ -2,11 +2,13 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useIsMobile } from "@/hooks/use-is-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -739,6 +741,32 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
+const SidebarNavLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<typeof Link> & {
+    icon?: React.ComponentType<{ className?: string }>
+    isActive?: boolean
+  }
+>(({ href, children, icon: Icon, className, ...props }, ref) => {
+  const pathname = usePathname()
+  const isActive = pathname === href
+
+  return (
+    <Link href={href} ref={ref} {...props}>
+      <SidebarMenuButton
+        isActive={isActive}
+        className={cn("w-full justify-start", className)}
+        tooltip={children as string}
+      >
+        {Icon && <Icon className="h-4 w-4" />}
+        <span>{children}</span>
+      </SidebarMenuButton>
+    </Link>
+  )
+})
+SidebarNavLink.displayName = "SidebarNavLink"
+
+
 export {
   Sidebar,
   SidebarContent,
@@ -755,6 +783,7 @@ export {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarNavLink,
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,
