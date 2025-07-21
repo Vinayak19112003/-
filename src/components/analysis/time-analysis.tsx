@@ -45,7 +45,6 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
         });
 
         const chartData = Object.entries(stats)
-            .filter(([, data]) => data.trades > 0) // Only show hours with trades
             .map(([hourStr, data]) => {
                 const hour = parseInt(hourStr, 10);
                 const winRate = data.wins + data.losses > 0 ? (data.wins / (data.wins + data.losses)) * 100 : 0;
@@ -60,23 +59,15 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
                     period = 'PM';
                 }
                 return {
-                    hour: `${displayHour} ${period}`,
+                    hour: `${displayHour}:00`,
+                    hourFull: `${displayHour} ${period}`,
                     netR: parseFloat(data.netR.toFixed(2)),
                     winRate: parseFloat(winRate.toFixed(1)),
                     trades: data.trades,
                 };
-            });
+            }).sort((a, b) => parseInt(a.hour.split(':')[0]) - parseInt(b.hour.split(':')[0]));
             
-        // Find best and worst hours for summary text
-        let bestHour: any = null;
-        let worstHour: any = null;
-
-        if(chartData.length > 0) {
-            bestHour = chartData.reduce((prev, current) => (prev.netR > current.netR) ? prev : current);
-            worstHour = chartData.reduce((prev, current) => (prev.netR < current.netR) ? prev : current);
-        }
-
-        return { chartData, bestHour, worstHour };
+        return { chartData };
     }, [trades]);
 
     const tickColor = theme === 'dark' ? '#888888' : '#333333';
@@ -90,7 +81,7 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
             return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm text-sm">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                        <div className="col-span-2 font-bold mb-1">Time: {label}</div>
+                        <div className="col-span-2 font-bold mb-1">Time: {data.hourFull}</div>
                         <div className="text-muted-foreground">Net R</div>
                         <div className="font-semibold text-right">{data.netR.toFixed(2)}R</div>
                         <div className="text-muted-foreground">Win Rate</div>
@@ -121,17 +112,13 @@ export const TimeAnalysis = memo(function TimeAnalysis({ trades }: TimeAnalysisP
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Time-Based Performance</CardTitle>
+                <CardTitle>Performance by Time of Day</CardTitle>
                 <CardDescription>
-                    {hourlyStats.bestHour && hourlyStats.worstHour ? (
-                        `Your most profitable period is around ${hourlyStats.bestHour.hour}, while performance dips near ${hourlyStats.worstHour.hour}.`
-                    ) : (
-                        'Analyze trade performance based on the hour of entry.'
-                    )}
+                    Analyze trade performance based on the hour of entry.
                 </CardDescription>
             </CardHeader>
             <CardContent className="h-[340px]">
-                {hourlyStats.chartData.length > 0 ? (
+                {hourlyStats.chartData.some(d => d.trades > 0) ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={hourlyStats.chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />

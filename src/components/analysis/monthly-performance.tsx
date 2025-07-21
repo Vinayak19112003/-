@@ -99,7 +99,7 @@ export const MonthlyPerformance = memo(function MonthlyPerformance({ trades }: M
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Monthly Performance (PNL)</CardTitle>
+                <CardTitle>Monthly Performance Trend</CardTitle>
                 <CardDescription>A month-by-month summary of your trading profitability.</CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">

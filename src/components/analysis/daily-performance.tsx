@@ -77,7 +77,7 @@ export const DailyPerformance = memo(function DailyPerformance({ trades }: Daily
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Daily Performance</CardTitle>
+                <CardTitle>Performance by Day of Week</CardTitle>
                 <CardDescription>Performance breakdown by day of the week.</CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">

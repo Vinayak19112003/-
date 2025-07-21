@@ -121,7 +121,7 @@ export const DurationAnalysis = memo(function DurationAnalysis({ trades }: Durat
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Trade Duration Analysis</CardTitle>
+                <CardTitle>Performance by Trade Duration</CardTitle>
                 <CardDescription>
                    Discover which holding times are most profitable for your style.
                 </CardDescription>
