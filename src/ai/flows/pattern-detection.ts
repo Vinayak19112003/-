@@ -17,12 +17,12 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const PatternDetectionInputSchema = z.object({
+const PatternDetectionInputSchema = z.object({
   tradeNotes: z.string().describe('A string containing all trade notes, emotional states, and psychological reflections to analyze.'),
 });
 export type PatternDetectionInput = z.infer<typeof PatternDetectionInputSchema>;
 
-export const PatternDetectionOutputSchema = z.object({
+const PatternDetectionOutputSchema = z.object({
   patterns: z
     .string()
     .describe(
