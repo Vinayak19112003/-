@@ -89,13 +89,23 @@ export default function AnalyticsPage() {
                 const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate() })) as Trade[];
                 setTrades(fetchedTrades);
 
-            } catch (error) {
-                console.error("Error fetching trades for analysis:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "Could not fetch trade data for the selected range."
-                });
+            } catch (error: any) {
+                if (error.code === 'failed-precondition') {
+                    // This error is handled globally in the dashboard, but we can show a specific message here too.
+                    toast({
+                        variant: 'destructive',
+                        title: 'Firebase Index Required',
+                        description: 'Please create the required Firestore index to filter by account.',
+                        duration: 10000,
+                    });
+                } else {
+                    console.error("Error fetching trades for analysis:", error);
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: "Could not fetch trade data for the selected range."
+                    });
+                }
             } finally {
                 setIsLoading(false);
             }

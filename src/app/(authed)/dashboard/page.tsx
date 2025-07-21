@@ -59,20 +59,29 @@ export default function DashboardPage() {
         setIsLoading(true);
         try {
             const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
-            let q: Query<Trade>;
-
+            
+            const queries: any[] = [orderBy('date', 'asc')];
             if (selectedAccountId !== 'all') {
-                q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
-            } else {
-                q = query(tradesCollection, orderBy('date', 'asc'));
+                queries.unshift(where('accountId', '==', selectedAccountId));
             }
+
+            const q = query(tradesCollection, ...queries);
             
             const querySnapshot = await getDocs(q);
             const fetchedTrades = querySnapshot.docs.map(doc => ({...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate()})) as Trade[];
             setAllTrades(fetchedTrades);
-        } catch (error) {
-            console.error("Error fetching all trades for dashboard:", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not fetch summary trade data." });
+        } catch (error: any) {
+            if (error.code === 'failed-precondition') {
+                toast({
+                    variant: 'destructive',
+                    title: 'Firebase Index Required',
+                    description: 'Please create the required Firestore index by clicking the link in the console error.',
+                    duration: 10000,
+                });
+            } else {
+                 console.error("Error fetching all trades for dashboard:", error);
+                 toast({ variant: "destructive", title: "Error", description: "Could not fetch summary trade data." });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -126,12 +135,36 @@ export default function DashboardPage() {
             <Skeleton className="h-8 w-36" />
             <Skeleton className="h-10 w-full sm:w-[470px]" />
         </div>
-        <Skeleton className="h-28 w-full" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="lg:col-span-2 flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-6 w-24 mx-auto" />
+                <Skeleton className="h-10 w-48 mx-auto" />
+            </div>
+            <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-5 w-20 mx-auto" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+            </div>
+             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-5 w-20 mx-auto" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+            </div>
+
+            <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-5 w-20 mx-auto" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+            </div>
+             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-5 w-20 mx-auto" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+            </div>
+             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-5 w-20 mx-auto" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+            </div>
+             <div className="flex flex-col gap-1 rounded-lg bg-card p-4 shadow-sm border text-center">
+                <Skeleton className="h-5 w-20 mx-auto" />
+                <Skeleton className="h-8 w-24 mx-auto" />
+            </div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:gap-8">
             <MonthlyCalendar trades={[]} onDateSelect={()=>{}} />
