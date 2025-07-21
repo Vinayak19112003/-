@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StreamerModeText } from '@/components/streamer-mode-text';
 
 type StrategyAnalyticsProps = {
     trades: Trade[];
@@ -15,14 +16,15 @@ type StrategyAnalyticsProps = {
 
 export const StrategyAnalytics = memo(function StrategyAnalytics({ trades }: StrategyAnalyticsProps) {
     const analytics = useMemo(() => {
-        const statsByStrategy: { [key: string]: { totalTrades: number, wins: number, losses: number, totalRr: number, netR: number } } = {};
+        const statsByStrategy: { [key: string]: { totalTrades: number, wins: number, losses: number, totalRr: number, netR: number, totalPnl: number } } = {};
 
         trades.forEach(trade => {
             if (!statsByStrategy[trade.strategy]) {
-                statsByStrategy[trade.strategy] = { totalTrades: 0, wins: 0, losses: 0, totalRr: 0, netR: 0 };
+                statsByStrategy[trade.strategy] = { totalTrades: 0, wins: 0, losses: 0, totalRr: 0, netR: 0, totalPnl: 0 };
             }
             const stats = statsByStrategy[trade.strategy];
             stats.totalTrades++;
+            stats.totalPnl += trade.pnl || 0;
 
             if (trade.result === 'Win') {
                 stats.wins++;
@@ -58,6 +60,7 @@ export const StrategyAnalytics = memo(function StrategyAnalytics({ trades }: Str
                                 <TableHead className="p-2">Win Rate</TableHead>
                                 <TableHead className="text-right p-2">Avg. RR</TableHead>
                                 <TableHead className="text-right p-2">Net R</TableHead>
+                                <TableHead className="text-right p-2">Total PNL</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -83,7 +86,16 @@ export const StrategyAnalytics = memo(function StrategyAnalytics({ trades }: Str
                                         stat.netR > 0 && "text-success",
                                         stat.netR < 0 && "text-destructive"
                                     )}>
-                                        {stat.netR > 0 ? '+$' : '$'}{stat.netR.toFixed(2)}R
+                                        {stat.netR.toFixed(2)}R
+                                    </TableCell>
+                                    <TableCell className={cn(
+                                        "text-right font-semibold p-2",
+                                        stat.totalPnl > 0 && "text-success",
+                                        stat.totalPnl < 0 && "text-destructive"
+                                    )}>
+                                        <StreamerModeText>
+                                            {stat.totalPnl >= 0 ? '+$' : '-$'}{Math.abs(stat.totalPnl).toFixed(2)}
+                                        </StreamerModeText>
                                     </TableCell>
                                 </TableRow>
                             ))}
