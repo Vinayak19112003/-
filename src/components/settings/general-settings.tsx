@@ -26,8 +26,12 @@ export default function GeneralSettings() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="usd">US Dollar - $</SelectItem>
+                                <SelectItem value="cad">Canadian Dollar - $</SelectItem>
                                 <SelectItem value="eur">Euro - €</SelectItem>
-                                <SelectItem value="gbp">Pound Sterling - £</SelectItem>
+                                <SelectItem value="gbp">British Pound Sterling - £</SelectItem>
+                                <SelectItem value="inr">Indian Rupee - ₹</SelectItem>
+                                <SelectItem value="jpy">Japanese Yen - ¥</SelectItem>
+                                <SelectItem value="sek">Swedish Krona - kr</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
