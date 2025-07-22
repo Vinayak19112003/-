@@ -9,6 +9,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { AddAccountDialog } from './add-account-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EditAccountDialog } from './edit-account-dialog';
 
 export function ManageAccountsCard() {
     const { accounts, deleteAccount, isLoaded } = useAccounts();
@@ -46,16 +47,19 @@ export function ManageAccountsCard() {
                                         Initial Balance: ${account.initialBalance?.toLocaleString()}
                                     </p>
                                 </div>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                    onClick={() => handleDelete(account.id)}
-                                    disabled={!!isDeleting}
-                                >
-                                    {isDeleting === account.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4" />}
-                                    <span className="sr-only">Delete {account.name}</span>
-                                </Button>
+                                <div className='flex items-center'>
+                                    <EditAccountDialog account={account} />
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                        onClick={() => handleDelete(account.id)}
+                                        disabled={!!isDeleting}
+                                    >
+                                        {isDeleting === account.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4" />}
+                                        <span className="sr-only">Delete {account.name}</span>
+                                    </Button>
+                                </div>
                             </div>
                         ))}
                     </div>

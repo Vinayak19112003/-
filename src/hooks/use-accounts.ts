@@ -26,6 +26,24 @@ export function useAccounts() {
     return success;
   }, [accounts, updateWholeObject, toast]);
 
+  const updateAccount = useCallback(async (accountId: string, updatedData: Omit<Account, 'id' | 'currentBalance'>) => {
+    const newAccounts = accounts.map((acc: Account) => {
+        if (acc.id === accountId) {
+            // Recalculate currentBalance if initialBalance changes
+            const balanceDifference = updatedData.initialBalance - acc.initialBalance;
+            const newCurrentBalance = (acc.currentBalance ?? acc.initialBalance) + balanceDifference;
+            return { ...acc, ...updatedData, currentBalance: newCurrentBalance };
+        }
+        return acc;
+    });
+    const success = await updateWholeObject(newAccounts);
+    if(success) {
+        toast({ title: "Account Updated", description: "Your account details have been saved." });
+    }
+    return success;
+  }, [accounts, updateWholeObject, toast]);
+
+
   const deleteAccount = useCallback(async (accountId: string) => {
     const newAccounts = accounts.filter((acc: Account) => acc.id !== accountId);
     // You might want to add checks here to prevent deleting the last account
@@ -36,5 +54,5 @@ export function useAccounts() {
     }
   }, [accounts, updateWholeObject, toast]);
 
-  return { accounts, addAccount, deleteAccount, isLoaded };
+  return { accounts, addAccount, updateAccount, deleteAccount, isLoaded };
 }
