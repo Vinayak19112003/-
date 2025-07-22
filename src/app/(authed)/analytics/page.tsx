@@ -32,7 +32,6 @@ const DrawdownStreakAnalysis = dynamic(() => import('@/components/analysis/drawd
 const SystemQualityMetrics = dynamic(() => import('@/components/analysis/system-quality-metrics'), { ssr: false, loading: () => <Skeleton className="h-[250px] w-full" /> });
 
 const DailyPerformance = dynamic(() => import('@/components/analysis/daily-performance').then(mod => mod.DailyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
-const MonthlyPerformance = dynamic(() => import('@/components/analysis/monthly-performance').then(mod => mod.MonthlyPerformance), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
 const SessionAnalysis = dynamic(() => import('@/components/analysis/session-analysis'), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
 const PnlDistribution = dynamic(() => import('@/components/analysis/pnl-distribution'), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
 const RMultipleDistribution = dynamic(() => import('@/components/analysis/r-multiple-distribution'), { ssr: false, loading: () => <Skeleton className="h-[400px]" /> });
@@ -148,9 +147,8 @@ export default function AnalyticsPage() {
                                 <SystemQualityMetrics trades={trades} />
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                            <div className="w-full">
                                 <DailyPerformance trades={trades} />
-                                <MonthlyPerformance trades={trades} />
                             </div>
                             
                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
