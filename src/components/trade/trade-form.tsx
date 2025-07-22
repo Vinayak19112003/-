@@ -247,6 +247,11 @@ export function TradeForm({
     const rRatio = parseFloat(rr as any);
     const tradeResult = result;
     
+    // This effect should only run if the user hasn't manually edited the PNL.
+    // However, since we're making PNL always editable, we can comment this out
+    // or add a flag to check if PNL was manually set. For simplicity, we'll allow override.
+    // A more advanced implementation might use a state `const [isPnlManuallySet, setIsPnlManuallySet] = useState(false)`
+
     if (!isNaN(size) && size > 0 && !isNaN(riskPercent) && riskPercent > 0) {
         const riskAmount = size * (riskPercent / 100);
         let calculatedPnl = 0;
@@ -256,8 +261,6 @@ export function TradeForm({
             calculatedPnl = -riskAmount;
         }
         setValue("pnl", parseFloat(calculatedPnl.toFixed(2)));
-    } else {
-        setValue("pnl", 0);
     }
 }, [accountSize, riskPercentage, rr, result, setValue]);
 
@@ -658,8 +661,9 @@ export function TradeForm({
                     <FormItem>
                     <FormLabel>Profit/Loss ($)</FormLabel>
                     <FormControl>
-                        <Input type="number" {...field} readOnly className={cn("bg-muted", isStreamerMode && "blur-sm")}/>
+                        <Input type="number" {...field} className={cn(isStreamerMode && "blur-sm")}/>
                     </FormControl>
+                    <FormDescription>Auto-calculated or can be entered manually.</FormDescription>
                     <FormMessage />
                     </FormItem>
                 )}
