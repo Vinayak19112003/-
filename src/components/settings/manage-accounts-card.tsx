@@ -30,14 +30,14 @@ export function ManageAccountsCard() {
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Trading Accounts</CardTitle>
-                        <CardDescription>Manage your different trading accounts.</CardDescription>
+                        <CardTitle>Account Management</CardTitle>
+                        <CardDescription>Add, edit, or remove your trading accounts.</CardDescription>
                     </div>
                     <AddAccountDialog />
                 </div>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-40">
+                <ScrollArea className="h-60">
                     <div className="space-y-2">
                         {accounts.map((account: any) => (
                              <div key={account.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md">
@@ -62,6 +62,11 @@ export function ManageAccountsCard() {
                                 </div>
                             </div>
                         ))}
+                         {accounts.length === 0 && (
+                            <div className="text-center text-sm text-muted-foreground p-4">
+                                You haven't added any trading accounts yet.
+                            </div>
+                        )}
                     </div>
                 </ScrollArea>
             </CardContent>
