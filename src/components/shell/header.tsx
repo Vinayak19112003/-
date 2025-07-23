@@ -8,7 +8,6 @@
  */
 
 import * as React from 'react';
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
@@ -22,7 +21,6 @@ import { useStreamerMode } from '@/contexts/streamer-mode-context';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { useAuth } from '@/hooks/use-auth';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccountSwitcher } from './account-switcher';
 
 const NAV_LINKS = [
@@ -41,7 +39,7 @@ export const Header = React.memo(function Header() {
     const { openForm } = useTradeForm();
     const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
 
-    const handleMobileNavClick = (value: string) => {
+    const handleNavClick = (value: string) => {
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.set("tab", value);
         const search = current.toString();
@@ -76,7 +74,7 @@ export const Header = React.memo(function Header() {
                                 {NAV_LINKS.map(link => (
                                     <SheetClose asChild key={link.value}>
                                         <button
-                                            onClick={() => handleMobileNavClick(link.value)}
+                                            onClick={() => handleNavClick(link.value)}
                                             className={cn(
                                                 "flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
                                                 (searchParams.get('tab') || 'dashboard') === link.value && "bg-muted text-primary"
@@ -105,6 +103,10 @@ export const Header = React.memo(function Header() {
                         <Switch id="streamer-mode-switch" checked={isStreamerMode} onCheckedChange={toggleStreamerMode} />
                     </div>
                      <ModeToggle />
+                     <Button variant="ghost" size="icon" onClick={() => handleNavClick('settings')}>
+                        <Settings className="h-5 w-5" />
+                        <span className="sr-only">Settings</span>
+                     </Button>
                      <UserMenu />
                      <Button onClick={() => openForm()} size="sm" className="hidden lg:flex">
                         <PlusCircle className="mr-2 h-4 w-4" />

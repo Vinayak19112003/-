@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
 import { useAccountContext } from "@/contexts/account-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, LineChart, Package, Settings, Users } from 'lucide-react';
+import { Home, LineChart, Package, Users } from 'lucide-react';
 import DashboardPage from "@/app/(authed)/dashboard/page";
 import JournalPage from "@/app/(authed)/journal/page";
 import AnalyticsPage from "@/app/(authed)/analytics/page";
@@ -25,7 +25,6 @@ const NAV_TABS = [
     { value: 'journal', label: 'Journal', icon: Package, component: JournalPage },
     { value: 'analytics', label: 'Analytics', icon: LineChart, component: AnalyticsPage },
     { value: 'performance', label: 'Performance', icon: Users, component: PerformancePage },
-    { value: 'settings', label: 'Settings', icon: Settings, component: SettingsPage },
 ];
 
 const TabSkeleton = () => (
@@ -63,6 +62,7 @@ export default function MainLayout() {
     }, [tabFromUrl]);
 
     const handleTabChange = (value: string) => {
+        if (value === 'settings') return; // Settings is no longer a tab
         setActiveTab(value);
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.set("tab", value);
@@ -117,6 +117,17 @@ export default function MainLayout() {
         }
     }, [user, toast, refreshKey, selectedAccountId]);
 
+    const CurrentPageComponent = NAV_TABS.find(tab => tab.value === activeTab)?.component || DashboardPage;
+
+    if (activeTab === 'settings') {
+         return (
+             <div className="mt-4">
+                 <h1 className="text-2xl font-bold tracking-tight font-headline capitalize">{activeTab}</h1>
+                {isLoading ? <TabSkeleton /> : <SettingsPage trades={trades} />}
+             </div>
+         )
+    }
+
     return (
         <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="flex items-center justify-between">
@@ -131,12 +142,9 @@ export default function MainLayout() {
                 </TabsList>
             </div>
             
-            {NAV_TABS.map(tab => (
-                 <TabsContent key={tab.value} value={tab.value} className="mt-4">
-                    {isLoading ? <TabSkeleton /> : <tab.component trades={trades} />}
-                 </TabsContent>
-            ))}
+            <TabsContent value={activeTab} forceMount className="mt-4">
+               {isLoading ? <TabSkeleton /> : <CurrentPageComponent trades={trades} />}
+            </TabsContent>
         </Tabs>
     );
 }
-
