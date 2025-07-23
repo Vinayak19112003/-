@@ -52,26 +52,26 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
    * to editing mode; otherwise, it's a new trade.
    * @param {Trade} [trade] - The optional trade object to edit.
    */
-  const handleOpenForm = (trade?: Trade) => {
+  const handleOpenForm = useMemo(() => (trade?: Trade) => {
     setEditingTrade(trade);
     setIsFormOpen(true);
-  };
+  }, []);
 
   /**
    * Closes the trade form and resets the editing state.
    */
-  const handleCloseForm = () => {
+  const handleCloseForm = useMemo(() => () => {
     setEditingTrade(undefined);
     setIsFormOpen(false);
-  };
+  }, []);
 
   /**
    * A callback function that is triggered on successful save of a trade.
    * It closes the form.
    */
-  const handleSaveSuccess = () => {
+  const handleSaveSuccess = useMemo(() => () => {
     handleCloseForm();
-  }
+  }, [handleCloseForm]);
 
   // Choose the appropriate modal component based on the device type.
   const FormComponent = isMobile ? Sheet : Dialog;
@@ -86,7 +86,7 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
   return (
     <AuthGuard>
       <TradeFormProvider value={tradeFormValue}>
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={true}>
           <div className="flex min-h-screen w-full bg-muted/40">
             <Sidebar />
             <div className="flex flex-1 flex-col">
@@ -97,7 +97,8 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
             </div>
           </div>
           {/* Render the trade form modal/sheet */}
-          <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
+          {isFormOpen && (
+            <FormComponent open={isFormOpen} onOpenChange={setIsFormOpen}>
               <FormContentComponent className={cn(isMobile ? "w-full" : "max-w-4xl")}>
                   <FormHeaderComponent>
                   <FormTitleComponent>{editingTrade ? "Edit Trade" : "Add New Trade"}</FormTitleComponent>
@@ -113,7 +114,8 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
                       />
                   </div>
               </FormContentComponent>
-          </FormComponent>
+            </FormComponent>
+          )}
         </SidebarProvider>
       </TradeFormProvider>
     </AuthGuard>

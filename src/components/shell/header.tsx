@@ -20,13 +20,17 @@ import * as React from 'react';
 export const Header = React.memo(function Header() {
     const pathname = usePathname();
     
+    const pageTitle = React.useMemo(() => {
+        return pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard';
+    }, [pathname]);
+    
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
             {/* Renders the hamburger icon to toggle the sidebar on mobile */}
             <SidebarTrigger />
             <div className="w-full flex-1">
                 {/* Dynamically sets the page title from the last segment of the URL */}
-                <h1 className="font-semibold text-lg capitalize">{pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}</h1>
+                <h1 className="font-semibold text-lg capitalize">{pageTitle}</h1>
             </div>
         </header>
     );

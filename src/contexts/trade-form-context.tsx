@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import type { Trade } from '@/lib/types';
 
 interface TradeFormContextType {
@@ -18,4 +18,18 @@ export function useTradeForm() {
   return context;
 }
 
-export const TradeFormProvider = TradeFormContext.Provider;
+export function TradeFormProvider({ 
+  value, 
+  children 
+}: { 
+  value: TradeFormContextType; 
+  children: React.ReactNode; 
+}) {
+  const memoizedValue = useMemo(() => value, [value.openForm]);
+  
+  return (
+    <TradeFormContext.Provider value={memoizedValue}>
+      {children}
+    </TradeFormContext.Provider>
+  );
+}

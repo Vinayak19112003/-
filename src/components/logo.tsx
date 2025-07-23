@@ -1,7 +1,8 @@
 
+import * as React from 'react';
 import { cn } from "@/lib/utils";
 
-export function Logo() {
+export const Logo = React.memo(function Logo() {
   return (
     <div className="flex items-center gap-2">
       <svg
@@ -25,4 +26,4 @@ export function Logo() {
       </h1>
     </div>
   );
-}
+});
