@@ -21,6 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { TradesProvider } from '@/contexts/trades-context';
 import { Header } from '@/components/shell/header';
 import { AccountProvider } from '@/contexts/account-context';
+import MainLayout from '@/components/shell/main-layout';
 
 // Dynamically import the TradeForm to optimize the initial bundle size.
 // The form is only loaded when the user triggers it.
@@ -88,7 +89,7 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
           <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <Header />
             <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-                {children}
+                <MainLayout />
             </main>
           </div>
           {/* Render the trade form modal/sheet */}

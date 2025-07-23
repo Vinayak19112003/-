@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -86,7 +85,10 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
           const currentItems = data[key];
 
           if (currentItems) {
-            setItems(currentItems);
+            // Deep compare to prevent re-renders if the data is the same
+            if (JSON.stringify(items) !== JSON.stringify(currentItems)) {
+                setItems(currentItems);
+            }
           } else {
             // Field might not exist yet for an old user, so we set it
             if (key === 'accounts' && !data.accounts) {
@@ -108,7 +110,7 @@ const useJournalSettings = (key: SettingsKey, defaultValues: any) => {
     });
     
     return () => unsubscribe();
-  }, [user, key, defaultValues, getSettingsDocRef, toast]);
+  }, [user, key, defaultValues, getSettingsDocRef, toast, items]);
 
 
   const addItem = async (newItem: any): Promise<boolean> => {

@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Trade } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PatternAnalysis } from '@/components/analysis/pattern-analysis';
-import type { useTradingRules } from '@/hooks/use-trading-rules';
 
 // Dynamically import charting components
 const MistakeAnalysis = dynamic(() => import('@/components/analysis/mistake-analysis').then(mod => mod.MistakeAnalysis), { ssr: false, loading: () => <Skeleton className="h-[180px]" /> });

@@ -16,57 +16,20 @@ import GeneralSettings from '@/components/settings/general-settings';
 import { ManageAccountsCard } from '@/components/settings/manage-accounts-card';
 import TagManagement from '@/components/settings/tag-management';
 
-type SettingsTab = 'general' | 'accounts' | 'tags';
+interface SettingsPageProps {
+  trades: any[]; // Trades prop is not used here but required by the main layout
+}
 
-const TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
-    { id: 'general', label: 'General Settings', icon: SettingsIcon },
-    { id: 'accounts', label: 'Account Management', icon: Users },
-    { id: 'tags', label: 'Tag Management', icon: Tag },
-];
-
-export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState<SettingsTab>('general');
-
-    const renderContent = () => {
-        switch (activeTab) {
-            case 'general':
-                return <GeneralSettings />;
-            case 'accounts':
-                return <ManageAccountsCard />;
-            case 'tags':
-                return <TagManagement />;
-            default:
-                return null;
-        }
-    };
-
+export default function SettingsPage({ trades }: SettingsPageProps) {
+    
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-bold tracking-tight font-headline">Settings</h1>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-                <Card className="lg:col-span-1">
-                    <CardContent className="p-2">
-                        <nav className="space-y-1">
-                            {TABS.map(tab => (
-                                <Button
-                                    key={tab.id}
-                                    variant="ghost"
-                                    className={cn(
-                                        "w-full justify-start text-left",
-                                        activeTab === tab.id && "bg-muted font-semibold"
-                                    )}
-                                    onClick={() => setActiveTab(tab.id)}
-                                >
-                                    <tab.icon className="mr-2 h-4 w-4" />
-                                    {tab.label}
-                                </Button>
-                            ))}
-                        </nav>
-                    </CardContent>
-                </Card>
-                <div className="lg:col-span-3">
-                    {renderContent()}
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-2 grid gap-6">
+                <GeneralSettings />
+                <TagManagement />
+            </div>
+            <div className="lg:col-span-1">
+                <ManageAccountsCard />
             </div>
         </div>
     );

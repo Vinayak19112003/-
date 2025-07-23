@@ -6,8 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
 export default function GeneralSettings() {
+    
+    const handleSaveChanges = () => {
+        toast({
+            title: "Coming Soon!",
+            description: "General settings are not yet implemented.",
+        })
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -20,7 +29,7 @@ export default function GeneralSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="currency-format">Currency Format</Label>
-                        <Select defaultValue="usd">
+                        <Select defaultValue="usd" disabled>
                             <SelectTrigger id="currency-format">
                                 <SelectValue placeholder="Select currency" />
                             </SelectTrigger>
@@ -37,7 +46,7 @@ export default function GeneralSettings() {
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="default-order-date">Default Order Date</Label>
-                        <Select defaultValue="previous">
+                        <Select defaultValue="previous" disabled>
                             <SelectTrigger id="default-order-date">
                                 <SelectValue placeholder="Select default" />
                             </SelectTrigger>
@@ -52,16 +61,16 @@ export default function GeneralSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="default-symbol">Default Symbol</Label>
-                        <Input id="default-symbol" placeholder="e.g., EURUSD" />
+                        <Input id="default-symbol" placeholder="e.g., EURUSD" disabled />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="default-qty">Default Qty</Label>
-                        <Input id="default-qty" type="number" placeholder="e.g., 1" />
+                        <Input id="default-qty" type="number" placeholder="e.g., 1" disabled />
                     </div>
                 </div>
                 
                  <div className="flex justify-end pt-4">
-                    <Button>Save Changes</Button>
+                    <Button onClick={handleSaveChanges}>Save Changes</Button>
                 </div>
             </CardContent>
         </Card>

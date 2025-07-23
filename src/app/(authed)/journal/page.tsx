@@ -10,23 +10,14 @@
  */
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
 import { useTrades } from "@/contexts/trades-context";
 import { useToast } from "@/hooks/use-toast";
 import { useTradeForm } from "@/contexts/trade-form-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import dynamic from 'next/dynamic';
-import { useAuth } from '@/hooks/use-auth';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, limit, getDocs, startAfter, DocumentData, where, Query, CollectionReference } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
 import type { Trade } from '@/lib/types';
 import { useAccountContext } from '@/contexts/account-context';
-
-// The number of trades to fetch per page.
-const TRADES_PER_PAGE = 7;
 
 // Dynamically import child components to optimize initial load.
 const TradeTable = dynamic(() => import('@/components/journal/trade-table'), {
@@ -37,105 +28,20 @@ const ImportTrades = dynamic(() => import('@/components/journal/import-trades'),
 const ExportTrades = dynamic(() => import('@/components/journal/export-trades').then(mod => mod.ExportTrades), { ssr: false });
 const ClearAllTrades = dynamic(() => import('@/components/journal/clear-all-trades').then(mod => mod.ClearAllTrades), { ssr: false });
 
+interface JournalPageProps {
+  trades: Trade[];
+}
+
 /**
  * The main content component for the Trades page.
  * It is memoized to prevent re-renders unless its props change.
  */
-const JournalPageContent = React.memo(function JournalPageContent() {
-    const { user } = useAuth();
-    const { deleteTrade, deleteAllTrades, addMultipleTrades, refreshKey } = useTrades();
+export default function JournalPage({ trades }: JournalPageProps) {
+    const { deleteTrade, deleteAllTrades, addMultipleTrades } = useTrades();
     const { toast } = useToast();
     const { openForm } = useTradeForm();
     const { selectedAccountId } = useAccountContext();
     
-    // State to hold the trades displayed on the page.
-    const [localTrades, setLocalTrades] = useState<Trade[]>([]);
-    // State to keep track of the last Firestore document for pagination.
-    const [lastVisible, setLastVisible] = useState<DocumentData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true); // Tracks if there are more trades to load.
-
-    /**
-     * Fetches trades from Firestore.
-     * @param {boolean} [initial=false] - If true, it's the first fetch, so it resets the list.
-     *                                      If false, it's a "load more" fetch.
-     */
-    const fetchTrades = React.useCallback(async (initial = false) => {
-        if (!user || !selectedAccountId) {
-            if (initial) setIsLoading(false);
-            return;
-        }
-
-        if (initial) {
-            setIsLoading(true);
-            setLocalTrades([]);
-            setLastVisible(null);
-            setHasMore(true);
-        } else {
-            if (!hasMore || isLoadingMore) return;
-            setIsLoadingMore(true);
-        }
-
-        try {
-            const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
-            
-            const queries: any[] = [
-                where('accountId', '==', selectedAccountId),
-                orderBy('date', 'desc'), 
-                limit(TRADES_PER_PAGE)
-            ];
-
-            const currentLastVisible = initial ? null : lastVisible;
-            if (currentLastVisible) {
-                queries.push(startAfter(currentLastVisible));
-            }
-            
-            const q = query(tradesCollection, ...queries);
-
-            const documentSnapshots = await getDocs(q);
-
-            const newTrades = documentSnapshots.docs.map(doc => ({
-                ...doc.data(),
-                id: doc.id,
-                date: doc.data().date.toDate()
-            })) as Trade[];
-
-            setLastVisible(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
-            setLocalTrades(prev => initial ? newTrades : [...prev, ...newTrades]);
-            
-            // If fewer trades are returned than requested, we know there are no more.
-            if (documentSnapshots.docs.length < TRADES_PER_PAGE) {
-                setHasMore(false);
-            }
-
-        } catch (error: any) {
-             if (error.code === 'failed-precondition') {
-                console.error("Firebase Index Required:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Firebase Index Required',
-                    description: 'Please create the required Firestore index by clicking the link in the console error.',
-                    duration: 10000,
-                });
-            } else {
-                console.error("Error fetching trades:", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch trades.' });
-            }
-        } finally {
-            if (initial) setIsLoading(false);
-            setIsLoadingMore(false);
-        }
-    }, [user, hasMore, isLoadingMore, lastVisible, toast, selectedAccountId]);
-
-    // Effect to trigger the initial fetch of trades when the user or refreshKey changes.
-    useEffect(() => {
-        if (user && selectedAccountId) {
-            fetchTrades(true);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, refreshKey, selectedAccountId]);
-
     /**
      * Handles the deletion of a single trade.
      * @param {string} id - The ID of the trade to delete.
@@ -143,7 +49,6 @@ const JournalPageContent = React.memo(function JournalPageContent() {
     const handleDeleteTrade = async (id: string) => {
         const success = await deleteTrade(id);
         if (success) {
-            setLocalTrades(prev => prev.filter(t => t.id !== id));
             toast({ title: "Trade Deleted", description: "The trade has been removed from your log." });
         }
     };
@@ -158,9 +63,6 @@ const JournalPageContent = React.memo(function JournalPageContent() {
         }
         const success = await deleteAllTrades(selectedAccountId);
         if (success) {
-            setLocalTrades([]);
-            setLastVisible(null);
-            setHasMore(false);
             toast({ title: "All Trades Deleted", description: "Your trade log has been cleared." });
         }
     }
@@ -175,23 +77,9 @@ const JournalPageContent = React.memo(function JournalPageContent() {
             title: "Import Complete",
             description: `${addedCount} trades were imported. ${skippedCount} duplicates were skipped.`,
         });
-        fetchTrades(true); // Refetch to show new trades
     }
 
-    // Renders a skeleton loader while the initial trades are being fetched.
-    if (isLoading) {
-        return (
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-36" />
-                    <Skeleton className="h-4 w-48" />
-                </CardHeader>
-                <CardContent>
-                    <Skeleton className="h-96 w-full" />
-                </CardContent>
-            </Card>
-        );
-    }
+    const reversedTrades = React.useMemo(() => [...trades].reverse(), [trades]);
 
     // Renders the main content of the trade log page.
     return (
@@ -203,30 +91,17 @@ const JournalPageContent = React.memo(function JournalPageContent() {
                 </div>
                 <div className="flex items-center gap-2">
                    <ImportTrades onImport={handleImport} addMultipleTrades={addMultipleTrades} />
-                   <ExportTrades trades={localTrades}/>
-                   <ClearAllTrades onClear={handleClearAll} disabled={localTrades.length === 0} />
+                   <ExportTrades trades={reversedTrades}/>
+                   <ClearAllTrades onClear={handleClearAll} disabled={reversedTrades.length === 0} />
                 </div>
             </CardHeader>
             <CardContent>
                <TradeTable 
-                    trades={localTrades} 
+                    trades={reversedTrades} 
                     onEdit={openForm} 
                     onDelete={handleDeleteTrade}
                 />
-                {isLoadingMore && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
-                {hasMore && !isLoadingMore && (
-                    <div className="flex justify-center pt-4">
-                        <Button onClick={() => fetchTrades(false)}>Load More</Button>
-                    </div>
-                )}
             </CardContent>
         </Card>
     );
-});
-
-/**
- * The main export for the Trades page.
- */
-export default function JournalPage() {
-    return <JournalPageContent />;
 }

@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -26,22 +26,32 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccountSwitcher } from './account-switcher';
 
 const NAV_LINKS = [
-  { icon: Home, text: 'Dashboard', href: '/dashboard' },
-  { icon: Package, text: 'Journal', href: '/journal' },
-  { icon: LineChart, text: 'Analytics', href: '/analytics' },
-  { icon: Users, text: 'Performance', href: '/performance' },
+  { value: 'dashboard', text: 'Dashboard', icon: Home },
+  { value: 'journal', text: 'Journal', icon: Package },
+  { value: 'analytics', text: 'Analytics', icon: LineChart },
+  { value: 'performance', text: 'Performance', icon: Users },
+  { value: 'settings', text: 'Settings', icon: Settings },
 ];
 
 export const Header = React.memo(function Header() {
     const pathname = usePathname();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useAuth();
     const { openForm } = useTradeForm();
     const { isStreamerMode, toggleStreamerMode } = useStreamerMode();
+
+    const handleMobileNavClick = (value: string) => {
+        const current = new URLSearchParams(Array.from(searchParams.entries()));
+        current.set("tab", value);
+        const search = current.toString();
+        const query = search ? `?${search}` : "";
+        router.push(`${pathname}${query}`);
+    };
     
     return (
-        <header className="sticky top-0 z-50 flex h-auto flex-col items-center gap-4 border-b bg-background px-4 md:px-6">
-            {/* Top Row */}
-            <div className='w-full flex items-center justify-between h-16'>
+        <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+            <div className='w-full flex items-center justify-between'>
                 <div className='flex items-center gap-4'>
                     <Sheet>
                         <SheetTrigger asChild>
@@ -57,27 +67,24 @@ export const Header = React.memo(function Header() {
                         <SheetContent side="left">
                             <nav className="grid gap-6 text-lg font-medium">
                                 <SheetClose asChild>
-                                    <Link
-                                        href="/dashboard"
-                                        className="flex items-center gap-2 text-lg font-semibold"
-                                    >
+                                     <div className="flex items-center gap-2 text-lg font-semibold">
                                         <Logo />
                                         <span className="sr-only">Anony Trading</span>
-                                    </Link>
+                                    </div>
                                 </SheetClose>
 
                                 {NAV_LINKS.map(link => (
-                                    <SheetClose asChild key={link.href}>
-                                        <Link
-                                            href={link.href}
+                                    <SheetClose asChild key={link.value}>
+                                        <button
+                                            onClick={() => handleMobileNavClick(link.value)}
                                             className={cn(
                                                 "flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                                pathname === link.href && "bg-muted text-primary"
+                                                (searchParams.get('tab') || 'dashboard') === link.value && "bg-muted text-primary"
                                             )}
                                         >
                                             <link.icon className="h-4 w-4" />
                                             {link.text}
-                                        </Link>
+                                        </button>
                                     </SheetClose>
                                 ))}
                             </nav>
@@ -99,27 +106,7 @@ export const Header = React.memo(function Header() {
                     </div>
                      <ModeToggle />
                      <UserMenu />
-                </div>
-            </div>
-            
-            {/* Bottom Row - Navigation */}
-            <div className='w-full flex items-center justify-between pb-2'>
-                <nav className="hidden md:flex">
-                     <Tabs value={pathname} className="w-full">
-                        <TabsList>
-                            {NAV_LINKS.map(link => (
-                                <Link key={link.href} href={link.href} passHref>
-                                    <TabsTrigger value={link.href} className='gap-2'>
-                                        <link.icon className="h-4 w-4" />
-                                        {link.text}
-                                    </TabsTrigger>
-                                </Link>
-                            ))}
-                        </TabsList>
-                    </Tabs>
-                </nav>
-                <div className='ml-auto'>
-                    <Button onClick={() => openForm()} size="sm">
+                     <Button onClick={() => openForm()} size="sm" className="hidden lg:flex">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Trade
                     </Button>
