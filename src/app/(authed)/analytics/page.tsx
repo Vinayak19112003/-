@@ -49,7 +49,7 @@ export default function AnalyticsPage({ trades: allTrades }: AnalyticsPageProps)
     });
 
     useEffect(() => {
-        if (dateRange?.from) {
+        if (dateRange?.from && allTrades) {
             const from = dateRange.from;
             const to = endOfDay(dateRange.to ?? dateRange.from);
             const newFilteredTrades = allTrades.filter(trade => {
@@ -58,7 +58,7 @@ export default function AnalyticsPage({ trades: allTrades }: AnalyticsPageProps)
             });
             setFilteredTrades(newFilteredTrades);
         } else {
-            setFilteredTrades(allTrades);
+            setFilteredTrades(allTrades || []);
         }
     }, [dateRange, allTrades]);
 

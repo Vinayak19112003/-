@@ -8,7 +8,7 @@
  * modal dialog or a sheet on mobile devices.
  */
 
-import { useState, memo, useMemo } from 'react';
+import { useState, memo, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { Trade } from '@/lib/types';
 import AuthGuard from '@/components/auth/auth-guard';
@@ -16,13 +16,17 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { TradeFormProvider } from '@/contexts/trade-form-context';
+import { TradeFormProvider, useTradeForm } from '@/contexts/trade-form-context';
 import { Loader2 } from 'lucide-react';
 import { TradesProvider, useTrades } from '@/contexts/trades-context';
 import { Header } from '@/components/shell/header';
 import { AccountProvider, useAccountContext } from '@/contexts/account-context';
 import MainLayout from '@/components/shell/main-layout';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import { collection, query, getDocs, orderBy, CollectionReference, where, Timestamp } from "firebase/firestore";
+import { useToast } from '@/hooks/use-toast';
 
 // Dynamically import the TradeForm to optimize the initial bundle size.
 // The form is only loaded when the user triggers it.
@@ -36,13 +40,60 @@ const TradeForm = dynamic(() => import('@/components/trade/trade-form').then(mod
 });
 
 const LayoutRenderer = memo(function LayoutRenderer({ children }: { children: React.ReactNode }) {
-    const { isTradesLoading } = useTrades();
-    const { isAccountsLoaded } = useAccountContext();
-    
-    if (isTradesLoading || !isAccountsLoaded) {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const { setAllTrades } = useTrades();
+    const { selectedAccountId, isAccountsLoaded } = useAccountContext();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTrades = async () => {
+            if (!user || !selectedAccountId || !isAccountsLoaded) {
+                if(isAccountsLoaded) { // if accounts are loaded but no account is selected (e.g. user has no accounts)
+                    setAllTrades([]);
+                    setIsLoading(false);
+                }
+                return;
+            };
+
+            setIsLoading(true);
+            try {
+                const tradesCollection = collection(db, 'users', user.uid, 'trades');
+                const q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
+                
+                const querySnapshot = await getDocs(q);
+                const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate() })) as Trade[];
+                setAllTrades(fetchedTrades);
+
+            } catch (error: any) {
+                 if (error.code === 'failed-precondition') {
+                    console.error("Firebase Index Required:", error);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Firebase Index Required',
+                        description: 'Please create the required Firestore index by clicking the link in the console error.',
+                        duration: 10000,
+                    });
+                } else {
+                    console.error("Error fetching trades:", error);
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: "Could not fetch trade data."
+                    });
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchTrades();
+    }, [user, selectedAccountId, isAccountsLoaded, setAllTrades, toast]);
+
+    if (isLoading) {
         return (
             <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-                 <div className="space-y-6 mt-4">
+                <div className="space-y-6 mt-4">
                     <div className="flex justify-between items-center">
                         <Skeleton className="h-8 w-32" />
                         <Skeleton className="h-10 w-full sm:w-[470px]" />
@@ -78,6 +129,7 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
   // State to hold the trade data when editing an existing trade.
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const isMobile = useIsMobile();
+  const { openForm: openFormFromContext } = useTradeForm();
 
   /**
    * Opens the trade form. If a trade object is provided, it sets the form

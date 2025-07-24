@@ -41,7 +41,7 @@ export default function DashboardPage({ trades: allTrades }: DashboardPageProps)
   });
 
   useEffect(() => {
-    if (dateRange?.from) {
+    if (dateRange?.from && allTrades) {
         const from = dateRange.from;
         const to = endOfDay(dateRange.to ?? dateRange.from);
         const newFilteredTrades = allTrades.filter(trade => {
@@ -50,7 +50,7 @@ export default function DashboardPage({ trades: allTrades }: DashboardPageProps)
         });
         setFilteredTrades(newFilteredTrades);
     } else {
-        setFilteredTrades(allTrades);
+        setFilteredTrades(allTrades || []);
     }
   }, [dateRange, allTrades]);
 
@@ -78,7 +78,7 @@ export default function DashboardPage({ trades: allTrades }: DashboardPageProps)
   // Memoize the trades needed for the summary banner (last month).
   const summaryTrades = useMemo(() => {
       const startOfThisMonth = startOfMonth(new Date());
-      return allTrades.filter(trade => new Date(trade.date) >= startOfThisMonth);
+      return (allTrades || []).filter(trade => new Date(trade.date) >= startOfThisMonth);
   }, [allTrades]);
 
 

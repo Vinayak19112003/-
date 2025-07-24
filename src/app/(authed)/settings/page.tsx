@@ -17,7 +17,8 @@ import { ManageAccountsCard } from '@/components/settings/manage-accounts-card';
 import TagManagement from '@/components/settings/tag-management';
 
 interface SettingsPageProps {
-  // This prop is no longer needed as the page doesn't receive trades directly.
+  // This prop is used to satisfy the page component signature in MainLayout
+  trades: never; 
 }
 
 export default function SettingsPage({}: SettingsPageProps) {

@@ -2,16 +2,8 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Skeleton } from "@/components/ui/skeleton";
-import type { Trade } from "@/lib/types";
-import { useAuth } from "@/hooks/use-auth";
-import { db } from "@/lib/firebase";
-import { collection, query, getDocs, orderBy, CollectionReference, where, Timestamp } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/contexts/trades-context";
-import { useAccountContext } from "@/contexts/account-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, LineChart, Package, Users } from 'lucide-react';
 import DashboardPage from "@/app/(authed)/dashboard/page";
@@ -56,7 +48,7 @@ export default function MainLayout() {
          return (
              <div className="mt-4">
                  <h1 className="text-2xl font-bold tracking-tight font-headline capitalize">{activeTab}</h1>
-                 <SettingsPage />
+                 <SettingsPage trades={[]} />
              </div>
          )
     }

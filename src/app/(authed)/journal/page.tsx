@@ -79,7 +79,7 @@ export default function JournalPage({ trades }: JournalPageProps) {
         });
     }
 
-    const reversedTrades = React.useMemo(() => [...trades].reverse(), [trades]);
+    const reversedTrades = React.useMemo(() => [...(trades || [])].reverse(), [trades]);
 
     // Renders the main content of the trade log page.
     return (
