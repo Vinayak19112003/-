@@ -18,10 +18,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TradeFormProvider } from '@/contexts/trade-form-context';
 import { Loader2 } from 'lucide-react';
-import { TradesProvider } from '@/contexts/trades-context';
+import { TradesProvider, useTrades } from '@/contexts/trades-context';
 import { Header } from '@/components/shell/header';
-import { AccountProvider } from '@/contexts/account-context';
+import { AccountProvider, useAccountContext } from '@/contexts/account-context';
 import MainLayout from '@/components/shell/main-layout';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Dynamically import the TradeForm to optimize the initial bundle size.
 // The form is only loaded when the user triggers it.
@@ -33,6 +34,37 @@ const TradeForm = dynamic(() => import('@/components/trade/trade-form').then(mod
         </div>
     )
 });
+
+const LayoutRenderer = memo(function LayoutRenderer({ children }: { children: React.ReactNode }) {
+    const { isTradesLoading } = useTrades();
+    const { isAccountsLoaded } = useAccountContext();
+    
+    if (isTradesLoading || !isAccountsLoaded) {
+        return (
+            <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+                 <div className="space-y-6 mt-4">
+                    <div className="flex justify-between items-center">
+                        <Skeleton className="h-8 w-32" />
+                        <Skeleton className="h-10 w-full sm:w-[470px]" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <Skeleton className="h-[120px]" />
+                        <Skeleton className="h-[120px]" />
+                        <Skeleton className="h-[120px]" />
+                        <Skeleton className="h-[120px]" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:gap-6">
+                        <Skeleton className="h-[400px]" />
+                        <Skeleton className="h-[400px]" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    return children;
+});
+
 
 /**
  * The main content component for the authenticated layout.
@@ -82,14 +114,16 @@ const AuthedLayoutContent = memo(function AuthedLayoutContent({ children }: { ch
   
   // Memoize the context value for the TradeForm to prevent unnecessary re-renders.
   const tradeFormValue = useMemo(() => ({ openForm: handleOpenForm }), []);
-
+  
   return (
     <AuthGuard>
       <TradeFormProvider value={tradeFormValue}>
           <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <Header />
             <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-                <MainLayout />
+                <LayoutRenderer>
+                    {children}
+                </LayoutRenderer>
             </main>
           </div>
           {/* Render the trade form modal/sheet */}
@@ -127,10 +161,10 @@ export default function AuthedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <TradesProvider>
-        <AccountProvider>
-            <AuthedLayoutContent>{children}</AuthedLayoutContent>
-        </AccountProvider>
-    </TradesProvider>
+    <AccountProvider>
+      <TradesProvider>
+          <AuthedLayoutContent>{children}</AuthedLayoutContent>
+      </TradesProvider>
+    </AccountProvider>
   )
 }

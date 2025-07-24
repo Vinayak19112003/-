@@ -1,7 +1,7 @@
 
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, type ReactNode, useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -15,16 +15,21 @@ import {
   query,
   runTransaction,
   where,
+  orderBy,
+  CollectionReference
 } from "firebase/firestore";
 import { Trade } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useAccountContext } from './account-context';
 
 const TRADES_COLLECTION = 'trades';
 const ACCOUNTS_COLLECTION = 'settings';
 const ACCOUNTS_DOC_ID = 'userConfig'; 
 
 interface TradesContextType {
+    allTrades: Trade[];
+    isTradesLoading: boolean;
     addTrade: (trade: Omit<Trade, 'id'>) => Promise<boolean>;
     addMultipleTrades: (newTrades: Omit<Trade, 'id'>[]) => Promise<{success: boolean, addedCount: number}>;
     updateTrade: (trade: Trade) => Promise<boolean>;
@@ -38,9 +43,60 @@ const TradesContext = createContext<TradesContextType | undefined>(undefined);
 export function TradesProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const { toast } = useToast();
+    const { selectedAccountId, isAccountsLoaded } = useAccountContext();
+
+    const [allTrades, setAllTrades] = useState<Trade[]>([]);
+    const [isTradesLoading, setIsTradesLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
 
     const triggerRefresh = () => setRefreshKey(prev => prev + 1);
+
+    useEffect(() => {
+        const fetchAllTrades = async () => {
+            if (!user || !selectedAccountId || !isAccountsLoaded) {
+                // If we don't have what we need, set loading to false and clear trades.
+                if(!selectedAccountId && isAccountsLoaded) {
+                    setAllTrades([]);
+                    setIsTradesLoading(false);
+                }
+                return;
+            };
+
+            setIsTradesLoading(true);
+            try {
+                const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
+                const q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
+                
+                const querySnapshot = await getDocs(q);
+                const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate() })) as Trade[];
+                setAllTrades(fetchedTrades);
+
+            } catch (error: any) {
+                 if (error.code === 'failed-precondition') {
+                    console.error("Firebase Index Required:", error);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Firebase Index Required',
+                        description: 'Please create the required Firestore index by clicking the link in the console error.',
+                        duration: 10000,
+                    });
+                } else {
+                    console.error("Error fetching trades:", error);
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: "Could not fetch trade data."
+                    });
+                }
+            } finally {
+                setIsTradesLoading(false);
+            }
+        };
+
+        fetchAllTrades();
+    // Re-fetch whenever the user, account, or refreshKey changes.
+    }, [user, selectedAccountId, isAccountsLoaded, refreshKey, toast]);
+
 
     const getTradesCollectionRef = useCallback(() => {
         if (!user || !db) return null;
@@ -239,13 +295,15 @@ export function TradesProvider({ children }: { children: ReactNode }) {
     }, [getTradesCollectionRef, toast]);
 
     const value = useMemo(() => ({
+        allTrades,
+        isTradesLoading,
         addTrade,
         addMultipleTrades,
         updateTrade,
         deleteTrade,
         deleteAllTrades,
         refreshKey
-    }), [addTrade, addMultipleTrades, updateTrade, deleteTrade, deleteAllTrades, refreshKey]);
+    }), [allTrades, isTradesLoading, addTrade, addMultipleTrades, updateTrade, deleteTrade, deleteAllTrades, refreshKey]);
 
     return <TradesContext.Provider value={value}>{children}</TradesContext.Provider>;
 }

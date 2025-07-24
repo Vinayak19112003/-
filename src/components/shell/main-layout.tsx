@@ -27,28 +27,8 @@ const NAV_TABS = [
     { value: 'performance', label: 'Performance', icon: Users, component: PerformancePage },
 ];
 
-const TabSkeleton = () => (
-    <div className="space-y-6 mt-4">
-        <Skeleton className="h-10 w-full sm:w-[470px] self-end" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            <Skeleton className="h-[250px]" />
-            <Skeleton className="h-[250px]" />
-            <Skeleton className="h-[250px]" />
-            <Skeleton className="h-[250px]" />
-        </div>
-         <Skeleton className="h-[400px]" />
-    </div>
-);
-
-
 export default function MainLayout() {
-    const { user } = useAuth();
-    const { toast } = useToast();
-    const { refreshKey } = useTrades();
-    const { selectedAccountId } = useAccountContext();
-    
-    const [trades, setTrades] = useState<Trade[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { allTrades } = useTrades();
 
     const router = useRouter();
     const pathname = usePathname();
@@ -62,7 +42,6 @@ export default function MainLayout() {
     }, [tabFromUrl]);
 
     const handleTabChange = (value: string) => {
-        if (value === 'settings') return; // Settings is no longer a tab
         setActiveTab(value);
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.set("tab", value);
@@ -71,59 +50,13 @@ export default function MainLayout() {
         router.push(`${pathname}${query}`);
     };
 
-    // Effect to fetch all trades for performance analysis
-    useEffect(() => {
-        const fetchAllTrades = async () => {
-            if (!user || !selectedAccountId) {
-                setTrades([]);
-                setIsLoading(false);
-                return;
-            }
-
-            setIsLoading(true);
-            try {
-                const tradesCollection = collection(db, 'users', user.uid, 'trades') as CollectionReference<Trade>;
-                
-                const q = query(tradesCollection, where('accountId', '==', selectedAccountId), orderBy('date', 'asc'));
-                
-                const querySnapshot = await getDocs(q);
-                const fetchedTrades = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id, date: (doc.data().date as unknown as Timestamp).toDate() })) as Trade[];
-                setTrades(fetchedTrades);
-
-            } catch (error: any) {
-                 if (error.code === 'failed-precondition') {
-                    console.error("Firebase Index Required:", error);
-                    toast({
-                        variant: 'destructive',
-                        title: 'Firebase Index Required',
-                        description: 'Please create the required Firestore index by clicking the link in the console error.',
-                        duration: 10000,
-                    });
-                } else {
-                    console.error("Error fetching trades for performance analysis:", error);
-                    toast({
-                        variant: "destructive",
-                        title: "Error",
-                        description: "Could not fetch trade data for performance analysis."
-                    });
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (user && selectedAccountId) {
-            fetchAllTrades();
-        }
-    }, [user, toast, refreshKey, selectedAccountId]);
-
     const CurrentPageComponent = NAV_TABS.find(tab => tab.value === activeTab)?.component || DashboardPage;
 
     if (activeTab === 'settings') {
          return (
              <div className="mt-4">
                  <h1 className="text-2xl font-bold tracking-tight font-headline capitalize">{activeTab}</h1>
-                {isLoading ? <TabSkeleton /> : <SettingsPage trades={trades} />}
+                 <SettingsPage />
              </div>
          )
     }
@@ -143,7 +76,7 @@ export default function MainLayout() {
             </div>
             
             <TabsContent value={activeTab} forceMount className="mt-4">
-               {isLoading ? <TabSkeleton /> : <CurrentPageComponent trades={trades} />}
+               <CurrentPageComponent trades={allTrades} />
             </TabsContent>
         </Tabs>
     );

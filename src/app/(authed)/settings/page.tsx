@@ -17,10 +17,10 @@ import { ManageAccountsCard } from '@/components/settings/manage-accounts-card';
 import TagManagement from '@/components/settings/tag-management';
 
 interface SettingsPageProps {
-  trades: any[]; // Trades prop is not used here but required by the main layout
+  // This prop is no longer needed as the page doesn't receive trades directly.
 }
 
-export default function SettingsPage({ trades }: SettingsPageProps) {
+export default function SettingsPage({}: SettingsPageProps) {
     
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
